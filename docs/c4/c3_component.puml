@@ -1,0 +1,26 @@
+@startuml C3_Component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Zappy - Les composants du serveur
+
+Container_Boundary(server, "Serveur") {
+    Component(main, "main", "main.cpp", "Lit les arguments et demarre le serveur")
+    Component(network, "Reseau", "sockets + poll", "Accepte les clients et surveille les messages")
+    Component(protocol, "Protocole", "protocol.cpp", "Lit les messages recus et ecrit les reponses")
+    Component(commands, "Commandes", "commands.cpp", "Execute les ordres des joueurs")
+    Component(clock, "Horloge", "clock.cpp", "Gere le temps et la file d'attente des commandes")
+    Component(world, "Monde", "world.cpp", "La carte, les ressources et les oeufs")
+    Component(players, "Joueurs", "player.cpp", "Position, niveau, inventaire et vie")
+    Component(gui_proto, "Protocole GUI", "gui.cpp", "Tient l'interface graphique au courant")
+}
+
+Rel(main, network, "Demarre")
+Rel(network, protocol, "Passe les messages recus")
+Rel(protocol, commands, "Transforme un message en ordre")
+Rel(clock, commands, "Declenche l'execution quand le delai est passe")
+Rel(commands, world, "Modifie la carte")
+Rel(commands, players, "Modifie les joueurs")
+Rel(commands, gui_proto, "Signale les changements")
+Rel(gui_proto, network, "Envoie les evenements a la GUI")
+
+@enduml

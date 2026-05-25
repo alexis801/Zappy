@@ -1,0 +1,22 @@
+@startuml C2_Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Zappy - Les grandes parties
+
+Person(user, "Utilisateur", "Lance et configure la partie")
+
+System_Boundary(zappy, "Zappy") {
+    Container(server, "Serveur", "C++ / poll", "Cree la carte, applique les regles, gere le temps")
+    Container(gui, "Interface graphique", "C++ / SFML", "Affiche la partie en 2D")
+    Container(ai, "Joueur automatique", "C++", "Se connecte et joue tout seul")
+    ContainerDb(world, "Etat du jeu", "Memoire du serveur", "Carte, joueurs, oeufs et ressources")
+}
+
+Rel(user, server, "Lance avec les reglages (port, carte, equipes...)")
+Rel(user, gui, "Lance (port, machine)")
+Rel(user, ai, "Lance (port, equipe, machine)")
+Rel(ai, server, "Envoie des ordres, recoit les reponses (TCP)")
+Rel(gui, server, "Recoit l'etat du jeu (TCP, protocole GUI)")
+Rel(server, world, "Lit et met a jour")
+
+@enduml
