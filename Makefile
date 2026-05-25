@@ -1,0 +1,98 @@
+##
+## EPITECH PROJECT, 2026
+## Zappy
+## File description:
+## Makefile
+##
+
+CXX			=	clang++
+CXXFLAGS	=	-Wall -Wextra -std=c++20 -iquote ./include
+DEPFLAGS	=	-MMD -MP
+
+SRC_DIR		=	src
+OBJ_DIR		=	obj
+
+SERVER		=	zappy_server
+GUI			=	zappy_gui
+AI			=	zappy_ai
+
+SERVER_LIBS	=
+GUI_LIBS	=	-lsfml-graphics -lsfml-window -lsfml-system
+AI_LIBS		=
+
+COMMON_SRC	=	$(shell find $(SRC_DIR)/common -name '*.cpp' 2>/dev/null)
+SERVER_SRC	=	$(shell find $(SRC_DIR)/server -name '*.cpp' 2>/dev/null) $(COMMON_SRC)
+GUI_SRC		=	$(shell find $(SRC_DIR)/gui    -name '*.cpp' 2>/dev/null) $(COMMON_SRC)
+AI_SRC		=	$(shell find $(SRC_DIR)/ai     -name '*.cpp' 2>/dev/null) $(COMMON_SRC)
+
+SERVER_OBJ	=	$(SERVER_SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+GUI_OBJ		=	$(GUI_SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+AI_OBJ		=	$(AI_SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+
+ALL_OBJ		=	$(sort $(SERVER_OBJ) $(GUI_OBJ) $(AI_OBJ))
+
+all:	$(SERVER) $(GUI) $(AI)
+
+
+$(SERVER):	$(SERVER_OBJ)
+	@if [ -z "$(strip $(SERVER_OBJ))" ]; then \
+		echo "  [skip] $@ : aucune source dans $(SRC_DIR)/server/"; \
+	else \
+		$(CXX) $(CXXFLAGS) -o $@ $(SERVER_OBJ) $(SERVER_LIBS); \
+		echo "  [ok]   $@"; \
+	fi
+
+$(GUI):	$(GUI_OBJ)
+	@if [ -z "$(strip $(GUI_OBJ))" ]; then \
+		echo "  [skip] $@ : aucune source dans $(SRC_DIR)/gui/"; \
+	else \
+		$(CXX) $(CXXFLAGS) -o $@ $(GUI_OBJ) $(GUI_LIBS); \
+		echo "  [ok]   $@"; \
+	fi
+
+$(AI):	$(AI_OBJ)
+	@if [ -z "$(strip $(AI_OBJ))" ]; then \
+		echo "  [skip] $@ : aucune source dans $(SRC_DIR)/ai/"; \
+	else \
+		$(CXX) $(CXXFLAGS) -o $@ $(AI_OBJ) $(AI_LIBS); \
+		echo "  [ok]   $@"; \
+	fi
+
+$(OBJ_DIR)/%.o:	$(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
+
+clean:
+	$(RM) -r $(OBJ_DIR)
+
+fclean:	clean tests_clean
+	$(RM) $(SERVER) $(GUI) $(AI)
+
+re:	fclean all
+
+dev:	CXXFLAGS += -Werror
+dev:	re
+
+TEST_SRC	=	$(shell find tests -name '*.cpp' 2>/dev/null)
+ALL_SRC		=	$(shell find $(SRC_DIR) -name '*.cpp' 2>/dev/null)
+SRC_NO_MAIN	=	$(filter-out %/main.cpp, $(ALL_SRC))
+
+tests_run:
+	$(CXX) $(CXXFLAGS) -o unit_tests $(SRC_NO_MAIN) $(TEST_SRC) --coverage -lcriterion
+	./unit_tests
+	gcovr -r . --exclude tests/ --gcov-executable "llvm-cov gcov"
+
+tests_clean:
+	$(RM) unit_tests
+	$(RM) -r *.gc* **/*.gc*
+
+docs:
+	doxygen Doxyfile
+	xdg-open docs/html/index.html
+
+doc_clean:
+	$(RM) -r docs/html docs/latex docs/xml
+
+-include $(ALL_OBJ:.o=.d)
+
+.PHONY:	all clean fclean re dev tests_run tests_clean docs doc_clean
