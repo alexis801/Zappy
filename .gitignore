@@ -1,0 +1,41 @@
+# Binaires
+zappy_server
+zappy_gui
+zappy_ai
+
+# Build
+obj/
+*.o
+*.d
+
+# Lib
+*.a
+*.so
+
+# Tests unit /cov
+unit_tests
+*.gc*
+coverage/
+*.info
+
+# Doxygen
+docs/html/
+docs/latex/
+docs/xml/
+
+# Ressources
+ressources/
+
+# Éditeurs
+.vscode/
+.idea/
+.cache/
+compile_commands.json
+
+# Dumps & fichiers temp
+vgcore.*
+core
+*~
+*.swp
+*.tmp
+.DS_Store
