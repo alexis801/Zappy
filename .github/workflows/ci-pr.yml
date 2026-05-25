@@ -1,0 +1,44 @@
+name: CI
+
+# Tourne AVANT le merge, sur chaque PR vers main.
+# Le but : afficher rouge si le code casse, pour bloquer le merge
+# (via la branch protection qui exige ces checks au vert).
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    container:
+      image: epitechcontent/epitest-docker:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # /!\ Quand la GUI utilisera SFML, decommente cette etape.
+      # epitest-docker est base sur Fedora -> dnf. Verifie le nom du paquet.
+      # - name: Install SFML
+      #   run: dnf install -y SFML-devel
+
+      - name: Build (zappy_server, zappy_gui, zappy_ai)
+        run: make
+
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    container:
+      image: epitechcontent/epitest-docker:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Tests Criterion
+        run: |
+          if [ -n "$(find tests -name '*.cpp' 2>/dev/null)" ]; then
+            make tests_run;
+          else
+            echo "Aucun test Criterion pour l'instant - rien a verifier.";
+          fi
