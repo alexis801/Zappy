@@ -16,7 +16,7 @@ jobs:
       image: epitechcontent/epitest-docker:latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # /!\ Quand la GUI utilisera SFML, decommente cette etape.
       # epitest-docker est base sur Fedora -> dnf. Verifie le nom du paquet.
@@ -33,7 +33,7 @@ jobs:
       image: epitechcontent/epitest-docker:latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Tests Criterion
         run: |
