@@ -1,0 +1,42 @@
+name: Test & Mirror to Epitech
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  test:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    container:
+      image: epitechcontent/epitest-docker:latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and run Criterion tests
+        run: make tests_run
+
+  mirror:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EPITECH_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Push to Epitech
+        run: |
+          git remote add epitech git@github.com:EpitechPGE2-2025/G-YEP-400-PAR-4-1-zappy-9.git
+          git push epitech main --force
