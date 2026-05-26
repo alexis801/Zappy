@@ -1,0 +1,15 @@
+@startuml C1_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Zappy - Contexte
+
+Person(user, "Utilisateur", "Lance le serveur, l'interface et les joueurs automatiques")
+
+System(zappy, "Zappy", "Jeu en reseau ou des equipes s'affrontent sur une carte")
+
+System_Ext(screen, "Ecran", "Affiche la partie en 2D")
+
+Rel(user, zappy, "Lance et configure la partie")
+Rel(zappy, screen, "Affiche ce qui se passe")
+
+@enduml
