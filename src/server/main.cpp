@@ -6,25 +6,30 @@
 */
 
 #include "Args.hpp"
+#include "Core.hpp"
 #include <exception>
 #include <iostream>
+#include <stdexcept>
 
 int main(int argc, char **argv)
 {
-    if (Zappy::Server::Args::isHelpRequested(argc, argv)) {
-        std::cout << Zappy::Server::Args::getUsage();
+    using Zappy::Server::Args;
+    using Zappy::Server::Core;
+
+    if (Args::isHelpRequested(argc, argv)) {
+        std::cout << Args::getUsage();
         return 0;
     }
     try {
-        const Zappy::Server::Args args(argc, argv);
+        const Args args(argc, argv);
+        Core core(args.getPort());
 
-        std::cout << "port=" << args.getPort()
-                  << " carte=" << args.getWidth() << "x" << args.getHeight()
-                  << " clients=" << args.getClientsPerTeam()
-                  << " f=" << args.getFrequency()
-                  << " equipes=" << args.getTeams().size() << "\n";
+        core.run();
+    } catch (const std::invalid_argument &e) {
+        std::cerr << e.what() << "\n" << Args::getUsage();
+        return 84;
     } catch (const std::exception &e) {
-        std::cerr << e.what() << "\n" << Zappy::Server::Args::getUsage();
+        std::cerr << e.what() << "\n";
         return 84;
     }
     return 0;
