@@ -8,6 +8,8 @@
 #ifndef ZAPPY_SOCKET_HPP_
 #define ZAPPY_SOCKET_HPP_
 
+#include <string_view>
+
 namespace Zappy::Server {
 
 /**
@@ -37,6 +39,11 @@ public:
      * @brief Accepte un client en attente (Socket invalide si aucun)
      */
     [[nodiscard]] Socket acceptClient() const;
+
+    /**
+     * @brief Envoie des datas ; renvoie false si erreur ou deconnecte
+     */
+    bool write(std::string_view data);
 
 private:
     int _fd = -1;
