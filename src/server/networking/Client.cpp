@@ -48,4 +48,20 @@ std::optional<std::string> Client::popLine()
     return line;
 }
 
+bool Client::send(std::string_view data)
+{
+    return _socket.write(data);
+}
+
+void Client::setAsPlayer(std::string teamName) noexcept
+{
+    _state = State::Player;
+    _teamName = std::move(teamName);
+}
+
+void Client::setAsGui() noexcept
+{
+    _state = State::Gui;
+}
+
 } // namespace Zappy::Server

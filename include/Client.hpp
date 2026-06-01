@@ -17,18 +17,34 @@ namespace Zappy::Server {
 
 /**
  * @class Client
- * @brief Un client connecte : sa socket et son buffer
+ * @brief Un client connecte : socket, buffer et etat
  */
 class Client {
 public:
+    enum class State {
+        AwaitingTeamName,
+        Player,
+        Gui,
+    };
+
     explicit Client(Socket socket) noexcept;
 
     [[nodiscard]] int getFd() const noexcept { return _socket.getFd(); }
+    [[nodiscard]] State getState() const noexcept { return _state; }
+    [[nodiscard]] const std::string &getTeamName() const noexcept
+    {
+        return _teamName;
+    }
 
     /**
      * @brief Lit les data dispo ; renvoie false si deconnecte
      */
     bool receive();
+
+    /**
+     * @brief Envoie des data au client ; renvoie false si erreur
+     */
+    bool send(std::string_view data);
 
     /**
      * @brief Ajoute des data au buffer
@@ -40,9 +56,21 @@ public:
      */
     [[nodiscard]] std::optional<std::string> popLine();
 
+    /**
+     * @brief Def le client comme joueur d'une equipe
+     */
+    void setAsPlayer(std::string teamName) noexcept;
+
+    /**
+     * @brief Def le client comme interface graphique
+     */
+    void setAsGui() noexcept;
+
 private:
     Socket _socket;
     std::string _readBuffer;
+    State _state = State::AwaitingTeamName;
+    std::string _teamName;
 };
 
 } // namespace Zappy::Server
