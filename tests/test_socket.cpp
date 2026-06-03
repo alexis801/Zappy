@@ -60,7 +60,7 @@ Test(socket, accept_sans_client_renvoie_invalide)
     cr_assert_not(server.acceptClient().isValid());
 }
 
-Test(socket, listen_leve_si_port_indisponible)
+Test(socket, listen_leve_si_port_indispo)
 {
     Socket first = Socket::listenOn(48813);
     bool threw = false;
@@ -71,4 +71,18 @@ Test(socket, listen_leve_si_port_indisponible)
         threw = true;
     }
     cr_assert(threw);
+}
+
+Test(socket, write_envoie_les_datas)
+{
+    std::array<int, 2> pair = {};
+
+    cr_assert_eq(::socketpair(AF_UNIX, SOCK_STREAM, 0, pair.data()), 0);
+    Socket source(pair[0]);
+    cr_assert(source.write("hello\n"));
+    char buf[16] = {};
+    ssize_t count = ::recv(pair[1], buf, sizeof(buf), 0);
+    cr_assert_eq(count, 6);
+    cr_assert_str_eq(buf, "hello\n");
+    ::close(pair[1]);
 }

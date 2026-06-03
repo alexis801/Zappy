@@ -8,20 +8,23 @@
 #ifndef ZAPPY_CORE_HPP_
 #define ZAPPY_CORE_HPP_
 
+#include "Args.hpp"
 #include "Client.hpp"
 #include "Socket.hpp"
+#include "Team.hpp"
 #include <poll.h>
+#include <string>
 #include <vector>
 
 namespace Zappy::Server {
 
 /**
  * @class Core
- * @brief Ecoute les clients et fait tourner la loop poll du serveur
+ * @brief Ecoute les clients, fait tourner la loop poll et la poignee de main
  */
 class Core {
 public:
-    explicit Core(int port);
+    explicit Core(const Args &args);
 
     void run();
 
@@ -31,11 +34,16 @@ private:
     void handleClientEvent(const pollfd &entry);
     void acceptClients();
     void consumeLines(Client &client);
+    bool handleHandshake(Client &client, const std::string &teamName);
     [[nodiscard]] Client *findClient(int fd);
+    [[nodiscard]] Team *findTeam(const std::string &name);
     void removeClient(int fd);
 
     Socket _listener;
     std::vector<Client> _clients;
+    std::vector<Team> _teams;
+    int _width;
+    int _height;
 };
 
 } // namespace Zappy::Server

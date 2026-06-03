@@ -6,6 +6,7 @@
 */
 
 #include "Core.hpp"
+#include "Macros.hpp"
 #include <iostream>
 #include <optional>
 #include <string>
@@ -13,8 +14,23 @@
 
 namespace Zappy::Server {
 
-Core::Core(int port) : _listener(Socket::listenOn(port))
+namespace {
+
+std::string buildHandshakeResponse(int slots, int width, int height)
 {
+    return std::to_string(slots) + "\n"
+        + std::to_string(width) + " "
+        + std::to_string(height) + "\n";
+}
+
+} // namespace
+
+Core::Core(const Args &args)
+    : _listener(Socket::listenOn(args.getPort())),
+    _width(args.getWidth()), _height(args.getHeight())
+{
+    for (const auto &name : args.getTeams())
+        _teams.emplace_back(name, args.getClientsPerTeam());
 }
 
 void Core::run()
@@ -66,14 +82,42 @@ void Core::acceptClients()
         std::cerr << "[serveur] client connecte (fd "
                   << client.getFd() << ")\n";
         _clients.emplace_back(std::move(client));
+        _clients.back().send("WELCOME\n");
         client = _listener.acceptClient();
     }
 }
 
 void Core::consumeLines(Client &client)
 {
-    while (std::optional<std::string> line = client.popLine())
-        std::cerr << "[client " << client.getFd() << "] " << *line << "\n";
+    while (std::optional<std::string> line = client.popLine()) {
+        if (client.getState() == Client::State::AwaitingTeamName) {
+            if (!handleHandshake(client, *line)) {
+                removeClient(client.getFd());
+                return;
+            }
+        } else {
+            std::cerr << "[client " << client.getFd() << "] "
+                      << *line << "\n";
+        }
+    }
+}
+
+bool Core::handleHandshake(Client &client, const std::string &teamName)
+{
+    if (teamName == Zappy::GRAPHIC_TEAM_NAME) {
+        client.setAsGui();
+        client.send(buildHandshakeResponse(0, _width, _height));
+        return true;
+    }
+    Team *team = findTeam(teamName);
+
+    if (team == nullptr || !team->canAcceptClient())
+        return false;
+    team->claimSlot();
+    client.setAsPlayer(teamName);
+    client.send(buildHandshakeResponse(
+        team->getRemainingSlots(), _width, _height));
+    return true;
 }
 
 Client *Core::findClient(int fd)
@@ -81,6 +125,14 @@ Client *Core::findClient(int fd)
     for (auto &client : _clients)
         if (client.getFd() == fd)
             return &client;
+    return nullptr;
+}
+
+Team *Core::findTeam(const std::string &name)
+{
+    for (auto &team : _teams)
+        if (team.getName() == name)
+            return &team;
     return nullptr;
 }
 

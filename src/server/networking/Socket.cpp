@@ -84,4 +84,16 @@ Socket Socket::acceptClient() const
     return Socket(clientFd);
 }
 
+bool Socket::write(std::string_view data)
+{
+    while (!data.empty()) {
+        ssize_t count = ::send(_fd, data.data(), data.size(), MSG_NOSIGNAL);
+
+        if (count <= 0)
+            return false;
+        data.remove_prefix(static_cast<std::size_t>(count));
+    }
+    return true;
+}
+
 } // namespace Zappy::Server

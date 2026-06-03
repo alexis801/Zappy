@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     }
     try {
         const Args args(argc, argv);
-        Core core(args.getPort());
+        Core core(args);
 
         core.run();
     } catch (const std::invalid_argument &e) {

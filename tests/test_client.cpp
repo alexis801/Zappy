@@ -17,7 +17,7 @@ using Zappy::Server::Socket;
 
 namespace {
 
-// Client avec une socket invalide : on ne teste que le tampon de lecture.
+// Client avec une socket invalide : on ne teste que buffer.
 Client makeClient()
 {
     return Client(Socket());
@@ -85,7 +85,7 @@ Test(client, recoit_les_donnees_du_socket)
     ::close(pair[1]);
 }
 
-Test(client, receive_faux_si_deconnecte)
+Test(client, receive_false_si_deconnecte)
 {
     std::array<int, 2> pair = {};
 
@@ -93,4 +93,42 @@ Test(client, receive_faux_si_deconnecte)
     Client client{Socket(pair[0])};
     ::close(pair[1]);
     cr_assert_not(client.receive());
+}
+
+Test(client, etat_ini_attend_le_nom_dequipe)
+{
+    Client client = makeClient();
+
+    cr_assert(client.getState() == Client::State::AwaitingTeamName);
+}
+
+Test(client, marque_comme_joueur)
+{
+    Client client = makeClient();
+
+    client.setAsPlayer("rouge");
+    cr_assert(client.getState() == Client::State::Player);
+    cr_assert(client.getTeamName() == "rouge");
+}
+
+Test(client, marque_comme_gui)
+{
+    Client client = makeClient();
+
+    client.setAsGui();
+    cr_assert(client.getState() == Client::State::Gui);
+}
+
+Test(client, send_envoie_au_socket)
+{
+    std::array<int, 2> pair = {};
+
+    cr_assert_eq(::socketpair(AF_UNIX, SOCK_STREAM, 0, pair.data()), 0);
+    Client client{Socket(pair[0])};
+    cr_assert(client.send("WELCOME\n"));
+    char buf[16] = {};
+    ssize_t count = ::recv(pair[1], buf, sizeof(buf), 0);
+    cr_assert_eq(count, 8);
+    cr_assert_str_eq(buf, "WELCOME\n");
+    ::close(pair[1]);
 }
