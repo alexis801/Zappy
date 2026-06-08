@@ -28,7 +28,7 @@ public:
     explicit Args(int ac, char **av);
 
     [[nodiscard]] int getPort() const noexcept { return _port; }
-    [[nodiscard]] std::string_view &getHost() const noexcept { return _host; }
+    [[nodiscard]] const std::string_view &getHost() const noexcept { return _host; }
 
     /**
      * @brief Mode d'emploie du client
@@ -42,6 +42,7 @@ public:
 
 private:
     void parseArgs(int ac, char **av);
+    void applyOption(std::string_view flag, const char *value);
 
     int _port = 0;
     std::string_view _host = "localhost";
