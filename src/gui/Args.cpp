@@ -49,6 +49,7 @@ int parsePos(std::string_view flag, const char *value)
 Args::Args(int ac, char **av)
 {
     parseArgs(ac, av);
+    validate();
 }
 
 // parse args by pair
@@ -67,6 +68,12 @@ void Args::applyOption(std::string_view flag, const char *value)
         _host = requireValue(flag, value);
     else
         throw std::invalid_argument("Unknown option :" + std::string(flag));
+}
+
+void Args::validate() const
+{
+    if (_port == 0)
+        throw std:: invalid_argument("Port (-p) is required");
 }
 
 std::string_view Args::getUsage() noexcept

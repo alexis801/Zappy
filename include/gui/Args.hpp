@@ -43,6 +43,7 @@ public:
 private:
     void parseArgs(int ac, char **av);
     void applyOption(std::string_view flag, const char *value);
+    void validate() const;
 
     int _port = 0;
     std::string_view _host = "localhost";

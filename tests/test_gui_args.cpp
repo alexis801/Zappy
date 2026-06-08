@@ -88,3 +88,13 @@ Test(gui_args, flag_h_sans_valeur)
 {
     cr_assert(throwsOn({"zappy_gui", "-p", "4242", "-h"}));
 }
+
+Test(gui_args, port_manquant)
+{
+    cr_assert(throwsOn({"zappy_gui", "-h", "localhost"}));
+}
+
+Test(gui_args, aucun_argument)
+{
+    cr_assert(throwsOn({"zappy_gui"}));
+}
