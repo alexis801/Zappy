@@ -94,3 +94,13 @@ Test(player, quatre_right_font_un_tour_complet)
         player.turnRight();
     cr_assert(player.getDirection() == Direction::SOUTH);
 }
+
+Test(player, spawn_random_reste_dans_la_carte)
+{
+    for (int i = 0; i < 100; ++i) {
+        Player player = Player::spawnRandom(7, 3);
+
+        cr_assert(player.getX() >= 0 && player.getX() < 7);
+        cr_assert(player.getY() >= 0 && player.getY() < 3);
+    }
+}

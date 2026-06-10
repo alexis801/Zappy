@@ -29,6 +29,11 @@ class Player {
 public:
     Player(int x, int y, Direction direction) noexcept;
 
+    /**
+     * @brief Cree un joueur a une position et direction aleatoires
+     */
+    [[nodiscard]] static Player spawnRandom(int width, int height);
+
     [[nodiscard]] int getX() const noexcept;
     [[nodiscard]] int getY() const noexcept;
     [[nodiscard]] Direction getDirection() const noexcept;
@@ -50,6 +55,8 @@ public:
 
 private:
     static constexpr int DIRECTION_COUNT = 4;
+
+    static int drawRandomInt(int upperExclusive);
 
     void stepNorth(int height) noexcept;
     void stepEast(int width) noexcept;

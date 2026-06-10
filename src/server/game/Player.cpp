@@ -6,8 +6,17 @@
 */
 
 #include "Player.hpp"
+#include <random>
 
 namespace Zappy::Server {
+
+int Player::drawRandomInt(int upperExclusive)
+{
+    static std::mt19937 generator{std::random_device{}()};
+    std::uniform_int_distribution<int> distribution(0, upperExclusive - 1);
+
+    return distribution(generator);
+}
 
 Player::Player(int x, int y, Direction direction) noexcept
     : _x(x), _y(y), _direction(direction)
@@ -27,6 +36,12 @@ int Player::getY() const noexcept
 Direction Player::getDirection() const noexcept
 {
     return _direction;
+}
+
+Player Player::spawnRandom(int width, int height)
+{
+    return Player(drawRandomInt(width), drawRandomInt(height),
+        static_cast<Direction>(drawRandomInt(DIRECTION_COUNT)));
 }
 
 void Player::stepNorth(int height) noexcept
@@ -72,5 +87,4 @@ void Player::turnRight() noexcept
     _direction = static_cast<Direction>(
         (static_cast<int>(_direction) + 1) % DIRECTION_COUNT);
 }
-
 } // namespace Zappy::Server
