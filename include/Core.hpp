@@ -32,7 +32,7 @@ public:
 
 private:
     [[nodiscard]] std::vector<pollfd> buildPollFds() const;
-    [[nodiscard]] int getPollTimeoutMillis() const;
+    [[nodiscard]] int getPollTimeoutMillis() const noexcept;
     void handleEvents(const std::vector<pollfd> &fds);
     void handleClientEvent(const pollfd &entry);
     void acceptClients();

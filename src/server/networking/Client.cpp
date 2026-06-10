@@ -84,7 +84,7 @@ long Client::getNextDeadlineMillis() const noexcept
     return _commands.front().deadlineMillis;
 }
 
-Command Client::popCommand()
+Command Client::popCommand() noexcept
 {
     Command cmd = std::move(_commands.front());
 

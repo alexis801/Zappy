@@ -91,7 +91,7 @@ public:
     /**
      * @brief Retire la premiere cmd de la file et la renvoie
      */
-    [[nodiscard]] Command popCommand();
+    [[nodiscard]] Command popCommand() noexcept;
 
 private:
     Socket _socket;

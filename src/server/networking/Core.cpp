@@ -55,7 +55,7 @@ std::vector<pollfd> Core::buildPollFds() const
     return fds;
 }
 
-int Core::getPollTimeoutMillis() const
+int Core::getPollTimeoutMillis() const noexcept
 {
     long soonest = -1;
 
