@@ -38,9 +38,10 @@ void Core::run()
     while (true) {
         std::vector<pollfd> fds = buildPollFds();
 
-        if (::poll(fds.data(), fds.size(), -1) < 0)
+        if (::poll(fds.data(), fds.size(), getPollTimeoutMillis()) < 0)
             return;
         handleEvents(fds);
+        executeDueCommands();
     }
 }
 
@@ -52,6 +53,22 @@ std::vector<pollfd> Core::buildPollFds() const
     for (const auto &client : _clients)
         fds.push_back({client.getFd(), POLLIN, 0});
     return fds;
+}
+
+int Core::getPollTimeoutMillis() const noexcept
+{
+    long soonest = -1;
+
+    for (const auto &client : _clients) {
+        if (!client.hasCommands())
+            continue;
+        long deadline = client.getNextDeadlineMillis();
+        if (soonest < 0 || deadline < soonest)
+            soonest = deadline;
+    }
+    if (soonest < 0)
+        return -1;
+    return static_cast<int>(_clock.getRemainingMillis(soonest));
 }
 
 void Core::handleEvents(const std::vector<pollfd> &fds)
@@ -95,9 +112,39 @@ void Core::consumeLines(Client &client)
                 removeClient(client.getFd());
                 return;
             }
+        } else if (client.getState() == Client::State::Player) {
+            handlePlayerLine(client, *line);
         } else {
-            std::cerr << "[client " << client.getFd() << "] "
+            std::cerr << "[gui " << client.getFd() << "] "
                       << *line << "\n";
+        }
+    }
+}
+
+void Core::handlePlayerLine(Client &client, const std::string &line)
+{
+    long now = _clock.getElapsedMillis();
+    long duration = _clock.getDurationMillis(action_cost::FORWARD);
+
+    if (!client.enqueueCommand(line, now, duration)) {
+        std::cerr << "[client " << client.getFd()
+                  << "] file pleine, commande ignoree\n";
+        return;
+    }
+    std::cerr << "[client " << client.getFd() << "] " << line
+              << " prevu a " << client.getNextDeadlineMillis() << "ms\n";
+}
+
+void Core::executeDueCommands()
+{
+    long now = _clock.getElapsedMillis();
+
+    for (auto &client : _clients) {
+        while (client.hasCommands()
+            && client.getNextDeadlineMillis() <= now) {
+            Command cmd = client.popCommand();
+            std::cerr << "[client " << client.getFd()
+                      << "] EXEC: " << cmd.text << "\n";
         }
     }
 }

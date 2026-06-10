@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 using Zappy::Server::Client;
+using Zappy::Server::Command;
 using Zappy::Server::Socket;
 
 namespace {
@@ -131,4 +132,46 @@ Test(client, send_envoie_au_socket)
     cr_assert_eq(count, 8);
     cr_assert_str_eq(buf, "WELCOME\n");
     ::close(pair[1]);
+}
+
+Test(client, enqueue_ajoute_une_commande_avec_son_heure)
+{
+    Client client = makeClient();
+
+    cr_assert(client.enqueueCommand("avance", 0, 70));
+    cr_assert(client.hasCommands());
+    cr_assert_eq(client.getNextDeadlineMillis(), 70);
+}
+
+Test(client, max_10_cmd_en_file)
+{
+    Client client = makeClient();
+
+    for (int i = 0; i < 10; ++i)
+        cr_assert(client.enqueueCommand("cmd", 0, 70));
+    cr_assert_not(client.enqueueCommand("trop", 0, 70));
+}
+
+Test(client, commandes_executees_dans_lordre)
+{
+    Client client = makeClient();
+
+    client.enqueueCommand("premier", 0, 70);
+    client.enqueueCommand("second", 0, 70);
+    cr_assert(client.popCommand().text == "premier");
+    cr_assert(client.popCommand().text == "second");
+    cr_assert_not(client.hasCommands());
+}
+
+Test(client, deadlines_se_chainent)
+{
+    Client client = makeClient();
+
+    client.enqueueCommand("a", 0, 100);
+    client.enqueueCommand("b", 0, 100);
+    Command first = client.popCommand();
+    Command second = client.popCommand();
+
+    cr_assert_eq(first.deadlineMillis, 100);
+    cr_assert_eq(second.deadlineMillis, 200);
 }
