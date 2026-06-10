@@ -8,6 +8,8 @@
 #ifndef ZAPPY_GUI_SOCKET_HPP_
 #define ZAPPY_GUI_SOCKET_HPP_
 
+#include <string_view>
+
 namespace Zappy::Gui {
 
 /**
@@ -27,6 +29,11 @@ public:
 
     [[nodiscard]] int getFd() const noexcept { return _fd; }
     [[nodiscard]] bool isValid() const noexcept { return _fd >= 0; }
+
+    /**
+    * @brief Conection en TCP a l'host PORT
+    */
+    static Socket connectTo(std::string_view host, int port);
 
 private:
     int _fd = -1;
