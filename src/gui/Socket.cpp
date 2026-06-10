@@ -98,10 +98,10 @@ Socket Socket::connectTo(std::string_view host, int port)
 bool Socket::write(std::string_view data)
 {
     while (!data.empty()) {
-        size_t count = ::send(_fd, data.data(), data.size(), MSG_NOSIGNAL);
+        ssize_t count = ::send(_fd, data.data(), data.size(), MSG_NOSIGNAL);
         if (count <= 0)
             return false;
-        data.remove_prefix(static_cast<std::ssize_t>(count));
+        data.remove_prefix(static_cast<std::size_t>(count));
     }
     return true;
 }
