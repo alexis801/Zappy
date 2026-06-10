@@ -95,4 +95,15 @@ Socket Socket::connectTo(std::string_view host, int port)
     return connectToAdress(*infos);
 }
 
+bool Socket::write(std::string_view data)
+{
+    while (!data.empty()) {
+        size_t count = ::send(_fd, data.data(), data.size(), MSG_NOSIGNAL);
+        if (count < 0)
+            return false;
+        data.remove_prefix(static_cast<std::size_t>(count));
+    }
+    return true;
+}
+
 } // namespace Zappy::Gui

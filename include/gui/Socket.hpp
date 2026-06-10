@@ -34,6 +34,7 @@ public:
     * @brief Conection en TCP a l'host PORT
     */
     static Socket connectTo(std::string_view host, int port);
+    bool write(std::string_view data);
 
 private:
     int _fd = -1;
