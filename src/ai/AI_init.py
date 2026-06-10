@@ -20,6 +20,23 @@ class Inventory:
     mendiane: int = 0
     phiras: int = 0
     thystame: int = 0
+    
+    def total_resources(self) -> int:
+        return (self.linemate + self.deraumere + self.sibur + 
+                self.mendiane + self.phiras + self.thystame)
+    
+    def status(self):
+        return (f"Food: {self.food}, Linemate: {self.linemate}, "
+                f"Deraumere: {self.deraumere}, Sibur: {self.sibur}, "
+                f"Mendiane: {self.mendiane}, Phiras: {self.phiras}, "
+                f"Thystame: {self.thystame}")
+
+class Direction(Enum):
+    UP = 0
+    LEFT = 1
+    DOWN = 2
+    RIGHT = 3
+
 
 class Tile:
     def __init__(self):
@@ -36,6 +53,15 @@ class State(Enum):
     SURVIVE = 1
     COLLECT = 2
     EXPLORE = 3
+
+class Resource(Enum):
+    FOOD = "food"
+    LINEMATE = "linemate"
+    DERAUMERE = "deraumere"
+    SIBUR = "sibur"
+    MENDIANE = "mendiane"
+    PHIRAS = "phiras"
+    THYSTAME = "thystame"
 
 class SurvivalAI:
     FOOD_THRESHOLD = 10
