@@ -8,6 +8,7 @@
 #include "gui/Socket.hpp"
 
 #include <string>
+#include <memory>
 #include <stdexcept>
 #include <unistd.h>
 #include <fcntl.h>
@@ -18,14 +19,45 @@ namespace Zappy::Gui {
 
 namespace {
 
+// make fd non block mode & raise error
 void setNoBlocking (int fd)
-{   
-    // make fd non block mode & raise error
+{
     int flags = fcntl(fd, F_GETFL, 0);
 
     if (flags < 0 || ::fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0)
         throw std::runtime_error("fcntl: Non blocking change impossible");
 
+}
+
+// resout le host:port en adresse
+addrinfo *resolveAdress(std::string_view host, int port)
+{
+    addrinfo hints = {};
+    addrinfo *infos = nullptr;
+    std::string hostTxt(host);
+    std::string portTxt = std::to_string(port);
+
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    if (::getaddrinfo(hostTxt.c_str(), portTxt.c_str(), &hints, &infos) != 0)
+        throw std::runtime_error("getadddrinfo: host not found" + hostTxt);
+    return infos;
+}
+
+// create Socket et se co a l'adresse trouve pr resolve adres
+Socket connectToAdress(const addrinfo &adress)
+{
+    int fd = ::socket(adress.ai_family, adress.ai_socktype, adress.ai_protocol);
+
+    if (fd < 0)
+        throw std::runtime_error("socket creation impossible");
+
+    Socket result(fd);
+    if (::connect(fd, adress.ai_addr, adress.ai_addrlen) < 0)
+        throw std::runtime_error("connect: connexion au serveur impossible");
+    setNoBlocking(fd);
+    return result;
 }
 
 } // anonymous namespace
@@ -58,30 +90,9 @@ Socket &Socket::operator=(Socket &&other) noexcept
 
 Socket Socket::connectTo(std::string_view host, int port)
 {
-    addrinfo hints = {};
-    addrinfo *infos = nullptr;
-    std::string hostTxt(host);
-    std::string portTxt = std::to_string(port);
+    std::unique_ptr<addrinfo, decltype(&::freeaddrinfo)> infos(resolveAdress(host, port), &::freeaddrinfo);
 
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-
-    if (::getaddrinfo(hostTxt.c_str(), portTxt.c_str(), &hints, &infos) != 0)
-        throw std::runtime_error("getadddrinfo: host not found" + hostTxt);
-
-    int fd = ::socket(infos->ai_family, infos->ai_socktype, infos->ai_protocol);
-    if (fd < 0) {
-        ::freeaddrinfo(infos);
-        throw std::runtime_error("socket creation impossible");
-    }
-    Socket result(fd);
-    if (::connect(fd, infos->ai_addr, infos->ai_addrlen) < 0) {
-        ::freeaddrinfo(infos);
-        throw std::runtime_error("connection to server impossible");
-    }
-    ::freeaddrinfo(infos);
-    setNoBlocking(fd);
-    return result;
+    return connectToAdress(*infos);
 }
 
 } // namespace Zappy::Gui
