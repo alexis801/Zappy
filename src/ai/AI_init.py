@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 ##
 ## EPITECH PROJECT, 2026
 ## zappyGotten
@@ -8,6 +10,7 @@
 from dataclasses import dataclass
 from enum import Enum
 import sys, getopt
+
 @dataclass
 class Inventory:
     food: int = 0
@@ -33,6 +36,14 @@ class State(Enum):
     SURVIVE = 1
     COLLECT = 2
     EXPLORE = 3
+
+class SurvivalAI:
+    FOOD_THRESHOLD = 10
+
+    def choose_state(self, inventory):
+        if inventory.food < self.FOOD_THRESHOLD:
+            return State.SURVIVE
+        return State.COLLECT
 
 def parser(argv):
     port = None
