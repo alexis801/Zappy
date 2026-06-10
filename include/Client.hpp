@@ -8,8 +8,10 @@
 #ifndef ZAPPY_CLIENT_HPP_
 #define ZAPPY_CLIENT_HPP_
 
+#include "Command.hpp"
 #include "Socket.hpp"
 #include <optional>
+#include <queue>
 #include <string>
 #include <string_view>
 
@@ -17,7 +19,7 @@ namespace Zappy::Server {
 
 /**
  * @class Client
- * @brief Un client connecte : socket, buffer et etat
+ * @brief Un client connecte : socket, buffer, etat et file de cmds
  */
 class Client {
 public:
@@ -66,11 +68,37 @@ public:
      */
     void setAsGui() noexcept;
 
+    /**
+     * @brief Met une cmd en file (max 10). False = file pleine
+     *        La nouvelle cmd commence apres la derniere de la file.
+     */
+    bool enqueueCommand(
+        std::string text, long nowMillis, long durationMillis);
+
+    /**
+     * @brief Vrai s'il y a au moins une cmd en file
+     */
+    [[nodiscard]] bool hasCommands() const noexcept
+    {
+        return !_commands.empty();
+    }
+
+    /**
+     * @brief Heure prevue de la prochaine cmd (precondition : hasCommands)
+     */
+    [[nodiscard]] long getNextDeadlineMillis() const noexcept;
+
+    /**
+     * @brief Retire la premiere cmd de la file et la renvoie
+     */
+    [[nodiscard]] Command popCommand();
+
 private:
     Socket _socket;
     std::string _readBuffer;
     State _state = State::AwaitingTeamName;
     std::string _teamName;
+    std::queue<Command> _commands;
 };
 
 } // namespace Zappy::Server

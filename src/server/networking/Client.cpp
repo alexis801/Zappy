@@ -6,6 +6,8 @@
 */
 
 #include "Client.hpp"
+#include "Macros.hpp"
+#include <algorithm>
 #include <array>
 #include <sys/socket.h>
 #include <utility>
@@ -62,6 +64,32 @@ void Client::setAsPlayer(std::string teamName) noexcept
 void Client::setAsGui() noexcept
 {
     _state = State::Gui;
+}
+
+bool Client::enqueueCommand(
+    std::string text, long nowMillis, long durationMillis)
+{
+    if (_commands.size() >= MAX_PENDING_REQUESTS)
+        return false;
+    long startMillis = _commands.empty()
+        ? nowMillis
+        : std::max(nowMillis, _commands.back().deadlineMillis);
+
+    _commands.push({std::move(text), startMillis + durationMillis});
+    return true;
+}
+
+long Client::getNextDeadlineMillis() const noexcept
+{
+    return _commands.front().deadlineMillis;
+}
+
+Command Client::popCommand()
+{
+    Command cmd = std::move(_commands.front());
+
+    _commands.pop();
+    return cmd;
 }
 
 } // namespace Zappy::Server
