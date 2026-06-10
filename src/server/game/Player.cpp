@@ -29,4 +29,48 @@ Direction Player::getDirection() const noexcept
     return _direction;
 }
 
+void Player::stepNorth(int height) noexcept
+{
+    _y = (_y - 1 + height) % height;
+}
+
+void Player::stepEast(int width) noexcept
+{
+    _x = (_x + 1) % width;
+}
+
+void Player::stepSouth(int height) noexcept
+{
+    _y = (_y + 1) % height;
+}
+
+void Player::stepWest(int width) noexcept
+{
+    _x = (_x - 1 + width) % width;
+}
+
+void Player::forward(int width, int height) noexcept
+{
+    if (_direction == Direction::NORTH)
+        stepNorth(height);
+    else if (_direction == Direction::EAST)
+        stepEast(width);
+    else if (_direction == Direction::SOUTH)
+        stepSouth(height);
+    else
+        stepWest(width);
+}
+
+void Player::turnLeft() noexcept
+{
+    _direction = static_cast<Direction>(
+        (static_cast<int>(_direction) + 3) % DIRECTION_COUNT);
+}
+
+void Player::turnRight() noexcept
+{
+    _direction = static_cast<Direction>(
+        (static_cast<int>(_direction) + 1) % DIRECTION_COUNT);
+}
+
 } // namespace Zappy::Server

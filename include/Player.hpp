@@ -33,7 +33,29 @@ public:
     [[nodiscard]] int getY() const noexcept;
     [[nodiscard]] Direction getDirection() const noexcept;
 
+    /**
+     * @brief Avance d'une case dans sa direction (monde toroidal)
+     */
+    void forward(int width, int height) noexcept;
+
+    /**
+     * @brief Tourne de 90 degres a gauche
+     */
+    void turnLeft() noexcept;
+
+    /**
+     * @brief Tourne de 90 degres a droite
+     */
+    void turnRight() noexcept;
+
 private:
+    static constexpr int DIRECTION_COUNT = 4;
+
+    void stepNorth(int height) noexcept;
+    void stepEast(int width) noexcept;
+    void stepSouth(int height) noexcept;
+    void stepWest(int width) noexcept;
+
     int _x;
     int _y;
     Direction _direction;
