@@ -51,12 +51,8 @@ $(GUI):	$(GUI_OBJ)
 	fi
 
 $(AI):	$(AI_OBJ)
-	@if [ -z "$(strip $(AI_OBJ))" ]; then \
-		echo "  [skip] $@ : aucune source dans $(SRC_DIR)/ai/"; \
-	else \
-		$(CXX) $(CXXFLAGS) -o $@ $(AI_OBJ) $(AI_LIBS); \
-		echo "  [ok]   $@"; \
-	fi
+	cp src/ai/AI_init.py $(AI)
+	chmod +x $(AI)
 
 $(OBJ_DIR)/%.o:	$(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
