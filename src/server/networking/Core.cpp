@@ -162,6 +162,7 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
         return false;
     team->claimSlot();
     client.setAsPlayer(teamName);
+    client.spawnPlayer(_width, _height);
     client.send(buildHandshakeResponse(
         team->getRemainingSlots(), _width, _height));
     return true;

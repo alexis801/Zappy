@@ -66,6 +66,18 @@ void Client::setAsGui() noexcept
     _state = State::Gui;
 }
 
+void Client::spawnPlayer(int width, int height)
+{
+    _player = Player::spawnRandom(width, height);
+}
+
+Player *Client::getPlayer() noexcept
+{
+    if (!_player.has_value())
+        return nullptr;
+    return &*_player;
+}
+
 bool Client::enqueueCommand(
     std::string text, long nowMillis, long durationMillis)
 {
