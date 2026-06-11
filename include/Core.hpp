@@ -10,6 +10,8 @@
 
 #include "Args.hpp"
 #include "Client.hpp"
+#include "Clock.hpp"
+#include "Macros.hpp"
 #include "Socket.hpp"
 #include "Team.hpp"
 #include <poll.h>
@@ -30,16 +32,20 @@ public:
 
 private:
     [[nodiscard]] std::vector<pollfd> buildPollFds() const;
+    [[nodiscard]] int getPollTimeoutMillis() const noexcept;
     void handleEvents(const std::vector<pollfd> &fds);
     void handleClientEvent(const pollfd &entry);
     void acceptClients();
     void consumeLines(Client &client);
     bool handleHandshake(Client &client, const std::string &teamName);
+    void handlePlayerLine(Client &client, const std::string &line);
+    void executeDueCommands();
     [[nodiscard]] Client *findClient(int fd);
     [[nodiscard]] Team *findTeam(const std::string &name);
     void removeClient(int fd);
 
     Socket _listener;
+    Clock _clock{DEFAULT_FREQUENCY};
     std::vector<Client> _clients;
     std::vector<Team> _teams;
     int _width;
