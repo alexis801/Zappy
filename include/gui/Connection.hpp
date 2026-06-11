@@ -40,6 +40,11 @@ public:
      */
     bool receive();
 
+    /**
+     * @brief Envoie une commande au serveur , raise false si erreur
+     */
+    bool send(std::string_view data);
+
 private:
     Socket _socket;
     std::string _readBuffer;

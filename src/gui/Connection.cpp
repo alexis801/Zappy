@@ -51,4 +51,9 @@ bool Connection::receive()
     return true;
 }
 
+bool Connection::send(std::string_view data)
+{
+    return _socket.write(data);
+}
+
 } // namespace Zappy::Gui
