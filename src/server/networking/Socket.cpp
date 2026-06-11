@@ -22,7 +22,7 @@ void setNonBlocking(int fd)
     int flags = ::fcntl(fd, F_GETFL, 0);
 
     if (flags < 0 || ::fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0)
-        throw std::runtime_error("fcntl: passage en non-bloquant impossible");
+        throw std::runtime_error("fcntl: failed to set non-blocking mode");
 }
 
 } // namespace
@@ -60,16 +60,16 @@ Socket Socket::listenOn(int port)
     sockaddr_in addr = {};
 
     if (fd < 0)
-        throw std::runtime_error("socket: creation impossible");
+        throw std::runtime_error("socket: creation failed");
     Socket result(fd);
     ::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons(static_cast<uint16_t>(port));
     if (::bind(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
-        throw std::runtime_error("bind: port indisponible");
+        throw std::runtime_error("bind: port unavailable");
     if (::listen(fd, SOMAXCONN) < 0)
-        throw std::runtime_error("listen: echec");
+        throw std::runtime_error("listen: failed");
     setNonBlocking(fd);
     return result;
 }

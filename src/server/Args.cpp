@@ -19,7 +19,7 @@ int parsePositive(std::string_view flag, const char *value)
 {
     if (value == nullptr)
         throw std::invalid_argument(
-            "Valeur manquante pour " + std::string(flag));
+            "Missing value for " + std::string(flag));
     std::string text = value;
     std::size_t pos = 0;
     int result = 0;
@@ -31,7 +31,7 @@ int parsePositive(std::string_view flag, const char *value)
     }
     if (result <= 0 || pos != text.size())
         throw std::invalid_argument(
-            std::string(flag) + " : entier positif attendu");
+            std::string(flag) + ": positive integer expected");
     return result;
 }
 
@@ -58,7 +58,7 @@ void Args::parse(int argc, char **argv)
             i = parseTeams(i + 1, argc, argv);
         else
             throw std::invalid_argument(
-                "Option inconnue : " + std::string(arg));
+                "Unknown option: " + std::string(arg));
     }
     validate();
 }
