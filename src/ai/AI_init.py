@@ -167,6 +167,13 @@ class SurvivalAI:
         if inventory.food < self.FOOD_THRESHOLD:
             return State.SURVIVE
         return State.COLLECT
+    
+    def act(self) -> None:
+        self.state = self.update_state()
+        
+        self.client.send_command("Look")
+        look_response = self.client.receive_response()
+        
 
 def parser(argv):
     port = None
