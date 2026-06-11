@@ -8,7 +8,7 @@
 #ifndef ZAPPY_GUI_ARGS_HPP_
 #define ZAPPY_GUI_ARGS_HPP_
 
-#include <string_view>
+#include <string>
 
 namespace Zappy::Gui {
 
@@ -28,7 +28,7 @@ public:
     explicit Args(int ac, char **av);
 
     [[nodiscard]] int getPort() const noexcept { return _port; }
-    [[nodiscard]] const std::string_view &getHost() const noexcept { return _host; }
+    [[nodiscard]] const std::string &getHost() const noexcept { return _host; }
 
     /**
      * @brief Mode d'emploie du client
@@ -46,7 +46,7 @@ private:
     void validate() const;
 
     int _port = 0;
-    std::string_view _host = "localhost";
+    std::string _host = "localhost";
 };
 
 } // namespace Zappy::Gui
