@@ -87,4 +87,23 @@ void Player::turnRight() noexcept
     _direction = static_cast<Direction>(
         (static_cast<int>(_direction) + 1) % DIRECTION_COUNT);
 }
+
+bool Player::executeMovement(
+    std::string_view command, int width, int height) noexcept
+{
+    if (command == "Forward") {
+        forward(width, height);
+        return true;
+    }
+    if (command == "Left") {
+        turnLeft();
+        return true;
+    }
+    if (command == "Right") {
+        turnRight();
+        return true;
+    }
+    return false;
+}
+
 } // namespace Zappy::Server

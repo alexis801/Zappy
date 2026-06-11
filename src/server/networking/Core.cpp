@@ -5,6 +5,7 @@
 ** Core
 */
 
+#include "CommandParser.hpp"
 #include "Core.hpp"
 #include "Macros.hpp"
 #include <iostream>
@@ -123,8 +124,14 @@ void Core::consumeLines(Client &client)
 
 void Core::handlePlayerLine(Client &client, const std::string &line)
 {
+    std::optional<int> cost = CommandParser::getCommandCost(line);
+
+    if (!cost.has_value()) {
+        client.send("ko\n");
+        return;
+    }
     long now = _clock.getElapsedMillis();
-    long duration = _clock.getDurationMillis(action_cost::FORWARD);
+    long duration = _clock.getDurationMillis(*cost);
 
     if (!client.enqueueCommand(line, now, duration)) {
         std::cerr << "[client " << client.getFd()
@@ -143,10 +150,25 @@ void Core::executeDueCommands()
         while (client.hasCommands()
             && client.getNextDeadlineMillis() <= now) {
             Command cmd = client.popCommand();
-            std::cerr << "[client " << client.getFd()
-                      << "] EXEC: " << cmd.text << "\n";
+
+            executePlayerCommand(client, cmd);
         }
     }
+}
+
+void Core::executePlayerCommand(Client &client, const Command &cmd)
+{
+    Player *player = client.getPlayer();
+
+    if (player == nullptr) {
+        client.send("ko\n");
+        return;
+    }
+    if (!player->executeMovement(cmd.text, _width, _height)) {
+        client.send("ko\n");
+        return;
+    }
+    client.send("ok\n");
 }
 
 bool Core::handleHandshake(Client &client, const std::string &teamName)

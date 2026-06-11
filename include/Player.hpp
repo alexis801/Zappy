@@ -8,6 +8,8 @@
 #ifndef ZAPPY_PLAYER_HPP_
 #define ZAPPY_PLAYER_HPP_
 
+#include <string_view>
+
 namespace Zappy::Server {
 
 /**
@@ -52,6 +54,12 @@ public:
      * @brief Tourne de 90 degres a droite
      */
     void turnRight() noexcept;
+
+    /**
+     * @brief Execute une commande de deplacement, false si inconnue
+     */
+    [[nodiscard]] bool executeMovement(
+        std::string_view command, int width, int height) noexcept;
 
 private:
     static constexpr int DIRECTION_COUNT = 4;
