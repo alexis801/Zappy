@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from enum import Enum
 import sys, getopt
 import socket
-from typing import Optional, List, Tuple
+from typing import Optional
 
 @dataclass
 class Inventory:
@@ -159,8 +159,6 @@ class ZappyClient:
     
     def send_line(self, line: str) -> None:
         self.socket.sendall(f"{line}\n".encode())
-
-
 
 class SurvivalAI:
     FOOD_THRESHOLD = 10
