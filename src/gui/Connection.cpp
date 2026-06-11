@@ -8,8 +8,16 @@
 #include "gui/Connection.hpp"
 
 #include <utility>
+#include <array>
+#include <sys/socket.h>
 
 namespace Zappy::Gui {
+
+namespace {
+
+constexpr std::size_t BUFFER_CHUNK_SIZE = 4096;
+
+} // anonymous namespace
 
 Connection::Connection(Socket socket) noexcept : _socket(std::move(socket))
 {
@@ -30,6 +38,17 @@ std::optional<std::string> Connection::popLine()
 
     _readBuffer.erase(0, pos + 1);
     return line;
+}
+
+bool Connection::receive()
+{
+    std::array<char, BUFFER_CHUNK_SIZE> buffer = {};
+    ssize_t count_bytes = recv(_socket.getFd(), buffer.data(), buffer.size(), 0);
+
+    if (count_bytes <= 0)
+        return false;
+    feed(std::string_view(buffer.data(), static_cast<std::size_t>(count_bytes)));
+    return true;
 }
 
 } // namespace Zappy::Gui

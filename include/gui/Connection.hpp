@@ -35,6 +35,11 @@ public:
      */
     [[nodiscard]] std::optional<std::string> popLine();
 
+    /**
+     * @brief Lit la socket vers le bufffer : false si déconnexion 
+     */
+    bool receive();
+
 private:
     Socket _socket;
     std::string _readBuffer;
