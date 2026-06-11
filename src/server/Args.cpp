@@ -6,6 +6,7 @@
 */
 
 #include "Args.hpp"
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -75,10 +76,16 @@ int Args::parseTeams(int start, int argc, char **argv)
 
 void Args::validate() const
 {
+    std::set<std::string> seen;
+
     if (_port == 0 || _width == 0 || _height == 0
         || _clientsPerTeam == 0 || _teams.empty())
         throw std::invalid_argument(
-            "Arguments obligatoires manquants (-p -x -y -n -c)");
+            "Required arguments missing (-p -x -y -n -c)");
+    for (const auto &name : _teams)
+        if (!seen.insert(name).second)
+            throw std::invalid_argument(
+                "Duplicate team name: " + name);
 }
 
 std::string_view Args::getUsage() noexcept

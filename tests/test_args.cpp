@@ -98,6 +98,14 @@ Test(args, pas_dequipe)
         "-y", "1", "-c", "1"}));
 }
 
+Test(args, refuse_equipes_en_double)
+{
+    cr_assert(throwsOn({"zappy_server", "-p", "1", "-x", "1",
+        "-y", "1", "-n", "red", "red", "-c", "1"}));
+    cr_assert(throwsOn({"zappy_server", "-p", "1", "-x", "1",
+        "-y", "1", "-n", "red", "blue", "red", "-c", "1"}));
+}
+
 Test(args, option_inconnue)
 {
     cr_assert(throwsOn({"zappy_server", "-z"}));
