@@ -22,7 +22,7 @@ public:
     Renderer();
 
     [[nodiscard]] bool isOpen() const;
-    void handleEvent();
+    void handleEvents();
     void draw(const World &world);
 
 

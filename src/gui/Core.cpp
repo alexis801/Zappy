@@ -8,7 +8,6 @@
 #include "gui/Core.hpp"
 #include "gui/Connection.hpp"
 
-#include <iostream>
 #include <optional>
 #include <poll.h>
 #include <string>
@@ -32,7 +31,7 @@ void Core::handleLine(const std::string &line)
 bool Core::update()
 {
     pollfd watched = {_connection.getFd(), POLLIN, 0};
-    int ready = ::poll(&watched, 1, 100);
+    int ready = ::poll(&watched, 1, 0);
 
     if (ready < 0)
         return false;

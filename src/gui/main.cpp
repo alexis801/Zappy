@@ -24,7 +24,7 @@ int main(int argc, char **argv)
         Zappy::Gui::Renderer renderer;
 
         while (renderer.isOpen()) {
-            renderer.handleEvent();
+            renderer.handleEvents();
             if (!core.update())
                 break;
             renderer.draw(core.getWorld());

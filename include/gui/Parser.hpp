@@ -10,7 +10,6 @@
 
 #include "gui/World.hpp"
 
-#include <sstream>
 #include <string>
 
 namespace Zappy::Gui {

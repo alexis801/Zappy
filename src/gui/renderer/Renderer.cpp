@@ -28,7 +28,7 @@ bool Renderer::isOpen() const
     return _window.isOpen();
 }
 
-void Renderer::handleEvent()
+void Renderer::handleEvents()
 {
     sf::Event event;
 
