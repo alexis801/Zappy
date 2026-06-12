@@ -38,25 +38,30 @@ void Renderer::handleEvent()
     }
 }
 
-void Renderer::draw(const World &world)
+void Renderer::drawGrid(const World &world)
 {
     int cols = world.getWidth();
     int rows = world.getHeight();
 
-    _window.clear(sf::Color(20, 20, 30));
-    if (cols > 0 && rows > 0) {
-        float cell = std::min(static_cast<float>(WINDOW_WIDTH) / cols,
-            static_cast<float>(WINDOW_HEIGHT) / rows);
-        for (int y = 0; y < rows; ++y) {
-            for (int x = 0; x < cols; ++x) {
-                sf::RectangleShape tile({cell - 1.f, cell - 1.f});
+    if (cols <= 0 || rows <= 0)
+        return;
+    float cell = std::min(static_cast<float>(WINDOW_WIDTH) / cols,
+        static_cast<float>(WINDOW_HEIGHT) / rows);
+    for (int y = 0; y < rows; ++y) {
+        for (int x = 0; x < cols; ++x) {
+            sf::RectangleShape tile({cell - 1.f, cell - 1.f});
 
-                tile.setPosition(x * cell, y * cell);
-                tile.setFillColor(sf::Color(40, 80, 50));
-                _window.draw(tile);
-            }
+            tile.setPosition(x * cell, y * cell);
+            tile.setFillColor(sf::Color(40, 80, 50));
+            _window.draw(tile);
         }
     }
+}
+
+void Renderer::draw(const World &world)
+{
+    _window.clear(sf::Color(20, 20, 30));
+    drawGrid(world);
     _window.display();
 }
 

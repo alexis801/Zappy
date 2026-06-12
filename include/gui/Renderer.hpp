@@ -27,6 +27,8 @@ public:
 
 
 private:
+    void drawGrid(const World &world);
+
     sf::RenderWindow _window;
 };
 
