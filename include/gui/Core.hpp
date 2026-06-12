@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2026
 ** zapp
 ** File description:
-** Core.hpp
+** Core.hpp (GUI)
 */
 
 #ifndef ZAPPY_GUI_CORE_HPP_
@@ -10,6 +10,8 @@
 
 #include "gui/Args.hpp"
 #include "gui/Connection.hpp"
+#include "gui/Parser.hpp"
+#include "gui/World.hpp"
 
 #include <string>
 
@@ -34,6 +36,8 @@ private:
 
     Connection _connection;
     bool _ready = false;
+    World _world;
+    Parser _parser;
 };
 
 } // namespace Zappy::Gui

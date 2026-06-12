@@ -34,7 +34,8 @@ void Core::handleLine(const std::string &line)
         _ready = true;
         return;
     }
-    std::cout << "serveur =" << line << "\n";
+    _parser.apply(line, _world);
+    std::cout << "serveur = " << line << "\n";
 }
 
 bool Core::update()

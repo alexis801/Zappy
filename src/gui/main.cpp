@@ -20,7 +20,6 @@ int main(int argc, char **argv)
     try {
         Zappy::Gui::Args args(argc, argv);
         Zappy::Gui::Core core(args);
-        std::cerr << "[host=\"" << args.getHost() << "\"]\n";
 
         core.run();
     } catch (const std::exception &error) {
