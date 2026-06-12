@@ -19,7 +19,7 @@ namespace Zappy::Gui {
 
 /**
  * @class Core
- * @brief Coeur du client graphique : conexion, handshake, poll loop
+ * @brief Coeur du client graphique : Résaux + modele : conection parsing remplissage du world
  */
 class Core {
 public:
@@ -28,10 +28,11 @@ public:
     /**
      * @brief Boucle de receive data du serveur
      */
-    void run();
+    bool update();
+
+    [[nodiscard]] const World &getWorld() const noexcept { return _world; }
 
 private:
-    bool update();
     void handleLine(const std::string &line);
 
     Connection _connection;

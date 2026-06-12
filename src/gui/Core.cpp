@@ -19,14 +19,6 @@ Core::Core(const Args &args) : _connection(Socket::connectTo(args.getHost(), arg
 {
 }
 
-void Core::run()
-{
-    bool connected = true;
-
-    while (connected)
-        connected = update();
-}
-
 void Core::handleLine(const std::string &line)
 {
     if (!_ready && line == "WELCOME") {
@@ -35,7 +27,6 @@ void Core::handleLine(const std::string &line)
         return;
     }
     _parser.apply(line, _world);
-    std::cout << "serveur = " << line << "\n";
 }
 
 bool Core::update()
