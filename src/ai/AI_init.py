@@ -173,7 +173,27 @@ class SurvivalAI:
         
         self.client.send_command("Look")
         look_response = self.client.receive_response()
-        
+    
+    def go_backward(self) -> None:
+        self.client.send_command("backward")
+        response = self.client.receive_response()
+        self._update_position()
+
+    def go_forward(self) -> None:
+        self.client.send_command("forward")
+        response = self.client.receive_response()
+        self._update_position()
+    
+    def go_right(self) -> None:
+        self.client.send_command("right")
+        response = self.client.receive_response()
+        self.current_direction = Direction((self.current_direction.value + 1) % 4)
+    
+    def go_left(self) -> None:
+        self.client.send_command("left")
+        response = self.client.receive_response()
+        self.current_direction = Direction((self.current_direction.value - 1) % 4)
+    
 
 def parser(argv):
     port = None
@@ -184,7 +204,7 @@ def parser(argv):
         opts, args = getopt.getopt(argv, "p:n:h:", ["help"])
     except getopt.GetoptError:
         print("USAGE: ./zappy_ai -p port -n name -h machine")
-        sys.exit(2)
+        sys.exit(84)
 
     for opt, arg in opts:
         if opt == "--help":
