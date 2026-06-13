@@ -18,6 +18,13 @@ namespace Zappy {
 // f = inverse du temps d'execution. Une action dure (cout / f) secondes.
 inline constexpr int DEFAULT_FREQUENCY = 100;
 
+// Valeurs par defaut du serveur (utilisees si l'option n'est pas passee)
+inline constexpr int DEFAULT_PORT = 4242;
+inline constexpr int DEFAULT_WIDTH = 10;
+inline constexpr int DEFAULT_HEIGHT = 10;
+inline constexpr int DEFAULT_CLIENTS_PER_TEAM = 4;
+inline constexpr std::string_view DEFAULT_TEAM_NAME = "default";
+
 // Vie des joueurs
 // unites de nourriture au depart
 inline constexpr int LIFE_UNITS_AT_START = 10;

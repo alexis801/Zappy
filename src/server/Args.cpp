@@ -67,6 +67,10 @@ int Args::parseTeams(int start, int argc, char **argv)
 {
     int i = start;
 
+    if (!_teamsProvided) {
+        _teams.clear();
+        _teamsProvided = true;
+    }
     while (i < argc && argv[i][0] != '-') {
         _teams.emplace_back(argv[i]);
         ++i;
@@ -78,10 +82,9 @@ void Args::validate() const
 {
     std::set<std::string> seen;
 
-    if (_port == 0 || _width == 0 || _height == 0
-        || _clientsPerTeam == 0 || _teams.empty())
+    if (_teams.empty())
         throw std::invalid_argument(
-            "Required arguments missing (-p -x -y -n -c)");
+            "At least one team name is required");
     for (const auto &name : _teams)
         if (!seen.insert(name).second)
             throw std::invalid_argument(

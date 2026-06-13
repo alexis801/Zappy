@@ -24,6 +24,14 @@ int main(int argc, char **argv)
         const Args args(argc, argv);
         Core core(args);
 
+        std::cerr << "Server: port=" << args.getPort()
+                  << " map=" << args.getWidth() << "x" << args.getHeight()
+                  << " clients=" << args.getClientsPerTeam()
+                  << " freq=" << args.getFrequency() << "\n";
+        std::cerr << "Teams:";
+        for (const auto &team : args.getTeams())
+            std::cerr << " " << team;
+        std::cerr << "\n";
         core.run();
     } catch (const std::invalid_argument &e) {
         std::cerr << e.what() << "\n" << Args::getUsage();
