@@ -24,6 +24,16 @@ void Parser::apply(const std::string &line, World &world) const
 
         if (stream >> width >> height) 
             world.setSize(width, height);
+    } else if (command == "bct") {
+        int x = 0;
+        int y = 0;
+        world::Tile tile{};
+
+        stream >> x >> y;
+        for (int &quantity : tile)
+            stream >> quantity;
+        if (stream)
+            world.setTile(x, y, tile);
     }
 }
 
