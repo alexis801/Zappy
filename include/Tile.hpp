@@ -17,6 +17,7 @@ namespace Zappy::Server {
 class Tile {
 public:
     [[nodiscard]] int get(Resource resource) const noexcept;
+    void add(Resource resource, int amount) noexcept;
 
 private:
     std::array<int, RESOURCE_COUNT> _quantities{};
