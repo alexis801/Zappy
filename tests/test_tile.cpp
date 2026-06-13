@@ -39,3 +39,29 @@ Test(tile, add_est_independant_par_ressource)
     cr_assert_eq(tile.get(Resource::FOOD), 0);
     cr_assert_eq(tile.get(Resource::SIBUR), 0);
 }
+
+Test(tile, remove_diminue_la_quantite)
+{
+    Tile tile;
+
+    tile.add(Resource::FOOD, 5);
+    tile.remove(Resource::FOOD, 2);
+    cr_assert_eq(tile.get(Resource::FOOD), 3);
+}
+
+Test(tile, remove_sous_zero_reste_a_zero)
+{
+    Tile tile;
+
+    tile.add(Resource::SIBUR, 2);
+    tile.remove(Resource::SIBUR, 5);
+    cr_assert_eq(tile.get(Resource::SIBUR), 0);
+}
+
+Test(tile, remove_sur_case_vide_reste_a_zero)
+{
+    Tile tile;
+
+    tile.remove(Resource::PHIRAS, 1);
+    cr_assert_eq(tile.get(Resource::PHIRAS), 0);
+}
