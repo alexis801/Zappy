@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -20,7 +21,7 @@ namespace Zappy::Server {
 
 namespace {
 
-[[nodiscard]] std::string systemError(const char *prefix)
+[[nodiscard]] std::string buildSystemError(std::string_view prefix)
 {
     return std::string(prefix) + ": " + std::strerror(errno);
 }
@@ -30,7 +31,8 @@ void setNonBlocking(int fd)
     int flags = ::fcntl(fd, F_GETFL, 0);
 
     if (flags < 0 || ::fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0)
-        throw std::runtime_error(systemError("fcntl(O_NONBLOCK) failed"));
+        throw std::runtime_error(
+            buildSystemError("fcntl(O_NONBLOCK) failed"));
 }
 
 } // namespace
@@ -68,17 +70,17 @@ Socket Socket::listenOn(int port)
     sockaddr_in addr = {};
 
     if (fd < 0)
-        throw std::runtime_error(systemError("socket() failed"));
+        throw std::runtime_error(buildSystemError("socket() failed"));
     Socket result(fd);
     ::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons(static_cast<uint16_t>(port));
     if (::bind(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0)
-        throw std::runtime_error(systemError(
-            ("bind() failed on port " + std::to_string(port)).c_str()));
+        throw std::runtime_error(
+            buildSystemError("bind() failed on port " + std::to_string(port)));
     if (::listen(fd, SOMAXCONN) < 0)
-        throw std::runtime_error(systemError("listen() failed"));
+        throw std::runtime_error(buildSystemError("listen() failed"));
     setNonBlocking(fd);
     return result;
 }

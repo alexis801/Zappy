@@ -11,6 +11,26 @@
 #include <iostream>
 #include <stdexcept>
 
+namespace Zappy::Server {
+
+namespace {
+
+void printConfig(const Args &args)
+{
+    std::cerr << "Server: port=" << args.getPort()
+              << " map=" << args.getWidth() << "x" << args.getHeight()
+              << " clients=" << args.getClientsPerTeam()
+              << " freq=" << args.getFrequency() << "\n";
+    std::cerr << "Teams:";
+    for (const auto &team : args.getTeams())
+        std::cerr << " " << team;
+    std::cerr << "\n";
+}
+
+} // namespace
+
+} // namespace Zappy::Server
+
 int main(int argc, char **argv)
 {
     using Zappy::Server::Args;
@@ -24,14 +44,7 @@ int main(int argc, char **argv)
         const Args args(argc, argv);
         Core core(args);
 
-        std::cerr << "Server: port=" << args.getPort()
-                  << " map=" << args.getWidth() << "x" << args.getHeight()
-                  << " clients=" << args.getClientsPerTeam()
-                  << " freq=" << args.getFrequency() << "\n";
-        std::cerr << "Teams:";
-        for (const auto &team : args.getTeams())
-            std::cerr << " " << team;
-        std::cerr << "\n";
+        Zappy::Server::printConfig(args);
         core.run();
     } catch (const std::invalid_argument &e) {
         std::cerr << e.what() << "\n" << Args::getUsage();
