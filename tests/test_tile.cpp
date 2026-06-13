@@ -65,3 +65,30 @@ Test(tile, remove_sur_case_vide_reste_a_zero)
     tile.remove(Resource::PHIRAS, 1);
     cr_assert_eq(tile.get(Resource::PHIRAS), 0);
 }
+
+Test(tile, isEmpty_vrai_sur_case_vide)
+{
+    Tile tile;
+
+    cr_assert(tile.isEmpty());
+}
+
+Test(tile, isEmpty_faux_si_une_ressource)
+{
+    Tile tile;
+
+    tile.add(Resource::FOOD, 1);
+    cr_assert_not(tile.isEmpty());
+}
+
+Test(tile, total_somme_toutes_ressources)
+{
+    Tile tile;
+
+    cr_assert_eq(tile.total(), 0);
+    tile.add(Resource::FOOD, 3);
+    tile.add(Resource::LINEMATE, 2);
+    cr_assert_eq(tile.total(), 5);
+    tile.remove(Resource::FOOD, 1);
+    cr_assert_eq(tile.total(), 4);
+}
