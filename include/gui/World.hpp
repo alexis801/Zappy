@@ -30,7 +30,7 @@ public:
     [[nodiscard]] int getHeight() const noexcept { return _height; }
 
     // Fixe la taille et alloue/ re alloue les case a 0
-    void setSize(int width, int height) noexcept
+    void setSize(int width, int height)
     {
         _width = width;
         _height = height;

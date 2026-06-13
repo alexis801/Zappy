@@ -27,7 +27,7 @@ void Parser::apply(const std::string &line, World &world) const
     } else if (command == "bct") {
         int x = 0;
         int y = 0;
-        world::Tile tile{};
+        World::Tile tile{};
 
         stream >> x >> y;
         for (int &quantity : tile)
