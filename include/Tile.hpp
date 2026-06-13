@@ -19,6 +19,8 @@ public:
     [[nodiscard]] int get(Resource resource) const noexcept;
     void add(Resource resource, int amount) noexcept;
     void remove(Resource resource, int amount) noexcept;
+    [[nodiscard]] bool isEmpty() const noexcept;
+    [[nodiscard]] int total() const noexcept;
 
 private:
     std::array<int, RESOURCE_COUNT> _quantities{};

@@ -27,4 +27,22 @@ void Tile::remove(Resource resource, int amount) noexcept
     _quantities[index] = remaining > 0 ? remaining : 0;
 }
 
+bool Tile::isEmpty() const noexcept
+{
+    for (int quantity : _quantities) {
+        if (quantity > 0)
+            return false;
+    }
+    return true;
+}
+
+int Tile::total() const noexcept
+{
+    int sum = 0;
+
+    for (int quantity : _quantities)
+        sum += quantity;
+    return sum;
+}
+
 } // namespace Zappy::Server
