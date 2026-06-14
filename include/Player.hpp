@@ -10,6 +10,7 @@
 
 #include "Macros.hpp"
 #include <array>
+#include <string>
 #include <string_view>
 
 namespace Zappy::Server {
@@ -43,6 +44,11 @@ public:
     [[nodiscard]] Direction getDirection() const noexcept;
 
     [[nodiscard]] int get(Resource resource) const noexcept;
+
+    /**
+     * @brief Formate l'inventaire pour la commande Inventory
+     */
+    [[nodiscard]] std::string formatInventory() const;
 
     /**
      * @brief Avance d'une case dans sa direction (monde toroidal)

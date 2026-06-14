@@ -7,6 +7,7 @@
 
 #include "Player.hpp"
 #include <random>
+#include <string>
 
 namespace Zappy::Server {
 
@@ -42,6 +43,21 @@ Direction Player::getDirection() const noexcept
 int Player::get(Resource resource) const noexcept
 {
     return _inventory[static_cast<std::size_t>(resource)];
+}
+
+std::string Player::formatInventory() const
+{
+    std::string result = "[";
+
+    for (std::size_t i = 0; i < RESOURCE_COUNT; ++i) {
+        if (i > 0)
+            result += ", ";
+        result += RESOURCE_NAMES[i];
+        result += ' ';
+        result += std::to_string(_inventory[i]);
+    }
+    result += ']';
+    return result;
 }
 
 Player Player::spawnRandom(int width, int height)
