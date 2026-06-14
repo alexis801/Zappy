@@ -110,7 +110,7 @@ void Player::turnRight() noexcept
         (static_cast<int>(_direction) + 1) % DIRECTION_COUNT);
 }
 
-bool Player::executeMovement(
+bool Player::runMovement(
     std::string_view command, int width, int height) noexcept
 {
     if (command == "Forward") {
@@ -126,6 +126,16 @@ bool Player::executeMovement(
         return true;
     }
     return false;
+}
+
+CommandOutcome Player::executeCommand(
+    std::string_view command, int width, int height) noexcept
+{
+    if (command == "Inventory")
+        return {CommandKind::INVENTORY, formatInventory()};
+    if (runMovement(command, width, height))
+        return {CommandKind::OK, {}};
+    return {CommandKind::KO, {}};
 }
 
 } // namespace Zappy::Server

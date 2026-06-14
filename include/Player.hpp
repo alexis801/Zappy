@@ -27,6 +27,25 @@ enum class Direction {
 };
 
 /**
+ * @enum CommandKind
+ * @brief Resultat d'une commande joueur
+ */
+enum class CommandKind {
+    KO,
+    OK,
+    INVENTORY,
+};
+
+/**
+ * @struct CommandOutcome
+ * @brief Reponse a renvoyer au client apres execution
+ */
+struct CommandOutcome {
+    CommandKind kind = CommandKind::KO;
+    std::string text;
+};
+
+/**
  * @class Player
  * @brief Un joueur sur la carte : position et direction
  */
@@ -66,15 +85,18 @@ public:
     void turnRight() noexcept;
 
     /**
-     * @brief Execute une commande de deplacement, false si inconnue
+     * @brief Execute une commande joueur (deplacement ou inventaire)
      */
-    [[nodiscard]] bool executeMovement(
+    [[nodiscard]] CommandOutcome executeCommand(
         std::string_view command, int width, int height) noexcept;
 
 private:
     static constexpr int DIRECTION_COUNT = 4;
 
     static int drawRandomInt(int upperExclusive);
+
+    [[nodiscard]] bool runMovement(
+        std::string_view command, int width, int height) noexcept;
 
     void stepNorth(int height) noexcept;
     void stepEast(int width) noexcept;
