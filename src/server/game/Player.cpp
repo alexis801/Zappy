@@ -21,6 +21,7 @@ int Player::drawRandomInt(int upperExclusive)
 Player::Player(int x, int y, Direction direction) noexcept
     : _x(x), _y(y), _direction(direction)
 {
+    _inventory[static_cast<std::size_t>(Resource::FOOD)] = LIFE_UNITS_AT_START;
 }
 
 int Player::getX() const noexcept
@@ -36,6 +37,11 @@ int Player::getY() const noexcept
 Direction Player::getDirection() const noexcept
 {
     return _direction;
+}
+
+int Player::get(Resource resource) const noexcept
+{
+    return _inventory[static_cast<std::size_t>(resource)];
 }
 
 Player Player::spawnRandom(int width, int height)

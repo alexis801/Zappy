@@ -8,6 +8,8 @@
 #ifndef ZAPPY_PLAYER_HPP_
 #define ZAPPY_PLAYER_HPP_
 
+#include "Macros.hpp"
+#include <array>
 #include <string_view>
 
 namespace Zappy::Server {
@@ -39,6 +41,8 @@ public:
     [[nodiscard]] int getX() const noexcept;
     [[nodiscard]] int getY() const noexcept;
     [[nodiscard]] Direction getDirection() const noexcept;
+
+    [[nodiscard]] int get(Resource resource) const noexcept;
 
     /**
      * @brief Avance d'une case dans sa direction (monde toroidal)
@@ -74,6 +78,7 @@ private:
     int _x;
     int _y;
     Direction _direction;
+    std::array<int, RESOURCE_COUNT> _inventory{};
 };
 
 } // namespace Zappy::Server
