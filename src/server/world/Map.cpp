@@ -23,4 +23,20 @@ int Map::normalize(int value, int size) const noexcept
     return result;
 }
 
+Tile &Map::at(int x, int y) noexcept
+{
+    int nx = normalize(x, _width);
+    int ny = normalize(y, _height);
+
+    return _tiles[ny * _width + nx];
+}
+
+const Tile &Map::at(int x, int y) const noexcept
+{
+    int nx = normalize(x, _width);
+    int ny = normalize(y, _height);
+
+    return _tiles[ny * _width + nx];
+}
+
 } // namespace Zappy::Server

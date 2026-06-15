@@ -20,6 +20,9 @@ public:
     [[nodiscard]] int getWidth() const noexcept { return _width; }
     [[nodiscard]] int getHeight() const noexcept { return _height; }
 
+    [[nodiscard]] Tile &at(int x, int y) noexcept;
+    [[nodiscard]] const Tile &at(int x, int y) const noexcept;
+
 private:
     [[nodiscard]] int normalize(int value, int size) const noexcept;
 
