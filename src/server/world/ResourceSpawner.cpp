@@ -6,6 +6,7 @@
 */
 
 #include "ResourceSpawner.hpp"
+#include <algorithm>
 #include <cmath>
 
 namespace Zappy::Server {
@@ -18,8 +19,9 @@ int ResourceSpawner::getTargetQuantity(
     Resource resource, int width, int height) noexcept
 {
     double density = RESOURCE_DENSITY[static_cast<std::size_t>(resource)];
+    int quantity = static_cast<int>(std::floor(width * height * density));
 
-    return static_cast<int>(std::floor(width * height * density));
+    return std::max(quantity, 1);
 }
 
 } // namespace Zappy::Server
