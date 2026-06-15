@@ -17,6 +17,9 @@ class Map {
 public:
     Map(int width, int height);
 
+    [[nodiscard]] int getWidth() const noexcept { return _width; }
+    [[nodiscard]] int getHeight() const noexcept { return _height; }
+
 private:
     int _width;
     int _height;
