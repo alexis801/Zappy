@@ -65,7 +65,8 @@ inline constexpr std::array<double, RESOURCE_COUNT> RESOURCE_DENSITY = {{
 }};
 
 // Noms du protocole joueur (commande Inventory)
-inline constexpr std::array<std::string_view, RESOURCE_COUNT> RESOURCE_NAMES = {{
+inline constexpr std::array<std::string_view, RESOURCE_COUNT>
+    RESOURCE_NAMES = {{
     "food",
     "linemate",
     "deraumere",
