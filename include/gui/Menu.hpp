@@ -17,9 +17,12 @@ namespace Zappy::Gui {
  */
 class Menu {
 public:
+    enum class ButtonAction { None, Play, Quit};
+
     Menu();
 
     void draw(sf::RenderWindow &window);
+    [[nodiscard]] ButtonAction handleClick(sf::Vector2f position) const;
 
 
 private:

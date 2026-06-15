@@ -6,8 +6,10 @@
 */
 
 #include "gui/Renderer.hpp"
+#include "gui/Factory.hpp"
 
 #include <algorithm>
+#include <array>
 
 namespace Zappy::Gui {
 
@@ -43,14 +45,14 @@ bool Renderer::isOpen() const
     return _window.isOpen();
 }
 
-void Renderer::handleEvents()
+bool Renderer::pollEvent(sf::Event &event)
 {
-    sf::Event event;
+    return _window.pollEvent(event);
+}
 
-    while (_window.pollEvent(event)) {
-        if (event.type == sf::Event::Closed)
-            _window.close();
-    }
+void Renderer::close()
+{
+    _window.close();
 }
 
 void Renderer::drawMenu(Menu &menu)
@@ -75,7 +77,7 @@ void Renderer::drawGrid(const World &world)
 
             tile.setPosition(x * cell, y * cell);
             tile.setFillColor(sf::Color(40, 80, 50));
-            _window.draw(tile);
+            _window.draw(factory::rect({cell - 1.f, cell - 1.f}, {x * cell, y * cell}, sf::Color(40, 80, 50)));
         }
     }
 }
@@ -84,13 +86,10 @@ void Renderer::drawGrid(const World &world)
 void Renderer::drawResourceDot(std::size_t resource, int x, int y, float cell)
 {
     float dot = cell / 9.f;
-    sf::CircleShape shape(dot);
     float px = x * cell + static_cast<float>(resource % 4) * (dot * 2.2f) + dot;
     float py = y * cell + static_cast<float>(resource / 4) * (dot * 2.2f) + dot;
 
-    shape.setPosition(px, py);
-    shape.setFillColor(RESOURCE_COLORS[resource]);
-    _window.draw(shape);
+    _window.draw(factory::circle(dot, {px, py}, RESOURCE_COLORS[resource]));
 }
 
 // Les ressources qui sont sur une seule case

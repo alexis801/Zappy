@@ -6,6 +6,8 @@
 */
 
 #include "gui/Menu.hpp"
+#include "gui/Factory.hpp"
+
 #include <stdexcept>
 
 namespace Zappy::Gui {
@@ -18,43 +20,44 @@ constexpr float BUTTON_WIDTH = 300.f;
 constexpr float BUTTON_HEIGHT = 80.f;
 constexpr float PLAY_Y = 450.f;
 constexpr float QUIT_Y = 580.f;
+constexpr float LABEL_OFFSET = 15.f;
 
-void centerText(sf::Text &text, float y)
+sf::Vector2f buttonPos(float y)
 {
-    text.setFillColor(sf::Color::White);
-    text.setPosition(CENTER_X - text.getGlobalBounds().width / 2.f, y);
-}
-
-sf::RectangleShape makeButton(float y, sf::Color color)
-{
-    sf::RectangleShape button({BUTTON_WIDTH, BUTTON_HEIGHT});
-
-    button.setPosition(CENTER_X - BUTTON_WIDTH / 2.f, y);
-    button.setFillColor(color);
-    return button;
+    return {CENTER_X - BUTTON_WIDTH / 2.f, y};
 }
 
 } // anonymous namespace
 
-Menu::Menu() : _playButton(makeButton(PLAY_Y, sf::Color(60, 140, 70))), _quitButton(makeButton(QUIT_Y, sf::Color(150, 60, 60)))
+Menu::Menu() : _playButton(factory::rect({BUTTON_WIDTH, BUTTON_HEIGHT}, buttonPos(PLAY_Y), sf::Color(60, 140, 70))), 
+    _quitButton(factory::rect({BUTTON_WIDTH, BUTTON_HEIGHT}, buttonPos(QUIT_Y), sf::Color(150, 60, 60)))
 {
     if (!_font.loadFromFile("assets/font.ttf")
         && !_font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"))
         throw std::runtime_error("Menu: font not found (add a .ttf in assets/font.ttf)");
 }
 
+Menu::ButtonAction Menu::handleClick(sf::Vector2f position) const
+{
+    if (_playButton.getGlobalBounds().contains(position))
+        return ButtonAction::Play;
+    if (_quitButton.getGlobalBounds().contains(position))
+        return ButtonAction::Quit;
+    return ButtonAction::None;
+}
+
 void Menu::draw(sf::RenderWindow &window)
 {
-    sf::Text title("ZAPPY", _font, 120);
-    sf::Text playText("Play", _font, 40);
-    sf::Text quitText("Quit", _font, 40);
+    sf::Text title = factory::text(_font, "ZAPPY", 120);
+    sf::Text playText = factory::text(_font, "Play", 40);
+    sf::Text quitText = factory::text(_font, "Quit", 40);
 
-    centerText(title, TITLE_Y);
-    centerText(playText, PLAY_Y + 15.f);
-    centerText(quitText, QUIT_Y + 15.f);
-    window.draw(title);
+    factory::centerText(title, CENTER_X, TITLE_Y);
+    factory::centerText(playText, CENTER_X, PLAY_Y + LABEL_OFFSET);
+    factory::centerText(quitText, CENTER_X, QUIT_Y + LABEL_OFFSET);
     window.draw(_playButton);
     window.draw(_quitButton);
+    window.draw(title);
     window.draw(playText);
     window.draw(quitText);
 }

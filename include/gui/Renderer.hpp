@@ -24,7 +24,8 @@ public:
     Renderer();
 
     [[nodiscard]] bool isOpen() const;
-    void handleEvents();
+    bool pollEvent(sf::Event &event);
+    void close();
     void draw(const World &world);
     void drawMenu(Menu &menu);
 
