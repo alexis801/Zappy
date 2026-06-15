@@ -19,7 +19,7 @@ Team::Team(std::string name, int slots) noexcept
 void Team::claimSlot()
 {
     if (!canAcceptClient())
-        throw std::runtime_error("Equipe pleine");
+        throw std::runtime_error("Team '" + _name + "' is full");
     --_slots;
 }
 

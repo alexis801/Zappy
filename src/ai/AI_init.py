@@ -34,9 +34,9 @@ class Inventory:
                 f"Thystame: {self.thystame}")
 
 class Direction(Enum):
-    UP = 0
+    FORWARD = 0
     LEFT = 1
-    DOWN = 2
+    BACKWARD = 2
     RIGHT = 3
 
 class Tile:
@@ -75,7 +75,7 @@ class ZappyClient:
         self.world_width: Optional[int] = None
         self.world_height: Optional[int] = None
         self.buffer = ""
-        
+
     def connect(self) -> bool:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -111,7 +111,7 @@ class ZappyClient:
             print(f"[INFO] Client #{self.client_num}")
             print(f"[INFO] World size: {self.world_width}x{self.world_height}")
             return True
-            
+
         except Exception as e:
             print(f"[ERROR] Connection failed: {e}")
             return False
@@ -161,19 +161,53 @@ class ZappyClient:
         self.socket.sendall(f"{line}\n".encode())
 
 class SurvivalAI:
-    FOOD_THRESHOLD = 10
+    def __init__(self, client: ZappyClient):
+        self.client = client
+        self.inventory = Inventory()
+        self.state = State.SURVIVE
+        self.current_direction = Direction.FORWARD
+        self.position_x = 0
+        self.position_y = 0
+        self.level = 1
 
-    def choose_state(self, inventory):
-        if inventory.food < self.FOOD_THRESHOLD:
-            return State.SURVIVE
-        return State.COLLECT
-    
     def act(self) -> None:
         self.state = self.update_state()
-        
         self.client.send_command("Look")
         look_response = self.client.receive_response()
-        
+
+    def go_forward(self) -> None:
+        self.client.send_command("Forward")
+        response = self.client.receive_response()
+        if response == 'ok':
+            self._update_position()
+
+    def go_right(self) -> None:
+        self.client.send_command("Right")
+        response = self.client.receive_response()
+        if response == 'ok':
+            self.current_direction = Direction((self.current_direction.value + 1) % 4)
+
+    def go_left(self) -> None:
+        self.client.send_command("Left")
+        response = self.client.receive_response()
+        if response == 'ok':
+            self.current_direction = Direction((self.current_direction.value - 1) % 4)
+
+    def _update_position(self) -> None:
+        if self.current_direction == Direction.FORWARD:
+            self.position_y -= 1
+        elif self.current_direction == Direction.RIGHT:
+            self.position_x += 1
+        elif self.current_direction == Direction.BACKWARD:
+            self.position_y += 1
+        elif self.current_direction == Direction.LEFT:
+            self.position_x -= 1
+
+    def inventory(self) -> None:
+        self.client.send_command("Inventory")
+        response = self.client.receive_response()
+        self.current_direction = Direction((self.current_direction.value - 1) % 4)
+    
 
 def parser(argv):
     port = None
@@ -184,7 +218,7 @@ def parser(argv):
         opts, args = getopt.getopt(argv, "p:n:h:", ["help"])
     except getopt.GetoptError:
         print("USAGE: ./zappy_ai -p port -n name -h machine")
-        sys.exit(2)
+        sys.exit(84)
 
     for opt, arg in opts:
         if opt == "--help":
@@ -212,6 +246,9 @@ def main(argv):
     client = ZappyClient(host, port, team)
     if not client.connect():
         sys.exit(1)
+    
+    while True:
+        None
 
 if __name__ == "__main__":
     main(sys.argv[1:])

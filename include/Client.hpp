@@ -9,6 +9,7 @@
 #define ZAPPY_CLIENT_HPP_
 
 #include "Command.hpp"
+#include "ReadBuffer.hpp"
 #include "Socket.hpp"
 #include <optional>
 #include <queue>
@@ -95,7 +96,7 @@ public:
 
 private:
     Socket _socket;
-    std::string _readBuffer;
+    ReadBuffer _readBuffer;
     State _state = State::AwaitingTeamName;
     std::string _teamName;
     std::queue<Command> _commands;
