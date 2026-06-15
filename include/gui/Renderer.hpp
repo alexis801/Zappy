@@ -10,6 +10,7 @@
 
 #include "gui/World.hpp"
 
+#include <cstddef>
 #include <SFML/Graphics.hpp>
 
 namespace Zappy::Gui {
@@ -28,6 +29,9 @@ public:
 
 private:
     void drawGrid(const World &world);
+    void drawResources(const World &world);
+    void drawTileResources(const World::Tile &tile, int x, int y, float cell);
+    void drawResourceDot(std::size_t resource, int x, int y, float cell);
 
     sf::RenderWindow _window;
 };
