@@ -9,6 +9,7 @@
 #define ZAPPY_GUI_RENDERER_HPP_
 
 #include "gui/World.hpp"
+#include "gui/Menu.hpp"
 
 #include <cstddef>
 #include <SFML/Graphics.hpp>
@@ -25,6 +26,7 @@ public:
     [[nodiscard]] bool isOpen() const;
     void handleEvents();
     void draw(const World &world);
+    void drawMenu(Menu &menu);
 
 
 private:

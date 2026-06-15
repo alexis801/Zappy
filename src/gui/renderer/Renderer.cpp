@@ -53,6 +53,13 @@ void Renderer::handleEvents()
     }
 }
 
+void Renderer::drawMenu(Menu &menu)
+{
+    _window.clear(sf::Color(20, 20, 30));
+    menu.draw(_window);
+    _window.display();
+}
+
 void Renderer::drawGrid(const World &world)
 {
     int cols = world.getWidth();

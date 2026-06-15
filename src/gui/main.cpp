@@ -8,6 +8,7 @@
 #include "gui/Args.hpp"
 #include "gui/Core.hpp"
 #include "gui/Renderer.hpp"
+#include "gui/Menu.hpp"
 
 #include <exception>
 #include <iostream>
@@ -20,14 +21,12 @@ int main(int argc, char **argv)
     }
     try {
         Zappy::Gui::Args args(argc, argv);
-        Zappy::Gui::Core core(args);
         Zappy::Gui::Renderer renderer;
+        Zappy::Gui::Menu menu;
 
         while (renderer.isOpen()) {
             renderer.handleEvents();
-            if (!core.update())
-                break;
-            renderer.draw(core.getWorld());
+            renderer.drawMenu(menu);
         }
 
     } catch (const std::exception &error) {
