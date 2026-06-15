@@ -27,6 +27,8 @@ public:
 
 private:
     sf::Font _font;
+    sf::Texture _backgroundTexture;
+    sf::Sprite _background;
     sf::RectangleShape _playButton;
     sf::RectangleShape _quitButton;
 };
