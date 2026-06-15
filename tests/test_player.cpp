@@ -12,7 +12,8 @@
 
 using Zappy::LIFE_UNITS_AT_START;
 using Zappy::Resource;
-
+using Zappy::Server::CommandKind;
+using Zappy::Server::CommandOutcome;
 using Zappy::Server::Direction;
 using Zappy::Server::Player;
 
@@ -133,4 +134,32 @@ Test(player, spawn_random_demarre_avec_10_food)
     Player player = Player::spawnRandom(5, 5);
 
     cr_assert_eq(player.get(Resource::FOOD), LIFE_UNITS_AT_START);
+}
+
+Test(player, execute_command_inventory)
+{
+    Player player(0, 0, Direction::NORTH);
+    CommandOutcome outcome = player.executeCommand("Inventory", 10, 10);
+
+    cr_assert(outcome.kind == CommandKind::INVENTORY);
+    cr_assert_str_eq(outcome.text.c_str(),
+        "[food 10, linemate 0, deraumere 0, sibur 0, mendiane 0, "
+        "phiras 0, thystame 0]");
+}
+
+Test(player, execute_command_forward_ok)
+{
+    Player player(5, 5, Direction::NORTH);
+    CommandOutcome outcome = player.executeCommand("Forward", 10, 10);
+
+    cr_assert(outcome.kind == CommandKind::OK);
+    cr_assert_eq(player.getY(), 4);
+}
+
+Test(player, execute_command_inconnue_ko)
+{
+    Player player(0, 0, Direction::NORTH);
+    CommandOutcome outcome = player.executeCommand("Look", 10, 10);
+
+    cr_assert(outcome.kind == CommandKind::KO);
 }
