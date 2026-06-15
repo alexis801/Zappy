@@ -205,8 +205,38 @@ class SurvivalAI:
 
     def inventory(self) -> None:
         self.client.send_command("Inventory")
+        response = self.client.receive_response()   
+    
+    def broadcast_text(self) -> None:
+        self.client.send_command("Broadcast")
         response = self.client.receive_response()
-        self.current_direction = Direction((self.current_direction.value - 1) % 4)
+        if response == 'ok':
+            self.client.send_command(input("Enter message: "))
+
+    def fork_player(self) -> None:
+        self.client.send_command("Fork")
+        response = self.client.receive_response()
+
+    def start_incantation(self) -> None:
+        self.client.send_command("Incantation")
+        response = self.client.receive_response()
+
+    def unused_team(self) -> None:
+        self.client.send_command("Connect_nbr ")
+        response = self.client.receive_response()
+        print(response)
+
+    def take_object(self, object) -> None:
+        self.client.send_command("Take " + object)
+        response = self.client.receive_response()
+        if response == 'ok':
+            print("take " + response)
+
+    def set_object_down(self, object) -> None:
+        self.client.send_command("Set " + object)
+        response = self.client.receive_response()
+        if response == 'ok':
+            print("set " + response)
     
 
 def parser(argv):
