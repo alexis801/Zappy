@@ -8,6 +8,7 @@
 #ifndef ZAPPY_RESOURCE_SPAWNER_HPP_
 #define ZAPPY_RESOURCE_SPAWNER_HPP_
 
+#include "Macros.hpp"
 #include <random>
 
 namespace Zappy::Server {
@@ -17,6 +18,9 @@ using Rng = std::mt19937;
 class ResourceSpawner {
 public:
     explicit ResourceSpawner(unsigned seed) noexcept;
+
+    [[nodiscard]] static int getTargetQuantity(
+        Resource resource, int width, int height) noexcept;
 
 private:
     Rng _rng;
