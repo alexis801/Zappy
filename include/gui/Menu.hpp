@@ -25,6 +25,7 @@ public:
 private:
     sf::Font _font;
     sf::RectangleShape _playButton;
+    sf::RectangleShape _quitButton;
 };
 
 } // namespace Zappy::Gui
