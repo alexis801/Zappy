@@ -213,6 +213,18 @@ class SurvivalAI:
         if response == 'ok':
             self.client.send_command(input())
 
+    def fork_player(self) -> None:
+        self.client.send_command("Fork")
+        response = self.client.receive_response()
+        if response == 'ok':
+            self.client.send_command(input())
+
+    def start_incantation(self) -> None:
+        self.client.send_command("Incantation")
+        response = self.client.receive_response()
+        if response == 'ok':
+            self.client.send_command(input())
+
     def unused_team(self) -> None:
         self.client.send_command("Connect_nbr ")
         response = self.client.receive_response()
