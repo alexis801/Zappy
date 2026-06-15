@@ -205,9 +205,18 @@ class SurvivalAI:
 
     def inventory(self) -> None:
         self.client.send_command("Inventory")
-        response = self.client.receive_response()
-        self.current_direction = Direction((self.current_direction.value - 1) % 4)
+        response = self.client.receive_response()   
     
+    def broadcast_text(self) -> None:
+        self.client.send_command("Broadcast")
+        response = self.client.receive_response()
+        if response == 'ok':
+            self.client.send_command(input())
+
+    def unused_team(self) -> None:
+        self.client.send_command("Connect_nbr ")
+        response = self.client.receive_response()
+        print(response)
 
 def parser(argv):
     port = None
