@@ -6,6 +6,7 @@
 */
 
 #include "Args.hpp"
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -18,7 +19,7 @@ int parsePositive(std::string_view flag, const char *value)
 {
     if (value == nullptr)
         throw std::invalid_argument(
-            "Valeur manquante pour " + std::string(flag));
+            "Missing value for " + std::string(flag));
     std::string text = value;
     std::size_t pos = 0;
     int result = 0;
@@ -30,7 +31,7 @@ int parsePositive(std::string_view flag, const char *value)
     }
     if (result <= 0 || pos != text.size())
         throw std::invalid_argument(
-            std::string(flag) + " : entier positif attendu");
+            std::string(flag) + ": positive integer expected");
     return result;
 }
 
@@ -57,7 +58,7 @@ void Args::parse(int argc, char **argv)
             i = parseTeams(i + 1, argc, argv);
         else
             throw std::invalid_argument(
-                "Option inconnue : " + std::string(arg));
+                "Unknown option: " + std::string(arg));
     }
     validate();
 }
@@ -66,6 +67,10 @@ int Args::parseTeams(int start, int argc, char **argv)
 {
     int i = start;
 
+    if (!_teamsProvided) {
+        _teams.clear();
+        _teamsProvided = true;
+    }
     while (i < argc && argv[i][0] != '-') {
         _teams.emplace_back(argv[i]);
         ++i;
@@ -75,10 +80,15 @@ int Args::parseTeams(int start, int argc, char **argv)
 
 void Args::validate() const
 {
-    if (_port == 0 || _width == 0 || _height == 0
-        || _clientsPerTeam == 0 || _teams.empty())
+    std::set<std::string> seen;
+
+    if (_teams.empty())
         throw std::invalid_argument(
-            "Arguments obligatoires manquants (-p -x -y -n -c)");
+            "At least one team name is required");
+    for (const auto &name : _teams)
+        if (!seen.insert(name).second)
+            throw std::invalid_argument(
+                "Duplicate team name: " + name);
 }
 
 std::string_view Args::getUsage() noexcept

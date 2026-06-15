@@ -58,12 +58,13 @@ private:
     int parseTeams(int start, int argc, char **argv);
     void validate() const;
 
-    int _port = 0;
-    int _width = 0;
-    int _height = 0;
-    int _clientsPerTeam = 0;
+    int _port = DEFAULT_PORT;
+    int _width = DEFAULT_WIDTH;
+    int _height = DEFAULT_HEIGHT;
+    int _clientsPerTeam = DEFAULT_CLIENTS_PER_TEAM;
     int _frequency = DEFAULT_FREQUENCY;
-    std::vector<std::string> _teams;
+    std::vector<std::string> _teams{std::string(DEFAULT_TEAM_NAME)};
+    bool _teamsProvided = false;
 };
 
 } // namespace Zappy::Server

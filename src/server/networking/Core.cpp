@@ -7,6 +7,8 @@
 
 #include "Core.hpp"
 #include "Macros.hpp"
+#include <cerrno>
+#include <cstring>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -38,8 +40,10 @@ void Core::run()
     while (true) {
         std::vector<pollfd> fds = buildPollFds();
 
-        if (::poll(fds.data(), fds.size(), getPollTimeoutMillis()) < 0)
+        if (::poll(fds.data(), fds.size(), getPollTimeoutMillis()) < 0) {
+            std::cerr << "poll() failed: " << std::strerror(errno) << "\n";
             return;
+        }
         handleEvents(fds);
         executeDueCommands();
     }
