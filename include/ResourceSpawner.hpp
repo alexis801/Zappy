@@ -9,6 +9,7 @@
 #define ZAPPY_RESOURCE_SPAWNER_HPP_
 
 #include "Macros.hpp"
+#include "Map.hpp"
 #include <random>
 
 namespace Zappy::Server {
@@ -21,6 +22,9 @@ public:
 
     [[nodiscard]] static int getTargetQuantity(
         Resource resource, int width, int height) noexcept;
+
+    [[nodiscard]] static int countOnMap(
+        Resource resource, const Map &map) noexcept;
 
 private:
     Rng _rng;

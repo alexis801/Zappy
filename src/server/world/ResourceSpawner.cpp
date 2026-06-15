@@ -24,4 +24,16 @@ int ResourceSpawner::getTargetQuantity(
     return std::max(quantity, 1);
 }
 
+int ResourceSpawner::countOnMap(
+    Resource resource, const Map &map) noexcept
+{
+    int total = 0;
+
+    for (int y = 0; y < map.getHeight(); ++y) {
+        for (int x = 0; x < map.getWidth(); ++x)
+            total += map.at(x, y).get(resource);
+    }
+    return total;
+}
+
 } // namespace Zappy::Server
