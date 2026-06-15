@@ -218,6 +218,19 @@ class SurvivalAI:
         response = self.client.receive_response()
         print(response)
 
+    def take_object(self, object) -> None:
+        self.client.send_command("Take " + object)
+        response = self.client.receive_response()
+        if response == 'ok':
+            print("take " + response)
+
+    def set_object_down(self, object) -> None:
+        self.client.send_command("Set " + object)
+        response = self.client.receive_response()
+        if response == 'ok':
+            print("set " + response)
+    
+
 def parser(argv):
     port = None
     team = None
