@@ -21,6 +21,8 @@ public:
     [[nodiscard]] int getHeight() const noexcept { return _height; }
 
 private:
+    [[nodiscard]] int normalize(int value, int size) const noexcept;
+
     int _width;
     int _height;
     std::vector<Tile> _tiles;
