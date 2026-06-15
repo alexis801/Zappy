@@ -6,7 +6,12 @@
 */
 
 #include <criterion/criterion.h>
+#include <string>
+#include "Macros.hpp"
 #include "Player.hpp"
+
+using Zappy::LIFE_UNITS_AT_START;
+using Zappy::Resource;
 
 using Zappy::Server::Direction;
 using Zappy::Server::Player;
@@ -103,4 +108,29 @@ Test(player, spawn_random_reste_dans_la_carte)
         cr_assert(player.getX() >= 0 && player.getX() < 7);
         cr_assert(player.getY() >= 0 && player.getY() < 3);
     }
+}
+
+Test(player, inventaire_demarre_avec_10_food)
+{
+    Player player(0, 0, Direction::NORTH);
+
+    cr_assert_eq(player.get(Resource::FOOD), LIFE_UNITS_AT_START);
+    cr_assert_eq(player.get(Resource::LINEMATE), 0);
+}
+
+Test(player, format_inventory_au_spawn)
+{
+    Player player(0, 0, Direction::NORTH);
+    std::string inventory = player.formatInventory();
+
+    cr_assert_str_eq(inventory.c_str(),
+        "[food 10, linemate 0, deraumere 0, sibur 0, mendiane 0, "
+        "phiras 0, thystame 0]");
+}
+
+Test(player, spawn_random_demarre_avec_10_food)
+{
+    Player player = Player::spawnRandom(5, 5);
+
+    cr_assert_eq(player.get(Resource::FOOD), LIFE_UNITS_AT_START);
 }
