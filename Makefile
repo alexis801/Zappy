@@ -51,12 +51,8 @@ $(GUI):	$(GUI_OBJ)
 	fi
 
 $(AI):	$(AI_OBJ)
-	@if [ -z "$(strip $(AI_OBJ))" ]; then \
-		echo "  [skip] $@ : aucune source dans $(SRC_DIR)/ai/"; \
-	else \
-		$(CXX) $(CXXFLAGS) -o $@ $(AI_OBJ) $(AI_LIBS); \
-		echo "  [ok]   $@"; \
-	fi
+	cp src/ai/AI_init.py $(AI)
+	chmod +x $(AI)
 
 $(OBJ_DIR)/%.o:	$(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
@@ -77,14 +73,23 @@ TEST_SRC	=	$(shell find tests -name '*.cpp' 2>/dev/null)
 ALL_SRC		=	$(shell find $(SRC_DIR) -name '*.cpp' 2>/dev/null)
 SRC_NO_MAIN	=	$(filter-out %/main.cpp, $(ALL_SRC))
 
-tests_run:
-	$(CXX) $(CXXFLAGS) -o unit_tests $(SRC_NO_MAIN) $(TEST_SRC) --coverage -lcriterion
+TEST_OBJ_DIR	=	obj_tests
+TEST_OBJ	=	$(SRC_NO_MAIN:%.cpp=$(TEST_OBJ_DIR)/%.o) \
+				$(TEST_SRC:%.cpp=$(TEST_OBJ_DIR)/%.o)
+
+$(TEST_OBJ_DIR)/%.o:	%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) --coverage -c $< -o $@
+
+tests_run:	$(TEST_OBJ)
+	$(CXX) $(CXXFLAGS) --coverage -o unit_tests $(TEST_OBJ) -lcriterion
 	./unit_tests
 	gcovr -r . --exclude tests/ --gcov-executable "llvm-cov gcov"
 
 tests_clean:
 	$(RM) unit_tests
-	$(RM) -r *.gc* **/*.gc*
+	$(RM) -r $(TEST_OBJ_DIR)
+	$(RM) *.gcno *.gcda
 
 docs:
 	doxygen Doxyfile

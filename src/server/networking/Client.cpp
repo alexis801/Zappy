@@ -35,19 +35,12 @@ bool Client::receive()
 
 void Client::feed(std::string_view data)
 {
-    _readBuffer.append(data);
+    _readBuffer.feed(data);
 }
 
 std::optional<std::string> Client::popLine()
 {
-    std::size_t pos = _readBuffer.find('\n');
-
-    if (pos == std::string::npos)
-        return std::nullopt;
-    std::string line = _readBuffer.substr(0, pos);
-
-    _readBuffer.erase(0, pos + 1);
-    return line;
+    return _readBuffer.popLine();
 }
 
 bool Client::send(std::string_view data)

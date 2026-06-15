@@ -10,6 +10,7 @@
 
 #include "Command.hpp"
 #include "Player.hpp"
+#include "ReadBuffer.hpp"
 #include "Socket.hpp"
 #include <optional>
 #include <queue>
@@ -106,7 +107,7 @@ public:
 
 private:
     Socket _socket;
-    std::string _readBuffer;
+    ReadBuffer _readBuffer;
     State _state = State::AwaitingTeamName;
     std::string _teamName;
     std::queue<Command> _commands;

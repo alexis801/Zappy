@@ -7,6 +7,7 @@
 
 #include <criterion/criterion.h>
 #include "Args.hpp"
+#include "Macros.hpp"
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -87,15 +88,47 @@ Test(args, plusieurs_equipes)
     cr_assert(args.getTeams()[2] == "green");
 }
 
-Test(args, arg_requis_manquant)
+Test(args, valeurs_par_defaut_sans_args)
 {
-    cr_assert(throwsOn({"zappy_server", "-p", "4242"}));
+    Args args = buildArgs({"zappy_server"});
+
+    cr_assert_eq(args.getPort(), Zappy::DEFAULT_PORT);
+    cr_assert_eq(args.getWidth(), Zappy::DEFAULT_WIDTH);
+    cr_assert_eq(args.getHeight(), Zappy::DEFAULT_HEIGHT);
+    cr_assert_eq(args.getClientsPerTeam(), Zappy::DEFAULT_CLIENTS_PER_TEAM);
+    cr_assert_eq(args.getFrequency(), Zappy::DEFAULT_FREQUENCY);
+    cr_assert_eq(args.getTeams().size(), 1u);
+    cr_assert(args.getTeams()[0] == Zappy::DEFAULT_TEAM_NAME);
 }
 
-Test(args, pas_dequipe)
+Test(args, port_omis_prend_le_defaut)
+{
+    Args args = buildArgs({"zappy_server", "-x", "5", "-y", "5",
+        "-n", "a", "-c", "2"});
+
+    cr_assert_eq(args.getPort(), Zappy::DEFAULT_PORT);
+}
+
+Test(args, n_remplace_l_equipe_par_defaut)
+{
+    Args args = buildArgs({"zappy_server", "-n", "red", "blue"});
+
+    cr_assert_eq(args.getTeams().size(), 2u);
+    cr_assert(args.getTeams()[0] == "red");
+    cr_assert(args.getTeams()[1] == "blue");
+}
+
+Test(args, n_sans_nom_est_refuse)
+{
+    cr_assert(throwsOn({"zappy_server", "-n", "-p", "4242"}));
+}
+
+Test(args, refuse_equipes_en_double)
 {
     cr_assert(throwsOn({"zappy_server", "-p", "1", "-x", "1",
-        "-y", "1", "-c", "1"}));
+        "-y", "1", "-n", "red", "red", "-c", "1"}));
+    cr_assert(throwsOn({"zappy_server", "-p", "1", "-x", "1",
+        "-y", "1", "-n", "red", "blue", "red", "-c", "1"}));
 }
 
 Test(args, option_inconnue)
