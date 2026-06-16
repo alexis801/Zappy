@@ -29,6 +29,8 @@ public:
     [[nodiscard]] int getX() const noexcept;
     [[nodiscard]] int getY() const noexcept;
     [[nodiscard]] Direction getDirection() const noexcept;
+    [[nodiscard]] int getLevel() const noexcept;
+    [[nodiscard]] int getFood() const noexcept;
 
     void forward(int width, int height) noexcept;
     void turnLeft() noexcept;

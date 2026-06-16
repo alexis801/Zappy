@@ -39,6 +39,16 @@ Direction Player::getDirection() const noexcept
     return _direction;
 }
 
+int Player::getLevel() const noexcept
+{
+    return _level;
+}
+
+int Player::getFood() const noexcept
+{
+    return _food;
+}
+
 Player Player::spawnRandom(int width, int height)
 {
     return Player(drawRandomInt(width), drawRandomInt(height),
