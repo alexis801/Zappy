@@ -81,3 +81,41 @@ Test(res, spawn_initial_minimum_carte_1x1)
         cr_assert_eq(ResourceSpawner::countOnMap(resource, map), 1);
     }
 }
+
+Test(res, respawn_complete_apres_consommation)
+{
+    Map map(10, 10);
+    ResourceSpawner spawner(42);
+
+    spawner.initialSpawn(map);
+    for (int y = 0; y < 10; ++y) {
+        for (int x = 0; x < 10; ++x)
+            map.at(x, y).remove(Resource::FOOD, map.at(x, y).get(Resource::FOOD));
+    }
+    cr_assert_eq(ResourceSpawner::countOnMap(Resource::FOOD, map), 0);
+
+    spawner.respawn(map);
+    for (std::size_t i = 0; i < RESOURCE_COUNT; ++i) {
+        Resource resource = static_cast<Resource>(i);
+
+        cr_assert_eq(
+            ResourceSpawner::countOnMap(resource, map),
+            ResourceSpawner::getTargetQuantity(resource, 10, 10));
+    }
+}
+
+Test(res, respawn_ne_depasse_pas_les_cibles)
+{
+    Map map(8, 8);
+    ResourceSpawner spawner(99);
+
+    spawner.initialSpawn(map);
+    spawner.respawn(map);
+    for (std::size_t i = 0; i < RESOURCE_COUNT; ++i) {
+        Resource resource = static_cast<Resource>(i);
+
+        cr_assert_eq(
+            ResourceSpawner::countOnMap(resource, map),
+            ResourceSpawner::getTargetQuantity(resource, 8, 8));
+    }
+}
