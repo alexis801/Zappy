@@ -26,6 +26,10 @@ public:
     [[nodiscard]] static int countOnMap(
         Resource resource, const Map &map) noexcept;
 
+    void initialSpawn(Map &map) noexcept;
+
+    void respawn(Map &map) noexcept;
+
 private:
     Rng _rng;
 };
