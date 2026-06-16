@@ -186,6 +186,9 @@ class SurvivalAI:
         self.state = self.update_state()
         self.client.send_command("Look")
         look_response = self.client.receive_response()
+        if not look_response:
+            print("cannot look")
+            return
 
     def go_forward(self) -> None:
         self.client.send_command("Forward")
