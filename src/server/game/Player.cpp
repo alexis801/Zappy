@@ -19,7 +19,8 @@ int Player::drawRandomInt(int upperExclusive)
 }
 
 Player::Player(int x, int y, Direction direction) noexcept
-    : _x(x), _y(y), _direction(direction)
+    : _x(x), _y(y), _direction(direction), _level(1),
+      _food(LIFE_UNITS_AT_START)
 {
 }
 
