@@ -221,6 +221,7 @@ class SurvivalAI:
     def inventory(self) -> None:
         self.client.send_command("Inventory")
         response = self.client.receive_response()   
+        self.store_inventory(response)
     
     def broadcast_text(self) -> None:
         self.client.send_command("Broadcast")
@@ -252,6 +253,20 @@ class SurvivalAI:
         response = self.client.receive_response()
         if response == 'ok':
             print("set " + response)
+
+    def store_inventory(self, inventory: str) -> None:
+        inventory = self.inventory.strip("[]")
+        items = self.inventory.split(",")
+        
+        for item in items:
+            parts = item.strip().split()
+            if len(parts) >= 2:
+                resource_name = parts[0]
+                try:
+                    quantity = int(parts[1])
+                    setattr(self.inventory, resource_name, quantity)
+                except ValueError:
+                    pass
     
 
 def parser(argv):
