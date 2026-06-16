@@ -10,6 +10,7 @@
 #include "ResourceSpawner.hpp"
 
 using Zappy::Resource;
+using Zappy::RESOURCE_COUNT;
 using Zappy::Server::Map;
 using Zappy::Server::ResourceSpawner;
 
@@ -51,4 +52,32 @@ Test(res, comptage_somme_sur_plusieurs_cases)
     cr_assert_eq(ResourceSpawner::countOnMap(Resource::FOOD, map), 5);
     cr_assert_eq(ResourceSpawner::countOnMap(Resource::LINEMATE, map), 4);
     cr_assert_eq(ResourceSpawner::countOnMap(Resource::SIBUR, map), 0);
+}
+
+Test(res, spawn_initial_totaux_carte_10x10)
+{
+    Map map(10, 10);
+    ResourceSpawner spawner(42);
+
+    spawner.initialSpawn(map);
+    for (std::size_t i = 0; i < RESOURCE_COUNT; ++i) {
+        Resource resource = static_cast<Resource>(i);
+
+        cr_assert_eq(
+            ResourceSpawner::countOnMap(resource, map),
+            ResourceSpawner::getTargetQuantity(resource, 10, 10));
+    }
+}
+
+Test(res, spawn_initial_minimum_carte_1x1)
+{
+    Map map(1, 1);
+    ResourceSpawner spawner(7);
+
+    spawner.initialSpawn(map);
+    for (std::size_t i = 0; i < RESOURCE_COUNT; ++i) {
+        Resource resource = static_cast<Resource>(i);
+
+        cr_assert_eq(ResourceSpawner::countOnMap(resource, map), 1);
+    }
 }
