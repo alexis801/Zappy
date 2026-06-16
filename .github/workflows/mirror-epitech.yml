@@ -16,6 +16,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Install SFML
+        run: dnf install -y SFML-devel
+
       - name: Build and run Criterion tests
         run: make tests_run
 
