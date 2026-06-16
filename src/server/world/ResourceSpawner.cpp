@@ -52,4 +52,21 @@ void ResourceSpawner::initialSpawn(Map &map) noexcept
     }
 }
 
+void ResourceSpawner::respawn(Map &map) noexcept
+{
+    int width = map.getWidth();
+    int height = map.getHeight();
+    std::uniform_int_distribution<int> xDist(0, width - 1);
+    std::uniform_int_distribution<int> yDist(0, height - 1);
+
+    for (std::size_t i = 0; i < RESOURCE_COUNT; ++i) {
+        Resource resource = static_cast<Resource>(i);
+        int target = getTargetQuantity(resource, width, height);
+        int missing = target - countOnMap(resource, map);
+
+        for (int placed = 0; placed < missing; ++placed)
+            map.at(xDist(_rng), yDist(_rng)).add(resource, 1);
+    }
+}
+
 } // namespace Zappy::Server

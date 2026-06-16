@@ -28,6 +28,8 @@ public:
 
     void initialSpawn(Map &map) noexcept;
 
+    void respawn(Map &map) noexcept;
+
 private:
     Rng _rng;
 };
