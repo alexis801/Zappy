@@ -161,6 +161,10 @@ class ZappyClient:
         self.socket.sendall(f"{line}\n".encode())
 
 class SurvivalAI:
+    FOOD_CRITICAL = 5
+    FOOD_LOW = 10
+    FOOD_COMFORTABLE = 25
+
     def __init__(self, client: ZappyClient):
         self.client = client
         self.inventory = Inventory()
@@ -170,6 +174,14 @@ class SurvivalAI:
         self.position_y = 0
         self.level = 1
 
+    def update_state(self) -> State:
+        if self.inventory.food < self.FOOD_CRITICAL:
+            return State.SURVIVE
+        elif self.inventory.food < self.FOOD_LOW:
+            return State.COLLECT
+        else:
+            return State.COLLECT
+        
     def act(self) -> None:
         self.state = self.update_state()
         self.client.send_command("Look")
