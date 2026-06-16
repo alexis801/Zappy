@@ -12,8 +12,19 @@
 
 #include <array>
 #include <vector>
+#include <string>
+#include <unordered_map>
 
 namespace Zappy::Gui {
+
+struct Player {
+    int id = 0;
+    int x = 0;
+    int y = 0;
+    int orientation = 1; // 1= nord, 2= est, 3= sdu, 4= ouest
+    int level = 1;
+    std::string team;
+};
 
 /**
  * @class World
@@ -49,6 +60,34 @@ public:
         return _tiles[index(x, y)];
     }
 
+// player methods
+
+    void addPlayer(const Player &player) { _players[player.id] = player; }
+
+    void movePlayer(int id, int x, int y, int orientation)
+    {
+        auto it = _players.find(id);
+        if (it == _players.end())
+            return;
+        it->second.x = x;
+        it->second.y = y;
+        it->second.orientation = orientation;
+    }
+
+    void setPlayerLevel(int id, int level)
+    {
+        auto it = _players.find(id);
+        if (it != _players.end())
+            it->second.level = level;
+    }
+
+    void removePlayer(int id) { _players.erase(id); }
+
+    [[nodiscard]] const std::unordered_map<int, Player> &getPlayers() const noexcept
+    {
+        return _players;
+    }
+
 private:
 
     [[nodiscard]] bool contains(int x, int y) const noexcept
@@ -64,6 +103,7 @@ private:
     int _width = 0;
     int _height = 0;
     std::vector<Tile> _tiles;
+    std::unordered_map<int, Player> _players;
 };
 
 } // namespace Zappy::Gui
