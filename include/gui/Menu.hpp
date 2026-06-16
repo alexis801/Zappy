@@ -35,8 +35,6 @@ private:
     sf::Texture _backgroundTexture;
     sf::Sprite _background;
     sf::Texture _titleTexture;
-    sf::Sprite _title;
-    bool _hasTitle = false;
     std::array<Button, 3> _buttons;
 };
 
