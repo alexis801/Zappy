@@ -8,7 +8,10 @@
 #ifndef ZAPPY_GUI_MENU_HPP_
 #define ZAPPY_GUI_MENU_HPP_
 
+#include "gui/Button.hpp"
+
 #include <SFML/Graphics.hpp>
+#include <array>
 
 namespace Zappy::Gui {
 /**
@@ -17,20 +20,24 @@ namespace Zappy::Gui {
  */
 class Menu {
 public:
-    enum class ButtonAction { None, Play, Quit};
+    enum class ButtonAction { None, Play, Options, Quit };
 
     Menu();
 
+    void updateHover(sf::Vector2f mouse);
+    void press(sf::Vector2f mouse);
+    [[nodiscard]] ButtonAction release(sf::Vector2f mouse);
     void draw(sf::RenderWindow &window);
-    [[nodiscard]] ButtonAction handleClick(sf::Vector2f position) const;
 
 
 private:
     sf::Font _font;
     sf::Texture _backgroundTexture;
     sf::Sprite _background;
-    sf::RectangleShape _playButton;
-    sf::RectangleShape _quitButton;
+    sf::Texture _titleTexture;
+    sf::Sprite _title;
+    bool _hasTitle = false;
+    std::array<Button, 3> _buttons;
 };
 
 } // namespace Zappy::Gui

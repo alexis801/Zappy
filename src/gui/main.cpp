@@ -1,27 +1,37 @@
 /*
 ** EPITECH PROJECT, 2026
-** zappy
+** zappy_gotenku
 ** File description:
-** main.cpp
+** main (GUI)
 */
 
 #include "gui/Args.hpp"
 #include "gui/Core.hpp"
-#include "gui/Renderer.hpp"
 #include "gui/Menu.hpp"
+#include "gui/Renderer.hpp"
 
 #include <exception>
-#include <optional>
 #include <iostream>
+#include <optional>
 
 namespace {
 
-    using Zappy::Gui::Args;
-    using Zappy::Gui::Core;
-    using Zappy::Gui::Menu;
-    using Zappy::Gui::Renderer;
+using Zappy::Gui::Args;
+using Zappy::Gui::Core;
+using Zappy::Gui::Menu;
+using Zappy::Gui::Renderer;
 
-void onMenuClick(Menu::ButtonAction action, const Args &args, std::optional<Core> &core, Renderer &renderer)
+sf::Vector2f at(const sf::Event::MouseMoveEvent &m)
+{
+    return {static_cast<float>(m.x), static_cast<float>(m.y)};
+}
+
+sf::Vector2f at(const sf::Event::MouseButtonEvent &m)
+{
+    return {static_cast<float>(m.x), static_cast<float>(m.y)};
+}
+
+void onMenuAction(Menu::ButtonAction action, const Args &args, std::optional<Core> &core, Renderer &renderer)
 {
     if (action == Menu::ButtonAction::Quit) {
         renderer.close();
@@ -34,6 +44,7 @@ void onMenuClick(Menu::ButtonAction action, const Args &args, std::optional<Core
             std::cerr << "Connexion impossible: " << error.what() << "\n";
         }
     }
+    // Menu::ButtonAction::Options a implementer
 }
 
 void handleEvents(Renderer &renderer, Menu &menu, const Args &args, std::optional<Core> &core)
@@ -43,8 +54,14 @@ void handleEvents(Renderer &renderer, Menu &menu, const Args &args, std::optiona
     while (renderer.pollEvent(event)) {
         if (event.type == sf::Event::Closed)
             renderer.close();
-        else if (!core && event.type == sf::Event::MouseButtonPressed)
-            onMenuClick(menu.handleClick({static_cast<float>(event.mouseButton.x), static_cast<float>(event.mouseButton.y)}), args, core, renderer);
+        else if (core)
+            continue; // en jeu : pas d'interaction menu
+        else if (event.type == sf::Event::MouseMoved)
+            menu.updateHover(at(event.mouseMove));
+        else if (event.type == sf::Event::MouseButtonPressed)
+            menu.press(at(event.mouseButton));
+        else if (event.type == sf::Event::MouseButtonReleased)
+            onMenuAction(menu.release(at(event.mouseButton)), args, core, renderer);
     }
 }
 
