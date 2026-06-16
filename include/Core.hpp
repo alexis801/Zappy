@@ -40,6 +40,7 @@ private:
     bool handleHandshake(Client &client, const std::string &teamName);
     void handlePlayerLine(Client &client, const std::string &line);
     void executeDueCommands();
+    void executePlayerCommand(Client &client, const Command &cmd);
     [[nodiscard]] Client *findClient(int fd);
     [[nodiscard]] Team *findTeam(const std::string &name);
     void removeClient(int fd);

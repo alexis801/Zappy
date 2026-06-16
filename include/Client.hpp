@@ -9,6 +9,7 @@
 #define ZAPPY_CLIENT_HPP_
 
 #include "Command.hpp"
+#include "Player.hpp"
 #include "ReadBuffer.hpp"
 #include "Socket.hpp"
 #include <optional>
@@ -70,6 +71,16 @@ public:
     void setAsGui() noexcept;
 
     /**
+     * @brief Fait apparaitre le joueur sur la carte (pos + dir aleatoires)
+     */
+    void spawnPlayer(int width, int height);
+
+    /**
+     * @brief Le joueur pilote par ce client, nullptr s'il n'existe pas
+     */
+    [[nodiscard]] Player *getPlayer() noexcept;
+
+    /**
      * @brief Met une cmd en file (max 10). False = file pleine
      *        La nouvelle cmd commence apres la derniere de la file.
      */
@@ -100,6 +111,7 @@ private:
     State _state = State::AwaitingTeamName;
     std::string _teamName;
     std::queue<Command> _commands;
+    std::optional<Player> _player;
 };
 
 } // namespace Zappy::Server
