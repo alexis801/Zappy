@@ -255,8 +255,8 @@ class SurvivalAI:
             print("set " + response)
 
     def store_inventory(self, inventory: str) -> None:
-        inventory = self.inventory.strip("[]")
-        items = self.inventory.split(",")
+        inventory = inventory.strip("[]")
+        items = inventory.split(",")
         
         for item in items:
             parts = item.strip().split()
