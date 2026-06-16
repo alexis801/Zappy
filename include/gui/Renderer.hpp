@@ -15,6 +15,16 @@
 #include <SFML/Graphics.hpp>
 
 namespace Zappy::Gui {
+
+// placement de la grille dans la fenetre : taille une case + coin haut gauche
+struct MapView {
+
+    float tileW = 0.f;
+    float tileH = 0.f;
+    float originX = 0.f;
+    float originY = 0.f;
+};
+
 /**
  * @class Renderer
  * @brief Fenetre SFML draw le world
@@ -31,10 +41,10 @@ public:
 
 
 private:
-    void drawGrid(const World &world);
-    void drawResources(const World &world);
-    void drawTileResources(const World::Tile &tile, int x, int y, float cell);
-    void drawResourceDot(std::size_t resource, int x, int y, float cell);
+    void drawGrid(const World &world, const MapView &view);
+    void drawResources(const World &world, const MapView &view);
+    void drawTileResources(const World::Tile &tile, sf::Vector2f center, const MapView &view);
+    void drawResourceDot(std::size_t resource, sf::Vector2f center, const MapView &view);
 
     sf::RenderWindow _window;
 };

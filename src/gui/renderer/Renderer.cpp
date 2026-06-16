@@ -17,6 +17,7 @@ namespace {
 
 constexpr unsigned int WINDOW_WIDTH = 1920;
 constexpr unsigned int WINDOW_HEIGHT = 1080;
+constexpr float MARGIN = 80.f; // marge autour de la grille
 
 const std::array<sf::Color, Zappy::RESOURCE_COUNT> RESOURCE_COLORS = {{
     sf::Color(90, 200, 90),    // FOOD
@@ -28,9 +29,50 @@ const std::array<sf::Color, Zappy::RESOURCE_COUNT> RESOURCE_COLORS = {{
     sf::Color(90, 220, 220),   // THYSTAME
 }};
 
-float cellSize(int cols, int rows)
+// calcul taille de case et origine pour centrer carte en isometrique
+MapView computeView(int cols, int rows)
 {
-    return std::min(static_cast<float>(WINDOW_WIDTH) / cols, static_cast<float>(WINDOW_HEIGHT) / rows);
+    MapView view;
+    float availableW = static_cast<float>(WINDOW_WIDTH) - 2.f * MARGIN;
+    float availableH = static_cast<float>(WINDOW_HEIGHT) - 2.f * MARGIN;
+    float diagonal = static_cast<float>(cols + rows);
+
+    // largeur carte = diagonal * tileW/2  hauteur = diagonal * tileW/4
+    view.tileW = std::min(2.f * availableW / diagonal, 4.f * availableH / diagonal);
+    view.tileH = view.tileW / 2.f;
+    view.originX = static_cast<float>(WINDOW_WIDTH) / 2.f - static_cast<float>(cols - rows) * view.tileW / 4.f;
+    view.originY = static_cast<float>(WINDOW_HEIGHT) / 2.f - diagonal * view.tileH / 4.f;
+    return view;
+}
+
+// sommet haut du losange de la case x y
+sf::Vector2f tileTop(const MapView &view, int x, int y)
+{
+    return {
+        view.originX + static_cast<float>(x - y) * view.tileW / 2.f,
+        view.originY + static_cast<float>(x + y) * view.tileH / 2.f,
+    };
+}
+
+// centre du losange de la case x y
+sf::Vector2f tileCenter(const MapView &view, int x, int y)
+{
+    sf::Vector2f top = tileTop(view, x, y);
+
+    return {top.x, top.y + view.tileH / 2.f};
+}
+
+sf::ConvexShape makeDiamond(sf::Vector2f top, const MapView &view)
+{
+    sf::ConvexShape diamond(4);
+    float halfW = view.tileW / 2.f;
+    float halfH = view.tileH / 2.f;
+
+    diamond.setPoint(0, {top.x, top.y}); // haut
+    diamond.setPoint(1, {top.x + halfW, top.y + halfH}); // droite
+    diamond.setPoint(2, {top.x, top.y + view.tileH}); // bas
+    diamond.setPoint(3, {top.x - halfW, top.y + halfH}); // gauche
+    return diamond;
 }
 
 } // anonymous namespace
@@ -62,65 +104,58 @@ void Renderer::drawMenu(Menu &menu)
     _window.display();
 }
 
-void Renderer::drawGrid(const World &world)
+void Renderer::drawGrid(const World &world, const MapView &view)
 {
-    int cols = world.getWidth();
-    int rows = world.getHeight();
+    for (int y = 0; y < world.getHeight(); ++y) {
+        for (int x = 0; x < world.getWidth(); ++x) {
+            sf::ConvexShape tile = makeDiamond(tileTop(view, x, y), view);
 
-    if (cols <= 0 || rows <= 0)
-        return;
-    float cell = std::min(static_cast<float>(WINDOW_WIDTH) / cols,
-        static_cast<float>(WINDOW_HEIGHT) / rows);
-    for (int y = 0; y < rows; ++y) {
-        for (int x = 0; x < cols; ++x) {
-            sf::RectangleShape tile({cell - 1.f, cell - 1.f});
-
-            tile.setPosition(x * cell, y * cell);
-            tile.setFillColor(sf::Color(40, 80, 50));
-            _window.draw(factory::rect({cell - 1.f, cell - 1.f}, {x * cell, y * cell}, sf::Color(40, 80, 50)));
+            tile.setFillColor(sf::Color(35, 30, 55));      // sol
+            tile.setOutlineThickness(1.f);
+            tile.setOutlineColor(sf::Color(70, 55, 110));  // bordure
+            _window.draw(tile);
         }
     }
 }
 
-// Un point represente une ressource dans une mini grille de 4 cols
-void Renderer::drawResourceDot(std::size_t resource, int x, int y, float cell)
+// une ressource = point range mini grille 4 cols
+void Renderer::drawResourceDot(std::size_t resource, sf::Vector2f center, const MapView &view)
 {
-    float dot = cell / 9.f;
-    float px = x * cell + static_cast<float>(resource % 4) * (dot * 2.2f) + dot;
-    float py = y * cell + static_cast<float>(resource / 4) * (dot * 2.2f) + dot;
+    float radius = view.tileW / 24.f;
+    float stepX = view.tileW / 9.f;
+    float stepY = view.tileH / 4.f;
+    float col = static_cast<float>(resource % 4);
+    float row = static_cast<float>(resource / 4);
+    float dotX = center.x + (col - 1.5f) * stepX;
+    float dotY = center.y + (row - 0.5f) * stepY;
 
-    _window.draw(factory::circle(dot, {px, py}, RESOURCE_COLORS[resource]));
+    _window.draw(factory::circle(radius, {dotX - radius, dotY - radius}, RESOURCE_COLORS[resource]));
 }
 
 // Les ressources qui sont sur une seule case
-void Renderer::drawTileResources(const World::Tile &tile, int x, int y, float cell)
+void Renderer::drawTileResources(const World::Tile &tile, sf::Vector2f center, const MapView &view)
 {
-    for (std::size_t i = 0; i < tile.size(); ++i) {
+    for (std::size_t i = 0; i < tile.size(); ++i)
         if (tile[i] > 0)
-            drawResourceDot(i, x, y, cell);
-    }
+            drawResourceDot(i, center, view);
 }
 
-// Toues les cases de la map 
-void Renderer::drawResources(const World &world)
+void Renderer::drawResources(const World &world, const MapView &view)
 {
-    int cols = world.getWidth();
-    int rows = world.getHeight();
-
-    if (cols <= 0 || rows <= 0)
-        return;
-    float cell = cellSize(cols, rows);
-    for (int y = 0; y < rows; ++y) {
-        for (int x = 0; x < cols; ++x)
-            drawTileResources(world.getTile(x, y), x, y, cell);
-    }
+    for (int y = 0; y < world.getHeight(); ++y)
+        for (int x = 0; x < world.getWidth(); ++x)
+            drawTileResources(world.getTile(x, y), tileCenter(view, x, y), view);
 }
 
 void Renderer::draw(const World &world)
 {
-    _window.clear(sf::Color(20, 20, 30));
-    drawGrid(world);
-    drawResources(world);
+    _window.clear(sf::Color(15, 12, 25));
+    if (world.getWidth() > 0 && world.getHeight() > 0) {
+        MapView view = computeView(world.getWidth(), world.getHeight());
+
+        drawGrid(world, view);
+        drawResources(world, view);
+    }
     _window.display();
 }
 
