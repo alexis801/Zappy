@@ -175,12 +175,12 @@ class SurvivalAI:
         self.level = 1
 
     def update_state(self) -> State:
-        if self.inventory.food < self.FOOD_CRITICAL:
+        if self.inventory.food <= self.FOOD_CRITICAL:
             return State.SURVIVE
-        elif self.inventory.food < self.FOOD_LOW:
+        elif self.inventory.food <= self.FOOD_LOW:
             return State.COLLECT
         else:
-            return State.COLLECT
+            return State.EXPLORE
         
     def act(self) -> None:
         self.state = self.update_state()
@@ -194,6 +194,23 @@ class SurvivalAI:
     
         #mettre a jour l'inventaire
         self.inventory()
+
+        #quel action
+        if self.state == State.SURVIVE:
+            self.survive()
+        elif self.state == State.COLLECT:
+            self.collect()
+        else:
+            self.explore()
+
+    def survive(self) -> None:
+        None
+    
+    def collect(self) -> None:
+        None
+
+    def explore(self) -> None:
+        None
 
     def go_forward(self) -> None:
         self.client.send_command("Forward")
