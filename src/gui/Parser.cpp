@@ -84,8 +84,15 @@ void applyPdi(std::istringstream &stream, World &world)
         world.removePlayer(id);
 }
 
-} // anonymous namespace
+void applyTna(std::istringstream &stream, World &world)
+{
+    std::string name;
 
+    if (stream >> name)
+        world.addTeam(name);
+}
+
+} // anonymous namespace
 
 void Parser::apply(const std::string &line, World &world) const
 {
@@ -105,6 +112,8 @@ void Parser::apply(const std::string &line, World &world) const
         applyPlv(stream, world);
     else if (command == "pdi")
         applyPdi(stream, world);
+    else if (command == "tna")
+        applyTna(stream, world);
 }
 
 } // namespace Zappy::Gui

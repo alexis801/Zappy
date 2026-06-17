@@ -88,6 +88,18 @@ public:
         return _players;
     }
 
+// teams methods
+
+    void addTeam(const std::string &name)
+    {
+        for (const std::string &team : _teams)
+            if (team == name)
+                return;
+        _teams.push_back(name);
+    }
+
+    [[nodiscard]] const std::vector<std::string> &getTeams() const noexcept;
+
 private:
 
     [[nodiscard]] bool contains(int x, int y) const noexcept
@@ -104,6 +116,7 @@ private:
     int _height = 0;
     std::vector<Tile> _tiles;
     std::unordered_map<int, Player> _players;
+    std::vector<std::string> _teams;
 };
 
 } // namespace Zappy::Gui
