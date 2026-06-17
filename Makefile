@@ -82,7 +82,7 @@ $(TEST_OBJ_DIR)/%.o:	%.cpp
 	$(CXX) $(CXXFLAGS) --coverage -c $< -o $@
 
 tests_run:	$(TEST_OBJ)
-	$(CXX) $(CXXFLAGS) --coverage -o unit_tests $(TEST_OBJ) -lcriterion
+	$(CXX) $(CXXFLAGS) --coverage -o unit_tests $(TEST_OBJ) -lcriterion $(GUI_LIBS)
 	./unit_tests
 	gcovr -r . --exclude tests/ --gcov-executable "llvm-cov gcov"
 
