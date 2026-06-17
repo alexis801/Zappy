@@ -69,7 +69,7 @@ public:
     }
 
 // player methods
-    std::unordered_map<int, Egg> _eggs;
+
     void addPlayer(const Player &player) { _players[player.id] = player; }
 
     void movePlayer(int id, int x, int y, int orientation)

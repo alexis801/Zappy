@@ -94,7 +94,6 @@ void applyTna(std::istringstream &stream, World &world)
 }
 
 // enw #e #n x y -> oeuf pondu par le joueur n
-
 void applyEnw(std::istringstream &stream, World &world)
 {
     Egg egg;
