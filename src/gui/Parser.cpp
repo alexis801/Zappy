@@ -120,7 +120,21 @@ void applyEdi(std::istringstream &stream, World &world)
         world.removeEgg(id);
 }
 
-// void applyPin(std::istringstream &stream, World &world)
+//pin #n x y q0 q6 inventaire du joeur
+void applyPin(std::istringstream &stream, World &world)
+{
+    int id = 0;
+    int x = 0;
+    int y = 0;
+    std::array<int, Zappy::RESOURCE_COUNT> inventory{};
+
+    if (!readId(stream, id) || !(stream >> x >> y))
+        return;
+    for (int &quantity : inventory)
+        if (!(stream >> quantity))
+            return;
+    world.setPLayerInventory(id, x, y, inventory);
+}
 
 // void applyPic(std::istringstream &stream, World &world)
 
@@ -162,6 +176,8 @@ void Parser::apply(const std::string &line, World &world) const
         applyEbo(stream, world);
     else if (command == "edi")
         applyEdi(stream, world);
+    else if (command == "pin")
+        applyPin(stream, world);
 }
 
 } // namespace Zappy::Gui

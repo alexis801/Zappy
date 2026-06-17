@@ -24,10 +24,10 @@ struct Player {
     int orientation = 1; // 1= nord, 2= est, 3= sdu, 4= ouest
     int level = 1;
     std::string team;
+    std::array<int, Zappy::RESOURCE_COUNT> inventory{};
 };
 
 struct Egg {
-
     int id = 0;
     int PLayerId = 0;
     int x = 0;
@@ -42,7 +42,7 @@ struct Egg {
 class World {
 public:
 
-    // Une case = 7 quantités de ressources (index par resources)
+    // Une case = 7 quantités de ressources (indsex par resources)
     using Tile = std::array<int, Zappy::RESOURCE_COUNT>;
 
     [[nodiscard]] int getWidth() const noexcept { return _width; }
@@ -116,6 +116,18 @@ public:
     [[nodiscard]] const std::unordered_map<int, Egg> &getEggs() const noexcept
     {
         return _eggs;
+    }
+
+// player inventory pin
+
+    void setPLayerInventory(int id, int x, int y, const std::array<int, Zappy::RESOURCE_COUNT> &inventory)
+    {
+        auto it = _players.find(id);
+        if (it == _players.end())
+            return;
+        it->second.x = x;
+        it->second.y = y;
+        it->second.inventory = inventory;
     }
 
 private:
