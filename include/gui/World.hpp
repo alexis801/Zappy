@@ -14,6 +14,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace Zappy::Gui {
 
@@ -130,6 +131,30 @@ public:
         it->second.inventory = inventory;
     }
 
+// player incantations methods
+
+    void startIncantation(int x, int y)
+    {
+        for (const auto &cell : _incantations)
+            if (cell.first == x && cell.second == y)
+                return;
+        _incantations.emplace_back(x, y);
+    }
+
+    void endIncantation(int x, int y)
+    {
+        for (auto i = _incantations.begin(); i != _incantations.end(); i++)
+            if (i->first == x && i->second == y) {
+                _incantations.erase(i);
+                return;
+        }
+    }
+
+    [[nodiscard]] const std::vector<std::pair<int, int>> &getIncantations() const noexcept
+    {
+        return _incantations;
+    }
+
 private:
 
     [[nodiscard]] bool contains(int x, int y) const noexcept
@@ -148,6 +173,7 @@ private:
     std::unordered_map<int, Player> _players;
     std::vector<std::string> _teams;
     std::unordered_map<int, Egg> _eggs;
+    std::vector<std::pair<int, int>> _incantations;
 };
 
 } // namespace Zappy::Gui

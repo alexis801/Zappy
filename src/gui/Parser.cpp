@@ -136,9 +136,25 @@ void applyPin(std::istringstream &stream, World &world)
     world.setPLayerInventory(id, x, y, inventory);
 }
 
-// void applyPic(std::istringstream &stream, World &world)
+// pic x y l #n debut incantation
+void applyPic(std::istringstream &stream, World &world)
+{
+    int x = 0;
+    int y = 0;
 
-// void applyPie(std::istringstream &stream, World &world)
+    if (stream >> x >> y)
+        world.startIncantation(x, y);
+}
+
+// pie x y r fin incantation
+void applyPie(std::istringstream &stream, World &world)
+{
+    int x = 0;
+    int y = 0;
+
+    if (stream >> x >> y)
+        world.endIncantation(x, y);
+}
 
 // void applySgt(std::istringstream &stream, World &world)
 
@@ -178,6 +194,11 @@ void Parser::apply(const std::string &line, World &world) const
         applyEdi(stream, world);
     else if (command == "pin")
         applyPin(stream, world);
+    else if (command == "pic")
+        applyPic(stream, world);
+    else if (command == "pie")
+        applyPie(stream, world);
+
 }
 
 } // namespace Zappy::Gui
