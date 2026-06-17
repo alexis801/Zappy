@@ -64,6 +64,18 @@ inline constexpr std::array<double, RESOURCE_COUNT> RESOURCE_DENSITY = {{
     0.05,  // THYSTAME
 }};
 
+// Noms du protocole joueur (commande Inventory)
+inline constexpr std::array<std::string_view, RESOURCE_COUNT>
+    RESOURCE_NAMES = {{
+    "food",
+    "linemate",
+    "deraumere",
+    "sibur",
+    "mendiane",
+    "phiras",
+    "thystame",
+}};
+
 // Couts des actions, en unites de temps
 namespace action_cost {
 inline constexpr int FORWARD     = 7;

@@ -8,6 +8,9 @@
 #ifndef ZAPPY_PLAYER_HPP_
 #define ZAPPY_PLAYER_HPP_
 
+#include "Macros.hpp"
+#include <array>
+#include <string>
 #include <string_view>
 
 namespace Zappy::Server {
@@ -21,6 +24,25 @@ enum class Direction {
     EAST,
     SOUTH,
     WEST,
+};
+
+/**
+ * @enum CommandKind
+ * @brief Resultat d'une commande joueur
+ */
+enum class CommandKind {
+    KO,
+    OK,
+    INVENTORY,
+};
+
+/**
+ * @struct CommandOutcome
+ * @brief Reponse a renvoyer au client apres execution
+ */
+struct CommandOutcome {
+    CommandKind kind = CommandKind::KO;
+    std::string text;
 };
 
 /**
@@ -40,6 +62,13 @@ public:
     [[nodiscard]] int getY() const noexcept;
     [[nodiscard]] Direction getDirection() const noexcept;
 
+    [[nodiscard]] int get(Resource resource) const noexcept;
+
+    /**
+     * @brief Formate l'inventaire pour la commande Inventory
+     */
+    [[nodiscard]] std::string formatInventory() const;
+
     /**
      * @brief Avance d'une case dans sa direction (monde toroidal)
      */
@@ -56,15 +85,18 @@ public:
     void turnRight() noexcept;
 
     /**
-     * @brief Execute une commande de deplacement, false si inconnue
+     * @brief Execute une commande joueur (deplacement ou inventaire)
      */
-    [[nodiscard]] bool executeMovement(
+    [[nodiscard]] CommandOutcome executeCommand(
         std::string_view command, int width, int height) noexcept;
 
 private:
     static constexpr int DIRECTION_COUNT = 4;
 
     static int drawRandomInt(int upperExclusive);
+
+    [[nodiscard]] bool runMovement(
+        std::string_view command, int width, int height) noexcept;
 
     void stepNorth(int height) noexcept;
     void stepEast(int width) noexcept;
@@ -74,6 +106,7 @@ private:
     int _x;
     int _y;
     Direction _direction;
+    std::array<int, RESOURCE_COUNT> _inventory{};
 };
 
 } // namespace Zappy::Server

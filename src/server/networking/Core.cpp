@@ -168,8 +168,15 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         client.send("ko\n");
         return;
     }
-    if (!player->executeMovement(cmd.text, _width, _height)) {
+    CommandOutcome outcome = player->executeCommand(
+        cmd.text, _width, _height);
+
+    if (outcome.kind == CommandKind::KO) {
         client.send("ko\n");
+        return;
+    }
+    if (outcome.kind == CommandKind::INVENTORY) {
+        client.send(outcome.text + "\n");
         return;
     }
     client.send("ok\n");
