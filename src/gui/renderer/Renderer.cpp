@@ -10,6 +10,9 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <iterator>
+#include <stdexcept>
 
 namespace Zappy::Gui {
 
@@ -18,6 +21,13 @@ namespace {
 constexpr unsigned int WINDOW_WIDTH = 1920;
 constexpr unsigned int WINDOW_HEIGHT = 1080;
 constexpr float MARGIN = 80.f; // marge autour de la grille
+
+// animation
+constexpr float IDLE_FRAME_TIME = 0.15f;
+constexpr float WALK_FRAME_TIME = 0.05f;
+constexpr float MOVE_SPEED = 4.f; // fraction du chemin par seconde
+constexpr float SRC_WIDTH = 682.f; // largeur real 1 frame robot
+constexpr float ROBOT_SCALE = 1.2f; // robot par rapport a la largeur de case
 
 const std::array<sf::Color, Zappy::RESOURCE_COUNT> RESOURCE_COLORS = {{
     sf::Color(90, 200, 90),    // FOOD
@@ -29,6 +39,11 @@ const std::array<sf::Color, Zappy::RESOURCE_COUNT> RESOURCE_COLORS = {{
     sf::Color(90, 220, 220),   // THYSTAME
 }};
 
+float lengthSq(sf::Vector2f v)
+{
+    return v.x * v.x + v.y * v.y;
+}
+
 // calcul taille de case et origine pour centrer carte en isometrique
 MapView computeView(int cols, int rows)
 {
@@ -37,7 +52,6 @@ MapView computeView(int cols, int rows)
     float availableH = static_cast<float>(WINDOW_HEIGHT) - 2.f * MARGIN;
     float diagonal = static_cast<float>(cols + rows);
 
-    // largeur carte = diagonal * tileW/2  hauteur = diagonal * tileW/4
     view.tileW = std::min(2.f * availableW / diagonal, 4.f * availableH / diagonal);
     view.tileH = view.tileW / 2.f;
     view.originX = static_cast<float>(WINDOW_WIDTH) / 2.f - static_cast<float>(cols - rows) * view.tileW / 4.f;
@@ -80,6 +94,8 @@ sf::ConvexShape makeDiamond(sf::Vector2f top, const MapView &view)
 Renderer::Renderer() : _window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Zappy GUI")
 {
     _window.setFramerateLimit(60);
+    if (!_robot.load())
+        throw std::runtime_error("Renderer: robot sprites not found" "Check if assets folder has ressources");
 }
 
 bool Renderer::isOpen() const
@@ -110,9 +126,9 @@ void Renderer::drawGrid(const World &world, const MapView &view)
         for (int x = 0; x < world.getWidth(); ++x) {
             sf::ConvexShape tile = makeDiamond(tileTop(view, x, y), view);
 
-            tile.setFillColor(sf::Color(35, 30, 55));      // sol
+            tile.setFillColor(sf::Color(35, 30, 55)); // sol
             tile.setOutlineThickness(1.f);
-            tile.setOutlineColor(sf::Color(70, 55, 110));  // bordure
+            tile.setOutlineColor(sf::Color(70, 55, 110)); // bordure
             _window.draw(tile);
         }
     }
@@ -147,14 +163,95 @@ void Renderer::drawResources(const World &world, const MapView &view)
             drawTileResources(world.getTile(x, y), tileCenter(view, x, y), view);
 }
 
+// ajouter ou retirer le viseul joueur selon le world
+void Renderer::syncPlayers(const World &world, const MapView &view)
+{
+    const auto &players = world.getPlayers();
+
+    for (auto it = _visuals.begin(); it != _visuals.end();)
+        it = players.count(it->first) ? std::next(it) : _visuals.erase(it);
+
+    for (const auto &[id, p] : players) {
+        PlayerVisual &v = _visuals[id];
+
+        v.target = tileCenter(view, p.x, p.y);
+        v.orientation = p.orientation;
+        if (!v.initialized) {
+            v.pos = v.target;
+            v.initialized = true;
+        }
+    }
+}
+
+// interpol la position idle walk et avance frame
+void Renderer::updateVisual(PlayerVisual &v, float dt)
+{
+    sf::Vector2f delta = v.target - v.pos;
+
+    if (lengthSq(delta) > 1.f) {
+        v.state = AnimState::Walk;
+        v.pos += delta * std::min(1.f, MOVE_SPEED * dt);
+    } else {
+        v.pos = v.target;
+        v.state = AnimState::Idle;
+    }
+
+    const Animation &anim = (v.state == AnimState::Walk) ? _robot.walk : _robot.idle;
+    float frameTime = (v.state == AnimState::Walk) ? WALK_FRAME_TIME : IDLE_FRAME_TIME;
+
+    if (anim.size() == 0)
+        return;
+    v.timer += dt;
+    if (v.timer >= frameTime) {
+        v.timer -= frameTime;
+        v.frame = (v.frame + 1) % anim.size();
+    }
+    if (v.frame >= anim.size())
+        v.frame = 0;
+}
+
+// set origine au centre pied du robot, origin = / nord 1 / est 2 sud 3 ouest 4 + pied au centre de la case
+void Renderer::drawRobot(const PlayerVisual &v, const MapView &view)
+{
+    const Animation &anim = (v.state == AnimState::Walk) ? _robot.walk : _robot.idle;
+
+    if (anim.size() == 0)
+        return;
+    sf::Sprite sprite(anim.frameAt(v.frame));
+    auto bounds = sprite.getLocalBounds();
+
+    sprite.setOrigin(bounds.width / 2.f, bounds.height);
+
+    float scale = (view.tileW * ROBOT_SCALE) / SRC_WIDTH;
+
+    bool faceLeft = (v.orientation == 1 || v.orientation == 4);
+    sprite.setScale(faceLeft ? -scale : scale, scale);
+
+    sprite.setPosition(v.pos.x, v.pos.y);
+    _window.draw(sprite);
+}
+
+void Renderer::drawPlayers(const World &world, const MapView &view, float dt)
+{
+    syncPlayers(world, view);
+    for (auto &[id, v] : _visuals) {
+        (void)id;
+        updateVisual(v, dt);
+        drawRobot(v, view);
+    }
+}
+
 void Renderer::draw(const World &world)
 {
+    float dt = _frameClock.restart().asSeconds();
+
     _window.clear(sf::Color(15, 12, 25));
     if (world.getWidth() > 0 && world.getHeight() > 0) {
         MapView view = computeView(world.getWidth(), world.getHeight());
 
         drawGrid(world, view);
         drawResources(world, view);
+        drawPlayers(world, view, dt);
     }
     _window.display();
 }

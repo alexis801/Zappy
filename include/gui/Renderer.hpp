@@ -10,9 +10,11 @@
 
 #include "gui/World.hpp"
 #include "gui/Menu.hpp"
+#include "gui/PlayerVisual.hpp"
 
 #include <cstddef>
 #include <SFML/Graphics.hpp>
+#include <unordered_map>
 
 namespace Zappy::Gui {
 
@@ -45,8 +47,15 @@ private:
     void drawResources(const World &world, const MapView &view);
     void drawTileResources(const World::Tile &tile, sf::Vector2f center, const MapView &view);
     void drawResourceDot(std::size_t resource, sf::Vector2f center, const MapView &view);
+    void drawPlayers(const World &world, const MapView &view, float dt);
+    void syncPlayers(const World &world, const MapView &view);
+    void updateVisual(PlayerVisual &v, float dt);
+    void drawRobot(const PlayerVisual &v, const MapView &view);
 
     sf::RenderWindow _window;
+    RobotAssets _robot;
+    std::unordered_map<int, PlayerVisual> _visuals;
+    sf::Clock _frameClock;
 };
 
 } // namespace Zappy::Gui
