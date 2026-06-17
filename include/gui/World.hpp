@@ -26,6 +26,14 @@ struct Player {
     std::string team;
 };
 
+struct Egg {
+
+    int id = 0;
+    int PLayerId = 0;
+    int x = 0;
+    int y = 0;
+};
+
 /**
  * @class World
  * @brief Copie locale du monde taille de la carte + cases (ressources)
@@ -61,7 +69,7 @@ public:
     }
 
 // player methods
-
+    std::unordered_map<int, Egg> _eggs;
     void addPlayer(const Player &player) { _players[player.id] = player; }
 
     void movePlayer(int id, int x, int y, int orientation)
@@ -100,6 +108,16 @@ public:
 
     [[nodiscard]] const std::vector<std::string> &getTeams() const noexcept;
 
+// eggs methods
+
+    void addEgg(const Egg &egg) { _eggs[egg.id] = egg; }
+    void removeEgg(int id) { _eggs.erase(id); }
+
+    [[nodiscard]] const std::unordered_map<int, Egg> &getEggs() const noexcept
+    {
+        return _eggs;
+    }
+
 private:
 
     [[nodiscard]] bool contains(int x, int y) const noexcept
@@ -117,6 +135,7 @@ private:
     std::vector<Tile> _tiles;
     std::unordered_map<int, Player> _players;
     std::vector<std::string> _teams;
+    std::unordered_map<int, Egg> _eggs;
 };
 
 } // namespace Zappy::Gui

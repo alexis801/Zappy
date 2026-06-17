@@ -84,6 +84,7 @@ void applyPdi(std::istringstream &stream, World &world)
         world.removePlayer(id);
 }
 
+// tna N nom d'equipe
 void applyTna(std::istringstream &stream, World &world)
 {
     std::string name;
@@ -91,6 +92,48 @@ void applyTna(std::istringstream &stream, World &world)
     if (stream >> name)
         world.addTeam(name);
 }
+
+// enw #e #n x y -> oeuf pondu par le joueur n
+
+void applyEnw(std::istringstream &stream, World &world)
+{
+    Egg egg;
+
+    if (readId(stream, egg.id) && readId(stream, egg.PLayerId) && (stream >> egg.x >> egg.y))
+        world.addEgg(egg);
+}
+
+// ebo #e player eclot l'oeuf -> oeuf disparait
+void applyEbo(std::istringstream &stream, World &world)
+{
+    int id = 0;
+
+    if (readId(stream, id))
+        world.removeEgg(id);
+}
+
+// edi #e mort d'un oeuf
+void applyEdi(std::istringstream &stream, World &world)
+{
+    int id = 0;
+
+    if (readId(stream, id))
+        world.removeEgg(id);
+}
+
+// void applyPin(std::istringstream &stream, World &world)
+
+// void applyPic(std::istringstream &stream, World &world)
+
+// void applyPie(std::istringstream &stream, World &world)
+
+// void applySgt(std::istringstream &stream, World &world)
+
+// void applySst(std::istringstream &stream, World &world)
+
+// void applySeg(std::istringstream &stream, World &world)
+
+// void applySmg(std::istringstream &stream, World &world)
 
 } // anonymous namespace
 
@@ -114,6 +157,12 @@ void Parser::apply(const std::string &line, World &world) const
         applyPdi(stream, world);
     else if (command == "tna")
         applyTna(stream, world);
+    else if (command == "enw")
+        applyEnw(stream, world);
+    else if (command == "ebo")
+        applyEbo(stream, world);
+    else if (command == "edi")
+        applyEdi(stream, world);
 }
 
 } // namespace Zappy::Gui
