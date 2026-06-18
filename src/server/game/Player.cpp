@@ -20,7 +20,7 @@ int Player::drawRandomInt(int upperExclusive)
 }
 
 Player::Player(int x, int y, Direction direction) noexcept
-    : _x(x), _y(y), _direction(direction), _level(1)
+    : _x(x), _y(y), _direction(direction), _level(1), _pendingTime(0)
 {
     _inventory[static_cast<std::size_t>(Resource::FOOD)] = LIFE_UNITS_AT_START;
 }
@@ -68,6 +68,26 @@ std::string Player::formatInventory() const
     }
     result += ']';
     return result;
+}
+
+void Player::consumeFood(int elapsedTimeUnits) noexcept
+{
+    if (!isAlive())
+        return;
+    _pendingTime += elapsedTimeUnits;
+    std::size_t foodIndex = static_cast<std::size_t>(Resource::FOOD);
+
+    while (_pendingTime >= TIME_UNITS_PER_FOOD && _inventory[foodIndex] > 0) {
+        _pendingTime -= TIME_UNITS_PER_FOOD;
+        --_inventory[foodIndex];
+    }
+    if (_inventory[foodIndex] <= 0)
+        _pendingTime = 0;
+}
+
+bool Player::isAlive() const noexcept
+{
+    return getFood() > 0;
 }
 
 Player Player::spawnRandom(int width, int height)

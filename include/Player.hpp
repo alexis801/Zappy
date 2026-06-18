@@ -48,6 +48,9 @@ public:
 
     [[nodiscard]] std::string formatInventory() const;
 
+    void consumeFood(int elapsedTimeUnits) noexcept;
+    [[nodiscard]] bool isAlive() const noexcept;
+
     void forward(int width, int height) noexcept;
     void turnLeft() noexcept;
     void turnRight() noexcept;
@@ -72,6 +75,7 @@ private:
     int _y;
     Direction _direction;
     int _level;
+    int _pendingTime;
     std::array<int, RESOURCE_COUNT> _inventory{};
 };
 
