@@ -30,6 +30,13 @@ constexpr float SRC_WIDTH = 682.f; // largeur real 1 frame robot
 constexpr float ROBOT_SCALE = 1.2f; // robot par rapport a la largeur de case
 constexpr float EGG_SCALE = 0.3f; //oeuf scale
 
+// dalles en iso
+
+constexpr int CELL = 64; // taille cellule dans la sheet
+constexpr int TILE_COL = 0;// colonne de la dalle sol
+constexpr int TILE_ROW = 0; // ligne de la dalle sol
+constexpr float TILE_Y_OFFSET = 0.f; // ajustement vertical
+
 const std::array<sf::Color, Zappy::RESOURCE_COUNT> RESOURCE_COLORS = {{
     sf::Color(90, 200, 90),    // FOOD
     sf::Color(230, 230, 230),  // LINEMATE
@@ -93,19 +100,6 @@ sf::Vector2f tileCenter(const MapView &view, int x, int y)
     return {top.x, top.y + view.tileH / 2.f};
 }
 
-sf::ConvexShape makeDiamond(sf::Vector2f top, const MapView &view)
-{
-    sf::ConvexShape diamond(4);
-    float halfW = view.tileW / 2.f;
-    float halfH = view.tileH / 2.f;
-
-    diamond.setPoint(0, {top.x, top.y}); // haut
-    diamond.setPoint(1, {top.x + halfW, top.y + halfH}); // droite
-    diamond.setPoint(2, {top.x, top.y + view.tileH}); // bas
-    diamond.setPoint(3, {top.x - halfW, top.y + halfH}); // gauche
-    return diamond;
-}
-
 } // anonymous namespace
 
 Renderer::Renderer() : _window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Zappy GUI")
@@ -115,6 +109,9 @@ Renderer::Renderer() : _window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Zapp
         throw std::runtime_error("Renderer: robot sprites not found" "Check if assets folder has ressources");
     if (!_eggTexture.loadFromFile("assets/White_egg.png"))
         throw std::runtime_error("Renderer: egg sprite not found (assets/White_egg.png)");
+    if (!_tilesTexture.loadFromFile("assets/tiles.png"))
+        throw std::runtime_error("Renderer: tile sheet not found (assets/tiles.png)");
+    _tilesTexture.setSmooth(false);
 }
 
 bool Renderer::isOpen() const
@@ -139,18 +136,28 @@ void Renderer::drawMenu(Menu &menu)
     _window.display();
 }
 
+// dalle iso en sprite dessiner de arriere a avant odre croissant
 void Renderer::drawGrid(const World &world, const MapView &view)
 {
-    for (int y = 0; y < world.getHeight(); ++y) {
-        for (int x = 0; x < world.getWidth(); ++x) {
-            sf::ConvexShape tile = makeDiamond(tileTop(view, x, y), view);
+    int w = world.getWidth();
+    int h = world.getHeight();
+    sf::Sprite sprite(_tilesTexture);
+    float scale = view.tileW / static_cast<float>(CELL);
 
-            tile.setFillColor(sf::Color(35, 30, 55)); // sol
-            tile.setOutlineThickness(1.f);
-            tile.setOutlineColor(sf::Color(70, 55, 110)); // bordure
-            _window.draw(tile);
+    sprite.setTextureRect(sf::IntRect(TILE_COL * CELL, TILE_ROW * CELL, CELL, CELL));
+    sprite.setOrigin(static_cast<float>(CELL) / 2.f, 0.f);
+    sprite.setScale(scale, scale);
+    for (int sum = 0; sum <= (w - 1) + (h - 1); ++sum)
+        for (int x = 0; x < w; ++x) {
+            int y = sum - x;
+
+            if (y < 0 || y >= h)
+                continue;
+            sf::Vector2f top = tileTop(view, x, y);
+
+            sprite.setPosition(top.x, top.y + TILE_Y_OFFSET);
+            _window.draw(sprite);
         }
-    }
 }
 
 // une ressource = point range mini grille 4 cols

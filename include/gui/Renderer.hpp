@@ -56,6 +56,7 @@ private:
     sf::RenderWindow _window;
     RobotAssets _robot;
     sf::Texture _eggTexture;
+    sf::Texture _tilesTexture;
     std::unordered_map<int, PlayerVisual> _visuals;
     sf::Clock _frameClock;
 };
