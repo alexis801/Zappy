@@ -12,6 +12,7 @@
 #include "Client.hpp"
 #include "Clock.hpp"
 #include "Macros.hpp"
+#include "Map.hpp"
 #include "Socket.hpp"
 #include "Team.hpp"
 #include <poll.h>
@@ -49,8 +50,7 @@ private:
     Clock _clock{DEFAULT_FREQUENCY};
     std::vector<Client> _clients;
     std::vector<Team> _teams;
-    int _width;
-    int _height;
+    Map _map;
 };
 
 } // namespace Zappy::Server

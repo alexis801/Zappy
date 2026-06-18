@@ -30,7 +30,7 @@ std::string buildHandshakeResponse(int slots, int width, int height)
 
 Core::Core(const Args &args)
     : _listener(Socket::listenOn(args.getPort())),
-    _width(args.getWidth()), _height(args.getHeight())
+    _map(args.getWidth(), args.getHeight())
 {
     for (const auto &name : args.getTeams())
         _teams.emplace_back(name, args.getClientsPerTeam());
@@ -169,7 +169,7 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         return;
     }
     CommandOutcome outcome = player->executeCommand(
-        cmd.text, _width, _height);
+        cmd.text, _map.getWidth(), _map.getHeight());
 
     if (outcome.kind == CommandKind::KO) {
         client.send("ko\n");
@@ -186,7 +186,7 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
 {
     if (teamName == Zappy::GRAPHIC_TEAM_NAME) {
         client.setAsGui();
-        client.send(buildHandshakeResponse(0, _width, _height));
+        client.send(buildHandshakeResponse(0, _map.getWidth(), _map.getHeight()));
         return true;
     }
     Team *team = findTeam(teamName);
@@ -195,9 +195,9 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
         return false;
     team->claimSlot();
     client.setAsPlayer(teamName);
-    client.spawnPlayer(_width, _height);
+    client.spawnPlayer(_map.getWidth(), _map.getHeight());
     client.send(buildHandshakeResponse(
-        team->getRemainingSlots(), _width, _height));
+        team->getRemainingSlots(), _map.getWidth(), _map.getHeight()));
     return true;
 }
 
