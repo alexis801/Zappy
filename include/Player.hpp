@@ -9,6 +9,8 @@
 #define ZAPPY_PLAYER_HPP_
 
 #include "Macros.hpp"
+#include <array>
+#include <string>
 #include <string_view>
 
 namespace Zappy::Server {
@@ -18,6 +20,17 @@ enum class Direction {
     EAST,
     SOUTH,
     WEST,
+};
+
+enum class CommandKind {
+    KO,
+    OK,
+    INVENTORY,
+};
+
+struct CommandOutcome {
+    CommandKind kind = CommandKind::KO;
+    std::string text;
 };
 
 class Player {
@@ -31,18 +44,24 @@ public:
     [[nodiscard]] Direction getDirection() const noexcept;
     [[nodiscard]] int getLevel() const noexcept;
     [[nodiscard]] int getFood() const noexcept;
+    [[nodiscard]] int get(Resource resource) const noexcept;
+
+    [[nodiscard]] std::string formatInventory() const;
 
     void forward(int width, int height) noexcept;
     void turnLeft() noexcept;
     void turnRight() noexcept;
 
-    [[nodiscard]] bool executeMovement(
+    [[nodiscard]] CommandOutcome executeCommand(
         std::string_view command, int width, int height) noexcept;
 
 private:
     static constexpr int DIRECTION_COUNT = 4;
 
     static int drawRandomInt(int upperExclusive);
+
+    [[nodiscard]] bool runMovement(
+        std::string_view command, int width, int height) noexcept;
 
     void stepNorth(int height) noexcept;
     void stepEast(int width) noexcept;
@@ -53,7 +72,7 @@ private:
     int _y;
     Direction _direction;
     int _level;
-    int _food;
+    std::array<int, RESOURCE_COUNT> _inventory{};
 };
 
 } // namespace Zappy::Server
