@@ -19,6 +19,8 @@ namespace Zappy::Server {
 
 namespace {
 
+constexpr unsigned DEFAULT_SPAWN_SEED = 42;
+
 std::string buildHandshakeResponse(int slots, int width, int height)
 {
     return std::to_string(slots) + "\n"
@@ -30,10 +32,12 @@ std::string buildHandshakeResponse(int slots, int width, int height)
 
 Core::Core(const Args &args)
     : _listener(Socket::listenOn(args.getPort())),
+    _map(args.getWidth(), args.getHeight()), _spawner(DEFAULT_SPAWN_SEED),
     _width(args.getWidth()), _height(args.getHeight())
 {
     for (const auto &name : args.getTeams())
         _teams.emplace_back(name, args.getClientsPerTeam());
+    _spawner.initialSpawn(_map);
 }
 
 void Core::run()

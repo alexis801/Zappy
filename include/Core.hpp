@@ -12,6 +12,8 @@
 #include "Client.hpp"
 #include "Clock.hpp"
 #include "Macros.hpp"
+#include "Map.hpp"
+#include "ResourceSpawner.hpp"
 #include "Socket.hpp"
 #include "Team.hpp"
 #include <poll.h>
@@ -47,6 +49,8 @@ private:
 
     Socket _listener;
     Clock _clock{DEFAULT_FREQUENCY};
+    Map _map;
+    ResourceSpawner _spawner;
     std::vector<Client> _clients;
     std::vector<Team> _teams;
     int _width;
