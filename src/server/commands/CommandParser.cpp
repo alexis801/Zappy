@@ -10,7 +10,7 @@
 
 namespace Zappy::Server {
 
-std::optional<int> CommandParser::getCommandCost(
+std::optional<int> CommandParser::getMovementCost(
     std::string_view line) noexcept
 {
     if (line == "Forward")
@@ -19,6 +19,18 @@ std::optional<int> CommandParser::getCommandCost(
         return action_cost::LEFT;
     if (line == "Right")
         return action_cost::RIGHT;
+    return std::nullopt;
+}
+
+std::optional<int> CommandParser::getCommandCost(
+    std::string_view line) noexcept
+{
+    std::optional<int> movement = getMovementCost(line);
+
+    if (movement.has_value())
+        return movement;
+    if (line == "Inventory")
+        return action_cost::INVENTORY;
     return std::nullopt;
 }
 
