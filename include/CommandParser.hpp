@@ -24,6 +24,10 @@ public:
      */
     [[nodiscard]] static std::optional<int> getCommandCost(
         std::string_view line) noexcept;
+
+private:
+    [[nodiscard]] static std::optional<int> getMovementCost(
+        std::string_view line) noexcept;
 };
 
 } // namespace Zappy::Server
