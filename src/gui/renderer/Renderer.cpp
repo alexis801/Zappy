@@ -29,6 +29,8 @@ constexpr float MOVE_SPEED = 4.f; // fraction du chemin par seconde
 constexpr float SRC_WIDTH = 682.f; // largeur real 1 frame robot
 constexpr float ROBOT_SCALE = 1.2f; // robot par rapport a la largeur de case
 constexpr float EGG_SCALE = 0.3f; //oeuf scale
+constexpr float INCANT_SCALE = 0.9f; // cercle incantation
+constexpr float ROBOT_FOOT = 0.70f; 
 
 // dalles en iso
 
@@ -130,6 +132,9 @@ Renderer::Renderer() : _window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Zapp
     if (!_materialsTexture.loadFromFile("assets/materials.png"))
         throw std::runtime_error("Renderer: materials sheet not found (assets/materials.png)");
     _materialsTexture.setSmooth(false);
+    if (!_incantationTexture.loadFromFile("assets/incantation.png"))
+        throw std::runtime_error("Renderer: incantation sheet not found (assets/materials.png)");
+     _incantationTexture.setSmooth(false);
 }
 
 bool Renderer::isOpen() const
@@ -273,7 +278,7 @@ void Renderer::drawRobot(const PlayerVisual &v, const MapView &view)
 
     sprite.setColor(v.color);
 
-    sprite.setOrigin(bounds.width / 2.f, bounds.height);
+    sprite.setOrigin(bounds.width / 2.f, bounds.height * ROBOT_FOOT);
 
     float scale = (view.tileW * ROBOT_SCALE) / SRC_WIDTH;
 
@@ -315,6 +320,25 @@ void Renderer::drawEggs(const World &world, const MapView &view)
     }
 }
 
+void Renderer::drawIncantations(const World &world, const MapView &view)
+{
+    sf::Vector2u size = _incantationTexture.getSize();
+
+    if (size.x == 0)
+        return;
+    float scale = (view.tileW * INCANT_SCALE) / static_cast<float>(size.x);
+
+    for (const auto &cell : world.getIncantations()) {
+        sf::Vector2f center = tileCenter(view, cell.first, cell.second);
+        sf::Sprite sprite(_incantationTexture);
+
+        sprite.setOrigin(static_cast<float>(size.x) / 2.f, static_cast<float>(size.y) / 2.f);
+        sprite.setScale(scale, scale);
+        sprite.setPosition(center.x, center.y);
+        _window.draw(sprite);
+    }
+}
+
 void Renderer::draw(const World &world)
 {
     float dt = _frameClock.restart().asSeconds();
@@ -325,6 +349,7 @@ void Renderer::draw(const World &world)
 
         drawGrid(world, view);
         drawResources(world, view);
+        drawIncantations(world, view);
         drawEggs(world, view);
         drawPlayers(world, view, dt);
     }
