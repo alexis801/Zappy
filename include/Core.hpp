@@ -19,6 +19,7 @@
 #include <poll.h>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace Zappy::Server {
@@ -51,6 +52,7 @@ private:
     void respondBct(Client &client, std::istringstream &iss);
     void respondPpo(Client &client, std::istringstream &iss);
     void respondPlv(Client &client, std::istringstream &iss);
+    void broadcastToGuis(std::string_view message);
     [[nodiscard]] Client *findPlayerById(int playerId);
     void executeDueCommands();
     void executePlayerCommand(Client &client, const Command &cmd);
