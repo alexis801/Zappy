@@ -90,6 +90,17 @@ bool Player::isAlive() const noexcept
     return getFood() > 0;
 }
 
+bool Player::eat(Tile &tile) noexcept
+{
+    std::size_t foodIndex = static_cast<std::size_t>(Resource::FOOD);
+
+    if (tile.get(Resource::FOOD) <= 0)
+        return false;
+    tile.remove(Resource::FOOD, 1);
+    ++_inventory[foodIndex];
+    return true;
+}
+
 Player Player::spawnRandom(int width, int height)
 {
     return Player(drawRandomInt(width), drawRandomInt(height),

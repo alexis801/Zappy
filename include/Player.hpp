@@ -9,6 +9,7 @@
 #define ZAPPY_PLAYER_HPP_
 
 #include "Macros.hpp"
+#include "Tile.hpp"
 #include <array>
 #include <string>
 #include <string_view>
@@ -50,6 +51,7 @@ public:
 
     void consumeFood(int elapsedTimeUnits) noexcept;
     [[nodiscard]] bool isAlive() const noexcept;
+    [[nodiscard]] bool eat(Tile &tile) noexcept;
 
     void forward(int width, int height) noexcept;
     void turnLeft() noexcept;
