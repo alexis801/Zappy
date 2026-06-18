@@ -51,9 +51,11 @@ private:
     void syncPlayers(const World &world, const MapView &view);
     void updateVisual(PlayerVisual &v, float dt);
     void drawRobot(const PlayerVisual &v, const MapView &view);
+    void drawEggs(const World &world, const MapView &view);
 
     sf::RenderWindow _window;
     RobotAssets _robot;
+    sf::Texture _eggTexture;
     std::unordered_map<int, PlayerVisual> _visuals;
     sf::Clock _frameClock;
 };

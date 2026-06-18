@@ -28,6 +28,7 @@ constexpr float WALK_FRAME_TIME = 0.05f;
 constexpr float MOVE_SPEED = 4.f; // fraction du chemin par seconde
 constexpr float SRC_WIDTH = 682.f; // largeur real 1 frame robot
 constexpr float ROBOT_SCALE = 1.2f; // robot par rapport a la largeur de case
+constexpr float EGG_SCALE = 0.3f; //oeuf scale
 
 const std::array<sf::Color, Zappy::RESOURCE_COUNT> RESOURCE_COLORS = {{
     sf::Color(90, 200, 90),    // FOOD
@@ -38,6 +39,22 @@ const std::array<sf::Color, Zappy::RESOURCE_COUNT> RESOURCE_COLORS = {{
     sf::Color(210, 100, 200),  // PHIRAS
     sf::Color(90, 220, 220),   // THYSTAME
 }};
+
+const std::array<sf::Color, 2> TEAM_COLORS = {{
+    sf::Color(230, 80, 80),    // ROUGE
+    sf::Color(80, 140, 230),  // BLEU
+}};
+
+// coleur d'equipe atribue par ordre arrive
+sf::Color teamColor(const World &world, const std::string &team)
+{
+    const auto &teams = world.getTeams();
+
+    for (std::size_t i = 0; i < teams.size(); ++i)
+        if (teams[i] == team)
+            return TEAM_COLORS[i % TEAM_COLORS.size()];
+    return sf::Color::White;
+}
 
 float lengthSq(sf::Vector2f v)
 {
@@ -96,6 +113,8 @@ Renderer::Renderer() : _window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Zapp
     _window.setFramerateLimit(60);
     if (!_robot.load())
         throw std::runtime_error("Renderer: robot sprites not found" "Check if assets folder has ressources");
+    if (!_eggTexture.loadFromFile("assets/White_egg.png"))
+        throw std::runtime_error("Renderer: egg sprite not found (assets/White_egg.png)");
 }
 
 bool Renderer::isOpen() const
@@ -176,6 +195,7 @@ void Renderer::syncPlayers(const World &world, const MapView &view)
 
         v.target = tileCenter(view, p.x, p.y);
         v.orientation = p.orientation;
+        v.color = teamColor(world, p.team);
         if (!v.initialized) {
             v.pos = v.target;
             v.initialized = true;
@@ -220,6 +240,8 @@ void Renderer::drawRobot(const PlayerVisual &v, const MapView &view)
     sf::Sprite sprite(anim.frameAt(v.frame));
     auto bounds = sprite.getLocalBounds();
 
+    sprite.setColor(v.color);
+
     sprite.setOrigin(bounds.width / 2.f, bounds.height);
 
     float scale = (view.tileW * ROBOT_SCALE) / SRC_WIDTH;
@@ -241,6 +263,27 @@ void Renderer::drawPlayers(const World &world, const MapView &view, float dt)
     }
 }
 
+// oeuf centre sur la tile comme le player
+void Renderer::drawEggs(const World &world, const MapView &view)
+{
+    sf::Vector2u size = _eggTexture.getSize();
+
+    if (size.x == 0)
+        return;
+    float scale = (view.tileW * EGG_SCALE) / static_cast<float>(size.x);
+
+    for (const auto &entry : world.getEggs()) {
+        const Egg &egg = entry.second;
+        sf::Vector2f center = tileCenter(view, egg.x, egg.y);
+        sf::Sprite sprite(_eggTexture);
+
+        sprite.setOrigin(static_cast<float>(size.x) / 2.f, static_cast<float>(size.y));
+        sprite.setScale(scale, scale);
+        sprite.setPosition(center.x, center.y);
+        _window.draw(sprite);
+    }
+}
+
 void Renderer::draw(const World &world)
 {
     float dt = _frameClock.restart().asSeconds();
@@ -251,6 +294,7 @@ void Renderer::draw(const World &world)
 
         drawGrid(world, view);
         drawResources(world, view);
+        drawEggs(world, view);
         drawPlayers(world, view, dt);
     }
     _window.display();

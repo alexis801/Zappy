@@ -107,7 +107,10 @@ public:
         _teams.push_back(name);
     }
 
-    [[nodiscard]] const std::vector<std::string> &getTeams() const noexcept;
+    [[nodiscard]] const std::vector<std::string> &getTeams() const noexcept
+    {
+        return _teams;
+    }
 
 // eggs methods
 

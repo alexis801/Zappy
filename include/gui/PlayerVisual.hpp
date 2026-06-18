@@ -37,6 +37,7 @@ struct PlayerVisual {
     std::size_t frame = 0;
     float timer = 0.f;
     bool initialized = false;
+    sf::Color color = sf::Color::White;
 };
 
 } // namespace Zappy::Gui
