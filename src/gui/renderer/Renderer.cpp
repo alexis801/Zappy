@@ -37,6 +37,21 @@ constexpr int TILE_COL = 0;// colonne de la dalle sol
 constexpr int TILE_ROW = 0; // ligne de la dalle sol
 constexpr float TILE_Y_OFFSET = 0.f; // ajustement vertical
 
+// materiaux (4 * 4, cel 64) index de la gemme
+
+constexpr int MAT_CELL = 64;
+constexpr float MATERIAL_SCALE = 0.3f;
+
+const std::array<int, Zappy::RESOURCE_COUNT> RESOURCE_TILES = {{
+    0, // FOOD -> vert
+    10, // LINEMATE -> blanc/rose
+    9, // DERAUMERE -> orange
+    1, // SIBUR -> bleu
+    2, // MENDIANE -> rouge
+    3, // PHIRAS -> violet
+    15, // THYSTAME -> cyan
+}};
+
 const std::array<sf::Color, Zappy::RESOURCE_COUNT> RESOURCE_COLORS = {{
     sf::Color(90, 200, 90),    // FOOD
     sf::Color(230, 230, 230),  // LINEMATE
@@ -112,6 +127,9 @@ Renderer::Renderer() : _window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Zapp
     if (!_tilesTexture.loadFromFile("assets/tiles.png"))
         throw std::runtime_error("Renderer: tile sheet not found (assets/tiles.png)");
     _tilesTexture.setSmooth(false);
+    if (!_materialsTexture.loadFromFile("assets/materials.png"))
+        throw std::runtime_error("Renderer: materials sheet not found (assets/materials.png)");
+    _materialsTexture.setSmooth(false);
 }
 
 bool Renderer::isOpen() const
@@ -161,17 +179,23 @@ void Renderer::drawGrid(const World &world, const MapView &view)
 }
 
 // une ressource = point range mini grille 4 cols
-void Renderer::drawResourceDot(std::size_t resource, sf::Vector2f center, const MapView &view)
+void Renderer::drawResource(std::size_t resource, sf::Vector2f center, const MapView &view)
 {
-    float radius = view.tileW / 24.f;
-    float stepX = view.tileW / 9.f;
-    float stepY = view.tileH / 4.f;
+    int idx = RESOURCE_TILES[resource];
+    float scale = (view.tileW * MATERIAL_SCALE) / static_cast<float>(MAT_CELL);
+    float stepX = view.tileW / 4.5f;
+    float stepY = view.tileH / 3.f;
     float col = static_cast<float>(resource % 4);
     float row = static_cast<float>(resource / 4);
-    float dotX = center.x + (col - 1.5f) * stepX;
-    float dotY = center.y + (row - 0.5f) * stepY;
+    float gx = center.x + (col - 1.5f) * stepX;
+    float gy = center.y + (row - 0.5f) * stepY - view.tileH * 0.1f;
+    sf::Sprite sprite(_materialsTexture);
 
-    _window.draw(factory::circle(radius, {dotX - radius, dotY - radius}, RESOURCE_COLORS[resource]));
+    sprite.setTextureRect(sf::IntRect((idx % 4) * MAT_CELL, (idx / 4) * MAT_CELL, MAT_CELL, MAT_CELL));
+    sprite.setOrigin(static_cast<float>(MAT_CELL) / 2.f, static_cast<float>(MAT_CELL) / 2.f);
+    sprite.setScale(scale, scale);
+    sprite.setPosition(gx, gy);
+    _window.draw(sprite);
 }
 
 // Les ressources qui sont sur une seule case
@@ -179,7 +203,7 @@ void Renderer::drawTileResources(const World::Tile &tile, sf::Vector2f center, c
 {
     for (std::size_t i = 0; i < tile.size(); ++i)
         if (tile[i] > 0)
-            drawResourceDot(i, center, view);
+            drawResource(i, center, view);
 }
 
 void Renderer::drawResources(const World &world, const MapView &view)

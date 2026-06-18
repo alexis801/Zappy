@@ -46,7 +46,7 @@ private:
     void drawGrid(const World &world, const MapView &view);
     void drawResources(const World &world, const MapView &view);
     void drawTileResources(const World::Tile &tile, sf::Vector2f center, const MapView &view);
-    void drawResourceDot(std::size_t resource, sf::Vector2f center, const MapView &view);
+    void drawResource(std::size_t resource, sf::Vector2f center, const MapView &view);
     void drawPlayers(const World &world, const MapView &view, float dt);
     void syncPlayers(const World &world, const MapView &view);
     void updateVisual(PlayerVisual &v, float dt);
@@ -57,6 +57,7 @@ private:
     RobotAssets _robot;
     sf::Texture _eggTexture;
     sf::Texture _tilesTexture;
+    sf::Texture _materialsTexture;
     std::unordered_map<int, PlayerVisual> _visuals;
     sf::Clock _frameClock;
 };
