@@ -47,6 +47,8 @@ private:
     void tickLife() noexcept;
     void killPlayer(int fd);
     void sendMapToGui(Client &gui) const;
+    void broadcastToGui(const std::string &message);
+    void broadcastTile(int x, int y);
     void removeClient(int fd);
 
     [[nodiscard]] Client *findClient(int fd);
@@ -60,6 +62,7 @@ private:
     Map _map;
     long _nextRespawnMillis;
     long _lastLifeTickMillis;
+    int _nextPlayerId;
 };
 
 } // namespace Zappy::Server

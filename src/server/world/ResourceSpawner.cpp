@@ -52,7 +52,8 @@ void ResourceSpawner::initialSpawn(Map &map) noexcept
     }
 }
 
-void ResourceSpawner::respawn(Map &map) noexcept
+void ResourceSpawner::respawn(
+    Map &map, std::vector<std::pair<int, int>> *changedTiles) noexcept
 {
     int width = map.getWidth();
     int height = map.getHeight();
@@ -64,8 +65,14 @@ void ResourceSpawner::respawn(Map &map) noexcept
         int target = getTargetQuantity(resource, width, height);
         int missing = target - countOnMap(resource, map);
 
-        for (int placed = 0; placed < missing; ++placed)
-            map.at(xDist(_rng), yDist(_rng)).add(resource, 1);
+        for (int placed = 0; placed < missing; ++placed) {
+            int x = xDist(_rng);
+            int y = yDist(_rng);
+
+            map.at(x, y).add(resource, 1);
+            if (changedTiles != nullptr)
+                changedTiles->emplace_back(x, y);
+        }
     }
 }
 

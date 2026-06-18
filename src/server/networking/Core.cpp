@@ -9,6 +9,7 @@
 #include "Core.hpp"
 #include "Macros.hpp"
 #include "Tile.hpp"
+#include <algorithm>
 #include <cerrno>
 #include <cstring>
 #include <iostream>
@@ -46,7 +47,8 @@ Core::Core(const Args &args)
     _spawner(42U),
     _map(args.getWidth(), args.getHeight()),
     _nextRespawnMillis(0),
-    _lastLifeTickMillis(0)
+    _lastLifeTickMillis(0),
+    _nextPlayerId(0)
 {
     for (const auto &name : args.getTeams())
         _teams.emplace_back(name, args.getClientsPerTeam());
@@ -207,7 +209,15 @@ void Core::tickResources() noexcept
 
     if (now < _nextRespawnMillis)
         return;
-    _spawner.respawn(_map);
+    std::vector<std::pair<int, int>> changedTiles;
+
+    _spawner.respawn(_map, &changedTiles);
+    std::sort(changedTiles.begin(), changedTiles.end());
+    changedTiles.erase(
+        std::unique(changedTiles.begin(), changedTiles.end()),
+        changedTiles.end());
+    for (const auto &[x, y] : changedTiles)
+        broadcastTile(x, y);
     while (_nextRespawnMillis <= now)
         _nextRespawnMillis += _clock.getDurationMillis(RESOURCE_SPAWN_INTERVAL);
 }
@@ -249,6 +259,10 @@ void Core::killPlayer(int fd)
     if (client == nullptr)
         return;
     if (client->getState() == Client::State::Player) {
+        Player *player = client->getPlayer();
+
+        if (player != nullptr)
+            broadcastToGui("pdi " + std::to_string(player->getId()) + "\n");
         Team *team = findTeam(client->getTeamName());
 
         if (team != nullptr)
@@ -268,6 +282,19 @@ void Core::sendMapToGui(Client &gui) const
     }
 }
 
+void Core::broadcastToGui(const std::string &message)
+{
+    for (auto &client : _clients) {
+        if (client.getState() == Client::State::Gui)
+            client.send(message);
+    }
+}
+
+void Core::broadcastTile(int x, int y)
+{
+    broadcastToGui(buildBctLine(x, y, _map.at(x, y)));
+}
+
 bool Core::handleHandshake(Client &client, const std::string &teamName)
 {
     if (teamName == Zappy::GRAPHIC_TEAM_NAME) {
@@ -282,7 +309,7 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
         return false;
     team->claimSlot();
     client.setAsPlayer(teamName);
-    client.spawnPlayer(_map.getWidth(), _map.getHeight());
+    client.spawnPlayer(_map.getWidth(), _map.getHeight(), _nextPlayerId++);
     client.send(buildHandshakeResponse(
         team->getRemainingSlots(), _map.getWidth(), _map.getHeight()));
     return true;

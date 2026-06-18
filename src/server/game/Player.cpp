@@ -19,10 +19,15 @@ int Player::drawRandomInt(int upperExclusive)
     return distribution(generator);
 }
 
-Player::Player(int x, int y, Direction direction) noexcept
-    : _x(x), _y(y), _direction(direction), _level(1), _pendingTime(0)
+Player::Player(int x, int y, Direction direction, int id) noexcept
+    : _x(x), _y(y), _direction(direction), _id(id), _level(1), _pendingTime(0)
 {
     _inventory[static_cast<std::size_t>(Resource::FOOD)] = LIFE_UNITS_AT_START;
+}
+
+int Player::getId() const noexcept
+{
+    return _id;
 }
 
 int Player::getX() const noexcept
@@ -101,10 +106,10 @@ bool Player::eat(Tile &tile) noexcept
     return true;
 }
 
-Player Player::spawnRandom(int width, int height)
+Player Player::spawnRandom(int width, int height, int id)
 {
     return Player(drawRandomInt(width), drawRandomInt(height),
-        static_cast<Direction>(drawRandomInt(DIRECTION_COUNT)));
+        static_cast<Direction>(drawRandomInt(DIRECTION_COUNT)), id);
 }
 
 void Player::stepNorth(int height) noexcept
