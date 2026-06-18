@@ -28,3 +28,22 @@ Test(life, spawn_random_conserve_les_valeurs_depart)
     cr_assert_eq(player.getLevel(), 1);
     cr_assert_eq(player.getFood(), LIFE_UNITS_AT_START);
 }
+
+Test(life, countdown_consomme_la_nourriture)
+{
+    Player player(0, 0, Direction::NORTH);
+
+    player.consumeFood(Zappy::TIME_UNITS_PER_FOOD);
+    cr_assert_eq(player.getFood(), LIFE_UNITS_AT_START - 1);
+    cr_assert(player.isAlive());
+}
+
+Test(life, mort_apres_1260_unites_de_temps)
+{
+    Player player(0, 0, Direction::NORTH);
+    int totalLife = LIFE_UNITS_AT_START * Zappy::TIME_UNITS_PER_FOOD;
+
+    player.consumeFood(totalLife);
+    cr_assert_eq(player.getFood(), 0);
+    cr_assert_not(player.isAlive());
+}
