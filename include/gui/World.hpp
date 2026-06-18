@@ -30,7 +30,7 @@ struct Player {
 
 struct Egg {
     int id = 0;
-    int PLayerId = 0;
+    int playerId = 0;
     int x = 0;
     int y = 0;
 };
@@ -121,7 +121,7 @@ public:
 
 // player inventory pin
 
-    void setPLayerInventory(int id, int x, int y, const std::array<int, Zappy::RESOURCE_COUNT> &inventory)
+    void setPlayerInventory(int id, int x, int y, const std::array<int, Zappy::RESOURCE_COUNT> &inventory)
     {
         auto it = _players.find(id);
         if (it == _players.end())
@@ -155,6 +155,27 @@ public:
         return _incantations;
     }
 
+// party state methods (sgt sst seg smg)
+
+    void setTimeUnit(int unit) { _timeUnit = unit; }
+    [[nodiscard]] int getTimeUnit() const noexcept { return _timeUnit; }
+
+    void endGame(const std::string &winner)
+    {
+        _gameOver = true;
+        _winner = winner;
+    }
+
+    [[nodiscard]] bool isGameOver() const noexcept { return _gameOver; }
+    [[nodiscard]] const std::string &getWinner() const noexcept { return _winner; }
+
+    void setServerMessage(const std::string &message) { _serverMessage = message; }
+    [[nodiscard]] const std::string &getServerMessage() const noexcept
+    {
+        return _serverMessage;
+    }
+
+
 private:
 
     [[nodiscard]] bool contains(int x, int y) const noexcept
@@ -174,6 +195,10 @@ private:
     std::vector<std::string> _teams;
     std::unordered_map<int, Egg> _eggs;
     std::vector<std::pair<int, int>> _incantations;
+    int _timeUnit = 0;
+    bool _gameOver = false;
+    std::string _winner;
+    std::string _serverMessage;
 };
 
 } // namespace Zappy::Gui

@@ -98,7 +98,7 @@ void applyEnw(std::istringstream &stream, World &world)
 {
     Egg egg;
 
-    if (readId(stream, egg.id) && readId(stream, egg.PLayerId) && (stream >> egg.x >> egg.y))
+    if (readId(stream, egg.id) && readId(stream, egg.playerId) && (stream >> egg.x >> egg.y))
         world.addEgg(egg);
 }
 
@@ -133,7 +133,7 @@ void applyPin(std::istringstream &stream, World &world)
     for (int &quantity : inventory)
         if (!(stream >> quantity))
             return;
-    world.setPLayerInventory(id, x, y, inventory);
+    world.setPlayerInventory(id, x, y, inventory);
 }
 
 // pic x y l #n debut incantation
@@ -156,13 +156,43 @@ void applyPie(std::istringstream &stream, World &world)
         world.endIncantation(x, y);
 }
 
-// void applySgt(std::istringstream &stream, World &world)
+// sgt T time unit actuel
+void applySgt(std::istringstream &stream, World &world)
+{
+    int unit = 0;
 
-// void applySst(std::istringstream &stream, World &world)
+    if (stream >> unit)
+        world.setTimeUnit(unit);
+}
 
-// void applySeg(std::istringstream &stream, World &world)
+// sst T nouveau time unit confirm par server
+void applySst(std::istringstream &stream, World &world)
+{
+    int unit = 0;
 
-// void applySmg(std::istringstream &stream, World &world)
+    if (stream >> unit)
+        world.setTimeUnit(unit);
+}
+
+// seg N fin de partie equipe gagnante N
+void applySeg(std::istringstream &stream, World &world)
+{
+    std::string winner;
+
+    if (stream >> winner)
+        world.endGame(winner);
+}
+
+// smg M message du serveur
+void applySmg(std::istringstream &stream, World &world)
+{
+    std::string message;
+
+    std::getline(stream, message);
+    if (!message.empty() && message.front() == ' ')
+        message.erase(message.begin());
+    world.setServerMessage(message);
+}
 
 } // anonymous namespace
 
@@ -198,6 +228,14 @@ void Parser::apply(const std::string &line, World &world) const
         applyPic(stream, world);
     else if (command == "pie")
         applyPie(stream, world);
+    else if (command == "sgt")
+        applySgt(stream, world);
+    else if (command == "sst")
+        applySst(stream, world);
+    else if (command == "seg")
+        applySeg(stream, world);
+    else if (command == "smg")
+        applySmg(stream, world);
 
 }
 
