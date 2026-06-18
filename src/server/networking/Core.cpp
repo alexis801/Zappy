@@ -30,10 +30,15 @@ std::string buildHandshakeResponse(int slots, int width, int height)
 
 Core::Core(const Args &args)
     : _listener(Socket::listenOn(args.getPort())),
-    _map(args.getWidth(), args.getHeight())
+    _clock(args.getFrequency()),
+    _spawner(42U),
+    _map(args.getWidth(), args.getHeight()),
+    _nextRespawnMillis(0)
 {
     for (const auto &name : args.getTeams())
         _teams.emplace_back(name, args.getClientsPerTeam());
+    _spawner.initialSpawn(_map);
+    _nextRespawnMillis = _clock.getDurationMillis(RESOURCE_SPAWN_INTERVAL);
 }
 
 void Core::run()
@@ -47,6 +52,7 @@ void Core::run()
         }
         handleEvents(fds);
         executeDueCommands();
+        tickResources();
     }
 }
 
@@ -62,17 +68,15 @@ std::vector<pollfd> Core::buildPollFds() const
 
 int Core::getPollTimeoutMillis() const noexcept
 {
-    long soonest = -1;
+    long soonest = _nextRespawnMillis;
 
     for (const auto &client : _clients) {
         if (!client.hasCommands())
             continue;
         long deadline = client.getNextDeadlineMillis();
-        if (soonest < 0 || deadline < soonest)
+        if (deadline < soonest)
             soonest = deadline;
     }
-    if (soonest < 0)
-        return -1;
     return static_cast<int>(_clock.getRemainingMillis(soonest));
 }
 
@@ -180,6 +184,17 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         return;
     }
     client.send("ok\n");
+}
+
+void Core::tickResources() noexcept
+{
+    long now = _clock.getElapsedMillis();
+
+    if (now < _nextRespawnMillis)
+        return;
+    _spawner.respawn(_map);
+    while (_nextRespawnMillis <= now)
+        _nextRespawnMillis += _clock.getDurationMillis(RESOURCE_SPAWN_INTERVAL);
 }
 
 bool Core::handleHandshake(Client &client, const std::string &teamName)

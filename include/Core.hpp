@@ -13,6 +13,7 @@
 #include "Clock.hpp"
 #include "Macros.hpp"
 #include "Map.hpp"
+#include "ResourceSpawner.hpp"
 #include "Socket.hpp"
 #include "Team.hpp"
 #include <poll.h>
@@ -42,15 +43,19 @@ private:
     void handlePlayerLine(Client &client, const std::string &line);
     void executeDueCommands();
     void executePlayerCommand(Client &client, const Command &cmd);
-    [[nodiscard]] Client *findClient(int fd);
-    [[nodiscard]] Team *findTeam(const std::string &name);
+    void tickResources() noexcept;
     void removeClient(int fd);
 
+    [[nodiscard]] Client *findClient(int fd);
+    [[nodiscard]] Team *findTeam(const std::string &name);
+
     Socket _listener;
-    Clock _clock{DEFAULT_FREQUENCY};
+    Clock _clock;
+    ResourceSpawner _spawner;
     std::vector<Client> _clients;
     std::vector<Team> _teams;
     Map _map;
+    long _nextRespawnMillis;
 };
 
 } // namespace Zappy::Server
