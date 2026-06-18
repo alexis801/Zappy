@@ -44,6 +44,9 @@ private:
     void executeDueCommands();
     void executePlayerCommand(Client &client, const Command &cmd);
     void tickResources() noexcept;
+    void tickLife() noexcept;
+    void killPlayer(int fd);
+    void sendMapToGui(Client &gui) const;
     void removeClient(int fd);
 
     [[nodiscard]] Client *findClient(int fd);
@@ -56,6 +59,7 @@ private:
     std::vector<Team> _teams;
     Map _map;
     long _nextRespawnMillis;
+    long _lastLifeTickMillis;
 };
 
 } // namespace Zappy::Server

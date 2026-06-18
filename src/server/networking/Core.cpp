@@ -8,6 +8,7 @@
 #include "CommandParser.hpp"
 #include "Core.hpp"
 #include "Macros.hpp"
+#include "Tile.hpp"
 #include <cerrno>
 #include <cstring>
 #include <iostream>
@@ -26,6 +27,17 @@ std::string buildHandshakeResponse(int slots, int width, int height)
         + std::to_string(height) + "\n";
 }
 
+std::string buildBctLine(int x, int y, const Tile &tile)
+{
+    std::string line = "bct " + std::to_string(x) + " "
+        + std::to_string(y);
+
+    for (std::size_t i = 0; i < RESOURCE_COUNT; ++i)
+        line += " " + std::to_string(tile.get(static_cast<Resource>(i)));
+    line += "\n";
+    return line;
+}
+
 } // namespace
 
 Core::Core(const Args &args)
@@ -33,12 +45,14 @@ Core::Core(const Args &args)
     _clock(args.getFrequency()),
     _spawner(42U),
     _map(args.getWidth(), args.getHeight()),
-    _nextRespawnMillis(0)
+    _nextRespawnMillis(0),
+    _lastLifeTickMillis(0)
 {
     for (const auto &name : args.getTeams())
         _teams.emplace_back(name, args.getClientsPerTeam());
     _spawner.initialSpawn(_map);
     _nextRespawnMillis = _clock.getDurationMillis(RESOURCE_SPAWN_INTERVAL);
+    _lastLifeTickMillis = _clock.getElapsedMillis();
 }
 
 void Core::run()
@@ -52,6 +66,7 @@ void Core::run()
         }
         handleEvents(fds);
         executeDueCommands();
+        tickLife();
         tickResources();
     }
 }
@@ -197,11 +212,68 @@ void Core::tickResources() noexcept
         _nextRespawnMillis += _clock.getDurationMillis(RESOURCE_SPAWN_INTERVAL);
 }
 
+void Core::tickLife() noexcept
+{
+    long now = _clock.getElapsedMillis();
+    long elapsedMs = now - _lastLifeTickMillis;
+
+    if (elapsedMs <= 0)
+        return;
+    _lastLifeTickMillis = now;
+    int elapsedUnits = static_cast<int>(
+        elapsedMs * _clock.getFrequency() / 1000);
+
+    if (elapsedUnits <= 0)
+        return;
+    std::vector<int> deadClients;
+
+    for (auto &client : _clients) {
+        if (client.getState() != Client::State::Player)
+            continue;
+        Player *player = client.getPlayer();
+
+        if (player == nullptr)
+            continue;
+        player->consumeFood(elapsedUnits);
+        if (!player->isAlive())
+            deadClients.push_back(client.getFd());
+    }
+    for (int fd : deadClients)
+        killPlayer(fd);
+}
+
+void Core::killPlayer(int fd)
+{
+    Client *client = findClient(fd);
+
+    if (client == nullptr)
+        return;
+    if (client->getState() == Client::State::Player) {
+        Team *team = findTeam(client->getTeamName());
+
+        if (team != nullptr)
+            team->releaseSlot();
+        client->send("dead\n");
+    }
+    removeClient(fd);
+}
+
+void Core::sendMapToGui(Client &gui) const
+{
+    gui.send("msz " + std::to_string(_map.getWidth()) + " "
+        + std::to_string(_map.getHeight()) + "\n");
+    for (int y = 0; y < _map.getHeight(); ++y) {
+        for (int x = 0; x < _map.getWidth(); ++x)
+            gui.send(buildBctLine(x, y, _map.at(x, y)));
+    }
+}
+
 bool Core::handleHandshake(Client &client, const std::string &teamName)
 {
     if (teamName == Zappy::GRAPHIC_TEAM_NAME) {
         client.setAsGui();
         client.send(buildHandshakeResponse(0, _map.getWidth(), _map.getHeight()));
+        sendMapToGui(client);
         return true;
     }
     Team *team = findTeam(teamName);
