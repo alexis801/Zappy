@@ -12,10 +12,14 @@
 #include "Client.hpp"
 #include "Clock.hpp"
 #include "Macros.hpp"
+#include "Map.hpp"
+#include "ResourceSpawner.hpp"
 #include "Socket.hpp"
 #include "Team.hpp"
 #include <poll.h>
+#include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace Zappy::Server {
@@ -39,6 +43,19 @@ private:
     void consumeLines(Client &client);
     bool handleHandshake(Client &client, const std::string &teamName);
     void handlePlayerLine(Client &client, const std::string &line);
+    void handleGuiLine(Client &client, const std::string &line);
+    void sendGuiInitialState(Client &client);
+    void respondMsz(Client &client, std::istringstream &iss);
+    void respondMct(Client &client, std::istringstream &iss);
+    void respondTna(Client &client, std::istringstream &iss);
+    void respondSgt(Client &client, std::istringstream &iss);
+    void respondBct(Client &client, std::istringstream &iss);
+    void respondPpo(Client &client, std::istringstream &iss);
+    void respondPlv(Client &client, std::istringstream &iss);
+    void respondPin(Client &client, std::istringstream &);
+    void respondSst(Client &client, std::istringstream &);
+    void broadcastToGuis(std::string_view message);
+    [[nodiscard]] Client *findPlayerById(int playerId);
     void executeDueCommands();
     void executePlayerCommand(Client &client, const Command &cmd);
     [[nodiscard]] Client *findClient(int fd);
@@ -47,6 +64,8 @@ private:
 
     Socket _listener;
     Clock _clock{DEFAULT_FREQUENCY};
+    Map _map;
+    ResourceSpawner _spawner;
     std::vector<Client> _clients;
     std::vector<Team> _teams;
     int _width;

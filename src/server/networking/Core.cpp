@@ -7,17 +7,22 @@
 
 #include "CommandParser.hpp"
 #include "Core.hpp"
+#include "GuiProtocol.hpp"
 #include "Macros.hpp"
 #include <cerrno>
 #include <cstring>
 #include <iostream>
 #include <optional>
+#include <sstream>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 namespace Zappy::Server {
 
 namespace {
+
+constexpr unsigned DEFAULT_SPAWN_SEED = 42;
 
 std::string buildHandshakeResponse(int slots, int width, int height)
 {
@@ -30,10 +35,12 @@ std::string buildHandshakeResponse(int slots, int width, int height)
 
 Core::Core(const Args &args)
     : _listener(Socket::listenOn(args.getPort())),
+    _map(args.getWidth(), args.getHeight()), _spawner(DEFAULT_SPAWN_SEED),
     _width(args.getWidth()), _height(args.getHeight())
 {
     for (const auto &name : args.getTeams())
         _teams.emplace_back(name, args.getClientsPerTeam());
+    _spawner.initialSpawn(_map);
 }
 
 void Core::run()
@@ -120,8 +127,7 @@ void Core::consumeLines(Client &client)
         } else if (client.getState() == Client::State::Player) {
             handlePlayerLine(client, *line);
         } else {
-            std::cerr << "[gui " << client.getFd() << "] "
-                      << *line << "\n";
+            handleGuiLine(client, *line);
         }
     }
 }
@@ -187,6 +193,7 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
     if (teamName == Zappy::GRAPHIC_TEAM_NAME) {
         client.setAsGui();
         client.send(buildHandshakeResponse(0, _width, _height));
+        sendGuiInitialState(client);
         return true;
     }
     Team *team = findTeam(teamName);
@@ -198,6 +205,9 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
     client.spawnPlayer(_width, _height);
     client.send(buildHandshakeResponse(
         team->getRemainingSlots(), _width, _height));
+    if (client.getPlayer() != nullptr)
+        broadcastToGuis(GuiProtocol::formatPnw(
+            client.getFd(), *client.getPlayer(), 1, teamName));
     return true;
 }
 
@@ -222,6 +232,148 @@ void Core::removeClient(int fd)
     std::cerr << "[serveur] client deconnecte (fd " << fd << ")\n";
     std::erase_if(_clients,
         [fd](const Client &client) { return client.getFd() == fd; });
+}
+
+void Core::handleGuiLine(Client &client, const std::string &line)
+{
+    using GuiMember = void (Core::*)(Client &, std::istringstream &);
+    static const std::unordered_map<std::string, GuiMember> handlers = {
+        {"msz", &Core::respondMsz}, {"mct", &Core::respondMct},
+        {"tna", &Core::respondTna}, {"sgt", &Core::respondSgt},
+        {"bct", &Core::respondBct}, {"ppo", &Core::respondPpo},
+        {"plv", &Core::respondPlv}, {"plv", &Core::respondPin},
+    };
+    std::istringstream iss(line);
+    std::string command;
+
+    iss >> command;
+    auto handler = handlers.find(command);
+    if (handler == handlers.end()) {
+        client.send("suc\n");
+        return;
+    }
+    (this->*(handler->second))(client, iss);
+}
+
+void Core::respondPin(Client &client, std::istringstream &iss)
+{
+    char hash = 0;
+    int playerId = 0;
+
+    if (!(iss >> hash >> playerId) || hash != '#') {
+        client.send("sbp\n");
+        return;
+    }
+    Client *clientPlayer = findPlayerById(playerId);
+    if (clientPlayer == nullptr || clientPlayer->getPlayer() == nullptr)
+        client.send("pin\n");
+    else {
+        const Player &player = *clientPlayer->getPlayer();
+        client.send(GuiProtocol::formatPin(playerId, player, _map.at(player.getX(), player.getY())));
+    }
+}
+
+void Core::respondMsz(Client &client, std::istringstream &)
+{
+    client.send(GuiProtocol::formatMsz(_width, _height));
+}
+
+void Core::respondMct(Client &client, std::istringstream &)
+{
+    for (int y = 0; y < _height; ++y)
+        for (int x = 0; x < _width; ++x)
+            client.send(GuiProtocol::formatBct(x, y, _map.at(x, y)));
+}
+
+void Core::respondTna(Client &client, std::istringstream &)
+{
+    for (const auto &team : _teams)
+        client.send(GuiProtocol::formatTna(team.getName()));
+}
+
+void Core::respondSgt(Client &client, std::istringstream &)
+{
+    client.send(GuiProtocol::formatSgt(_clock.getFrequency()));
+}
+
+void Core::respondSst(Client &client, std::istringstream &iss)
+{   
+    int frequency = 0;
+    if (!iss >> frequency) {
+        client.send("sst\n");
+        return;
+    }
+    client.send(GuiProtocol::formatSst(_clock, frequency));
+}
+
+void Core::respondBct(Client &client, std::istringstream &iss)
+{
+    int x = 0;
+    int y = 0;
+
+    if (!(iss >> x >> y)
+        || x < 0 || y < 0 || x >= _width || y >= _height) {
+        client.send("sbp\n");
+        return;
+    }
+    client.send(GuiProtocol::formatBct(x, y, _map.at(x, y)));
+}
+
+void Core::respondPpo(Client &client, std::istringstream &iss)
+{
+    char hash = 0;
+    int playerId = 0;
+
+    if (!(iss >> hash >> playerId) || hash != '#') {
+        client.send("sbp\n");
+        return;
+    }
+    Client *player = findPlayerById(playerId);
+
+    if (player == nullptr || player->getPlayer() == nullptr)
+        client.send("sbp\n");
+    else
+        client.send(GuiProtocol::formatPpo(playerId, *player->getPlayer()));
+}
+
+void Core::respondPlv(Client &client, std::istringstream &iss)
+{
+    char hash = 0;
+    int playerId = 0;
+
+    if (!(iss >> hash >> playerId) || hash != '#') {
+        client.send("sbp\n");
+        return;
+    }
+    if (findPlayerById(playerId) != nullptr)
+        client.send(GuiProtocol::formatPlv(playerId, 1));
+    else
+        client.send("sbp\n");
+}
+
+void Core::broadcastToGuis(std::string_view message)
+{
+    for (auto &client : _clients)
+        if (client.getState() == Client::State::Gui)
+            client.send(message);
+}
+
+Client *Core::findPlayerById(int playerId)
+{
+    for (auto &client : _clients)
+        if (client.getFd() == playerId
+            && client.getState() == Client::State::Player)
+            return &client;
+    return nullptr;
+}
+
+void Core::sendGuiInitialState(Client &client)
+{
+    std::istringstream empty;
+
+    respondMsz(client, empty);
+    respondTna(client, empty);
+    respondMct(client, empty);
 }
 
 } // namespace Zappy::Server
