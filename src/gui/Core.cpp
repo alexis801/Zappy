@@ -8,7 +8,6 @@
 #include "gui/Core.hpp"
 #include "gui/Connection.hpp"
 
-#include <iostream>
 #include <optional>
 #include <poll.h>
 #include <string>
@@ -19,14 +18,6 @@ Core::Core(const Args &args) : _connection(Socket::connectTo(args.getHost(), arg
 {
 }
 
-void Core::run()
-{
-    bool connected = true;
-
-    while (connected)
-        connected = update();
-}
-
 void Core::handleLine(const std::string &line)
 {
     if (!_ready && line == "WELCOME") {
@@ -34,13 +25,13 @@ void Core::handleLine(const std::string &line)
         _ready = true;
         return;
     }
-    std::cout << "serveur =" << line << "\n";
+    _parser.apply(line, _world);
 }
 
 bool Core::update()
 {
     pollfd watched = {_connection.getFd(), POLLIN, 0};
-    int ready = ::poll(&watched, 1, 100);
+    int ready = ::poll(&watched, 1, 0);
 
     if (ready < 0)
         return false;

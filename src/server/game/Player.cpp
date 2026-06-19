@@ -7,6 +7,7 @@
 
 #include "Player.hpp"
 #include <random>
+#include <string>
 
 namespace Zappy::Server {
 
@@ -19,8 +20,9 @@ int Player::drawRandomInt(int upperExclusive)
 }
 
 Player::Player(int x, int y, Direction direction) noexcept
-    : _x(x), _y(y), _direction(direction)
+    : _x(x), _y(y), _direction(direction), _level(1), _pendingTime(0)
 {
+    _inventory[static_cast<std::size_t>(Resource::FOOD)] = LIFE_UNITS_AT_START;
 }
 
 int Player::getX() const noexcept
@@ -36,6 +38,67 @@ int Player::getY() const noexcept
 Direction Player::getDirection() const noexcept
 {
     return _direction;
+}
+
+int Player::getLevel() const noexcept
+{
+    return _level;
+}
+
+int Player::getFood() const noexcept
+{
+    return _inventory[static_cast<std::size_t>(Resource::FOOD)];
+}
+
+int Player::get(Resource resource) const noexcept
+{
+    return _inventory[static_cast<std::size_t>(resource)];
+}
+
+std::string Player::formatInventory() const
+{
+    std::string result = "[";
+
+    for (std::size_t i = 0; i < RESOURCE_COUNT; ++i) {
+        if (i > 0)
+            result += ", ";
+        result += RESOURCE_NAMES[i];
+        result += ' ';
+        result += std::to_string(_inventory[i]);
+    }
+    result += ']';
+    return result;
+}
+
+void Player::consumeFood(int elapsedTimeUnits) noexcept
+{
+    if (!isAlive())
+        return;
+    _pendingTime += elapsedTimeUnits;
+    std::size_t foodIndex = static_cast<std::size_t>(Resource::FOOD);
+
+    while (_pendingTime >= TIME_UNITS_PER_FOOD && _inventory[foodIndex] > 0) {
+        _pendingTime -= TIME_UNITS_PER_FOOD;
+        --_inventory[foodIndex];
+    }
+    if (_inventory[foodIndex] <= 0)
+        _pendingTime = 0;
+}
+
+bool Player::isAlive() const noexcept
+{
+    return getFood() > 0;
+}
+
+bool Player::eat(Tile &tile) noexcept
+{
+    std::size_t foodIndex = static_cast<std::size_t>(Resource::FOOD);
+
+    if (tile.get(Resource::FOOD) <= 0)
+        return false;
+    tile.remove(Resource::FOOD, 1);
+    ++_inventory[foodIndex];
+    return true;
 }
 
 Player Player::spawnRandom(int width, int height)
@@ -88,7 +151,7 @@ void Player::turnRight() noexcept
         (static_cast<int>(_direction) + 1) % DIRECTION_COUNT);
 }
 
-bool Player::executeMovement(
+bool Player::runMovement(
     std::string_view command, int width, int height) noexcept
 {
     if (command == "Forward") {
@@ -104,6 +167,16 @@ bool Player::executeMovement(
         return true;
     }
     return false;
+}
+
+CommandOutcome Player::executeCommand(
+    std::string_view command, int width, int height) noexcept
+{
+    if (command == "Inventory")
+        return {CommandKind::INVENTORY, formatInventory()};
+    if (runMovement(command, width, height))
+        return {CommandKind::OK, {}};
+    return {CommandKind::KO, {}};
 }
 
 } // namespace Zappy::Server
