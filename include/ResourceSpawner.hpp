@@ -11,6 +11,8 @@
 #include "Macros.hpp"
 #include "Map.hpp"
 #include <random>
+#include <utility>
+#include <vector>
 
 namespace Zappy::Server {
 
@@ -28,7 +30,9 @@ public:
 
     void initialSpawn(Map &map) noexcept;
 
-    void respawn(Map &map) noexcept;
+    void respawn(
+        Map &map, std::vector<std::pair<int, int>> *changedTiles = nullptr)
+        noexcept;
 
 private:
     Rng _rng;

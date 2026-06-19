@@ -73,7 +73,7 @@ public:
     /**
      * @brief Fait apparaitre le joueur sur la carte (pos + dir aleatoires)
      */
-    void spawnPlayer(int width, int height);
+    void spawnPlayer(int width, int height, int id);
 
     /**
      * @brief Le joueur pilote par ce client, nullptr s'il n'existe pas

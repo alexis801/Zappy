@@ -29,6 +29,8 @@ public:
      */
     void claimSlot();
 
+    void releaseSlot() noexcept;
+
 private:
     std::string _name;
     int _slots;

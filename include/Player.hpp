@@ -36,9 +36,12 @@ struct CommandOutcome {
 
 class Player {
 public:
-    Player(int x, int y, Direction direction) noexcept;
+    Player(int x, int y, Direction direction, int id = 0) noexcept;
 
-    [[nodiscard]] static Player spawnRandom(int width, int height);
+    [[nodiscard]] static Player spawnRandom(
+        int width, int height, int id = 0);
+
+    [[nodiscard]] int getId() const noexcept;
 
     [[nodiscard]] int getX() const noexcept;
     [[nodiscard]] int getY() const noexcept;
@@ -76,6 +79,7 @@ private:
     int _x;
     int _y;
     Direction _direction;
+    int _id;
     int _level;
     int _pendingTime;
     std::array<int, RESOURCE_COUNT> _inventory{};

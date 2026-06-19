@@ -161,6 +161,10 @@ class ZappyClient:
         self.socket.sendall(f"{line}\n".encode())
 
 class SurvivalAI:
+    FOOD_CRITICAL = 5
+    FOOD_LOW = 10
+    FOOD_COMFORTABLE = 25
+
     def __init__(self, client: ZappyClient):
         self.client = client
         self.inventory = Inventory()
@@ -170,10 +174,43 @@ class SurvivalAI:
         self.position_y = 0
         self.level = 1
 
+    def update_state(self) -> State:
+        if self.inventory.food <= self.FOOD_CRITICAL:
+            return State.SURVIVE
+        elif self.inventory.food <= self.FOOD_LOW:
+            return State.COLLECT
+        else:
+            return State.EXPLORE
+        
     def act(self) -> None:
         self.state = self.update_state()
+
+        #regarder autour pour mettre a jour l'objectif
         self.client.send_command("Look")
         look_response = self.client.receive_response()
+        if not look_response:
+            print("cannot look")
+            return
+    
+        #mettre a jour l'inventaire
+        self.inventory()
+
+        #quel action
+        if self.state == State.SURVIVE:
+            self.survive()
+        elif self.state == State.COLLECT:
+            self.collect()
+        else:
+            self.explore()
+
+    def survive(self) -> None:
+        None
+    
+    def collect(self) -> None:
+        None
+
+    def explore(self) -> None:
+        None
 
     def go_forward(self) -> None:
         self.client.send_command("Forward")
@@ -203,9 +240,25 @@ class SurvivalAI:
         elif self.current_direction == Direction.LEFT:
             self.position_x -= 1
 
+    def store_inventory(self, inventory: str) -> None:
+        inventory = inventory.strip("[]")
+        items = inventory.split(",")
+        
+        for item in items:
+            parts = item.strip().split()
+            if len(parts) >= 2:
+                resource_name = parts[0]
+                try:
+                    quantity = int(parts[1])
+                    setattr(self.inventory, resource_name, quantity)
+                except ValueError:
+                    pass
+
     def inventory(self) -> None:
         self.client.send_command("Inventory")
         response = self.client.receive_response()   
+        if response:
+            self.store_inventory(response)
     
     def broadcast_text(self) -> None:
         self.client.send_command("Broadcast")
@@ -237,7 +290,6 @@ class SurvivalAI:
         response = self.client.receive_response()
         if response == 'ok':
             print("set " + response)
-    
 
 def parser(argv):
     port = None
