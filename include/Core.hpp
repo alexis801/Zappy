@@ -58,9 +58,16 @@ private:
     [[nodiscard]] Client *findPlayerById(int playerId);
     void executeDueCommands();
     void executePlayerCommand(Client &client, const Command &cmd);
+    void tickResources() noexcept;
+    void tickLife() noexcept;
+    void killPlayer(int fd);
+    void sendMapToGui(Client &gui) const;
+    void broadcastToGui(const std::string &message);
+    void broadcastTile(int x, int y);
+    void removeClient(int fd);
+
     [[nodiscard]] Client *findClient(int fd);
     [[nodiscard]] Team *findTeam(const std::string &name);
-    void removeClient(int fd);
 
     Socket _listener;
     Clock _clock{DEFAULT_FREQUENCY};
@@ -68,8 +75,9 @@ private:
     ResourceSpawner _spawner;
     std::vector<Client> _clients;
     std::vector<Team> _teams;
-    int _width;
-    int _height;
+    long _nextRespawnMillis;
+    long _lastLifeTickMillis;
+    int _nextPlayerId;
 };
 
 } // namespace Zappy::Server

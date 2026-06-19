@@ -59,9 +59,9 @@ void Client::setAsGui() noexcept
     _state = State::Gui;
 }
 
-void Client::spawnPlayer(int width, int height)
+void Client::spawnPlayer(int width, int height, int id)
 {
-    _player = Player::spawnRandom(width, height);
+    _player = Player::spawnRandom(width, height, id);
 }
 
 Player *Client::getPlayer() noexcept

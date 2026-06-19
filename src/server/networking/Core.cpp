@@ -9,6 +9,8 @@
 #include "Core.hpp"
 #include "GuiProtocol.hpp"
 #include "Macros.hpp"
+#include "Tile.hpp"
+#include <algorithm>
 #include <cerrno>
 #include <cstring>
 #include <iostream>
@@ -31,16 +33,33 @@ std::string buildHandshakeResponse(int slots, int width, int height)
         + std::to_string(height) + "\n";
 }
 
+std::string buildBctLine(int x, int y, const Tile &tile)
+{
+    std::string line = "bct " + std::to_string(x) + " "
+        + std::to_string(y);
+
+    for (std::size_t i = 0; i < RESOURCE_COUNT; ++i)
+        line += " " + std::to_string(tile.get(static_cast<Resource>(i)));
+    line += "\n";
+    return line;
+}
+
 } // namespace
 
 Core::Core(const Args &args)
     : _listener(Socket::listenOn(args.getPort())),
-    _map(args.getWidth(), args.getHeight()), _spawner(DEFAULT_SPAWN_SEED),
-    _width(args.getWidth()), _height(args.getHeight())
+    _clock(args.getFrequency()),
+    _map(args.getWidth(), args.getHeight()),
+    _spawner(DEFAULT_SPAWN_SEED),
+    _nextRespawnMillis(0),
+    _lastLifeTickMillis(0),
+    _nextPlayerId(0)
 {
     for (const auto &name : args.getTeams())
         _teams.emplace_back(name, args.getClientsPerTeam());
     _spawner.initialSpawn(_map);
+    _nextRespawnMillis = _clock.getDurationMillis(RESOURCE_SPAWN_INTERVAL);
+    _lastLifeTickMillis = _clock.getElapsedMillis();
 }
 
 void Core::run()
@@ -54,6 +73,8 @@ void Core::run()
         }
         handleEvents(fds);
         executeDueCommands();
+        tickLife();
+        tickResources();
     }
 }
 
@@ -69,17 +90,15 @@ std::vector<pollfd> Core::buildPollFds() const
 
 int Core::getPollTimeoutMillis() const noexcept
 {
-    long soonest = -1;
+    long soonest = _nextRespawnMillis;
 
     for (const auto &client : _clients) {
         if (!client.hasCommands())
             continue;
         long deadline = client.getNextDeadlineMillis();
-        if (soonest < 0 || deadline < soonest)
+        if (deadline < soonest)
             soonest = deadline;
     }
-    if (soonest < 0)
-        return -1;
     return static_cast<int>(_clock.getRemainingMillis(soonest));
 }
 
@@ -175,7 +194,7 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         return;
     }
     CommandOutcome outcome = player->executeCommand(
-        cmd.text, _width, _height);
+        cmd.text, _map.getWidth(), _map.getHeight());
 
     if (outcome.kind == CommandKind::KO) {
         client.send("ko\n");
@@ -188,12 +207,104 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
     client.send("ok\n");
 }
 
+void Core::tickResources() noexcept
+{
+    long now = _clock.getElapsedMillis();
+
+    if (now < _nextRespawnMillis)
+        return;
+    std::vector<std::pair<int, int>> changedTiles;
+
+    _spawner.respawn(_map, &changedTiles);
+    std::sort(changedTiles.begin(), changedTiles.end());
+    changedTiles.erase(
+        std::unique(changedTiles.begin(), changedTiles.end()),
+        changedTiles.end());
+    for (const auto &[x, y] : changedTiles)
+        broadcastTile(x, y);
+    while (_nextRespawnMillis <= now)
+        _nextRespawnMillis += _clock.getDurationMillis(RESOURCE_SPAWN_INTERVAL);
+}
+
+void Core::tickLife() noexcept
+{
+    long now = _clock.getElapsedMillis();
+    long elapsedMs = now - _lastLifeTickMillis;
+
+    if (elapsedMs <= 0)
+        return;
+    _lastLifeTickMillis = now;
+    int elapsedUnits = static_cast<int>(
+        elapsedMs * _clock.getFrequency() / 1000);
+
+    if (elapsedUnits <= 0)
+        return;
+    std::vector<int> deadClients;
+
+    for (auto &client : _clients) {
+        if (client.getState() != Client::State::Player)
+            continue;
+        Player *player = client.getPlayer();
+
+        if (player == nullptr)
+            continue;
+        player->consumeFood(elapsedUnits);
+        if (!player->isAlive())
+            deadClients.push_back(client.getFd());
+    }
+    for (int fd : deadClients)
+        killPlayer(fd);
+}
+
+void Core::killPlayer(int fd)
+{
+    Client *client = findClient(fd);
+
+    if (client == nullptr)
+        return;
+    if (client->getState() == Client::State::Player) {
+        Player *player = client->getPlayer();
+
+        if (player != nullptr)
+            broadcastToGui("pdi " + std::to_string(player->getId()) + "\n");
+        Team *team = findTeam(client->getTeamName());
+
+        if (team != nullptr)
+            team->releaseSlot();
+        client->send("dead\n");
+    }
+    removeClient(fd);
+}
+
+void Core::sendMapToGui(Client &gui) const
+{
+    gui.send("msz " + std::to_string(_map.getWidth()) + " "
+        + std::to_string(_map.getHeight()) + "\n");
+    for (int y = 0; y < _map.getHeight(); ++y) {
+        for (int x = 0; x < _map.getWidth(); ++x)
+            gui.send(buildBctLine(x, y, _map.at(x, y)));
+    }
+}
+
+void Core::broadcastToGui(const std::string &message)
+{
+    for (auto &client : _clients) {
+        if (client.getState() == Client::State::Gui)
+            client.send(message);
+    }
+}
+
+void Core::broadcastTile(int x, int y)
+{
+    broadcastToGui(buildBctLine(x, y, _map.at(x, y)));
+}
+
 bool Core::handleHandshake(Client &client, const std::string &teamName)
 {
     if (teamName == Zappy::GRAPHIC_TEAM_NAME) {
         client.setAsGui();
-        client.send(buildHandshakeResponse(0, _width, _height));
-        sendGuiInitialState(client);
+        client.send(buildHandshakeResponse(0, _map.getWidth(), _map.getHeight()));
+        sendMapToGui(client);
         return true;
     }
     Team *team = findTeam(teamName);
@@ -202,9 +313,9 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
         return false;
     team->claimSlot();
     client.setAsPlayer(teamName);
-    client.spawnPlayer(_width, _height);
+    client.spawnPlayer(_map.getWidth(), _map.getHeight(), _nextPlayerId++);
     client.send(buildHandshakeResponse(
-        team->getRemainingSlots(), _width, _height));
+        team->getRemainingSlots(), _map.getWidth(), _map.getHeight()));
     if (client.getPlayer() != nullptr)
         broadcastToGuis(GuiProtocol::formatPnw(
             client.getFd(), *client.getPlayer(), 1, teamName));
@@ -275,13 +386,13 @@ void Core::respondPin(Client &client, std::istringstream &iss)
 
 void Core::respondMsz(Client &client, std::istringstream &)
 {
-    client.send(GuiProtocol::formatMsz(_width, _height));
+    client.send(GuiProtocol::formatMsz(_map.getWidth(), _map.getHeight()));
 }
 
 void Core::respondMct(Client &client, std::istringstream &)
 {
-    for (int y = 0; y < _height; ++y)
-        for (int x = 0; x < _width; ++x)
+    for (int y = 0; y < _map.getHeight(); ++y)
+        for (int x = 0; x < _map.getWidth(); ++x)
             client.send(GuiProtocol::formatBct(x, y, _map.at(x, y)));
 }
 
@@ -312,7 +423,7 @@ void Core::respondBct(Client &client, std::istringstream &iss)
     int y = 0;
 
     if (!(iss >> x >> y)
-        || x < 0 || y < 0 || x >= _width || y >= _height) {
+        || x < 0 || y < 0 || x >= _map.getWidth() || y >= _map.getHeight()) {
         client.send("sbp\n");
         return;
     }
