@@ -264,11 +264,13 @@ void Core::respondPin(Client &client, std::istringstream &iss)
         client.send("sbp\n");
         return;
     }
-    Client *player = findPlayerById(playerId);
-    if (player == nullptr || player->getPlayer() == nullptr)
+    Client *clientPlayer = findPlayerById(playerId);
+    if (clientPlayer == nullptr || clientPlayer->getPlayer() == nullptr)
         client.send("pin\n");
-    else
-        client.send(GuiProtocol::formatPin(playerId, *player->getPlayer()));
+    else {
+        const Player &player = *clientPlayer->getPlayer();
+        client.send(GuiProtocol::formatPin(playerId, player, _map.at(player.getX(), player.getY())));
+    }
 }
 
 void Core::respondMsz(Client &client, std::istringstream &)
