@@ -49,8 +49,8 @@ std::string buildBctLine(int x, int y, const Tile &tile)
 Core::Core(const Args &args)
     : _listener(Socket::listenOn(args.getPort())),
     _clock(args.getFrequency()),
-    _spawner(42U),
     _map(args.getWidth(), args.getHeight()),
+    _spawner(DEFAULT_SPAWN_SEED),
     _nextRespawnMillis(0),
     _lastLifeTickMillis(0),
     _nextPlayerId(0)
@@ -386,13 +386,13 @@ void Core::respondPin(Client &client, std::istringstream &iss)
 
 void Core::respondMsz(Client &client, std::istringstream &)
 {
-    client.send(GuiProtocol::formatMsz(_width, _height));
+    client.send(GuiProtocol::formatMsz(_map.getWidth(), _map.getHeight()));
 }
 
 void Core::respondMct(Client &client, std::istringstream &)
 {
-    for (int y = 0; y < _height; ++y)
-        for (int x = 0; x < _width; ++x)
+    for (int y = 0; y < _map.getHeight(); ++y)
+        for (int x = 0; x < _map.getWidth(); ++x)
             client.send(GuiProtocol::formatBct(x, y, _map.at(x, y)));
 }
 
@@ -423,7 +423,7 @@ void Core::respondBct(Client &client, std::istringstream &iss)
     int y = 0;
 
     if (!(iss >> x >> y)
-        || x < 0 || y < 0 || x >= _width || y >= _height) {
+        || x < 0 || y < 0 || x >= _map.getWidth() || y >= _map.getHeight()) {
         client.send("sbp\n");
         return;
     }

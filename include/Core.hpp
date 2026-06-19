@@ -75,7 +75,6 @@ private:
     ResourceSpawner _spawner;
     std::vector<Client> _clients;
     std::vector<Team> _teams;
-    Map _map;
     long _nextRespawnMillis;
     long _lastLifeTickMillis;
     int _nextPlayerId;
