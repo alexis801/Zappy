@@ -36,7 +36,7 @@ public:
     [[nodiscard]] static std::string formatPpo(int playerId,
         const Player &player);
     [[nodiscard]] static std::string formatPlv(int playerId, int level);
-    [[nodiscard]] static std::string formatPin();
+    [[nodiscard]] static std::string formatPin(int playerId, const Player &player, const Tile &tile);
 };
 
 } // namespace Zappy::Server

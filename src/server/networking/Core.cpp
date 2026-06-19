@@ -255,9 +255,28 @@ void Core::handleGuiLine(Client &client, const std::string &line)
     (this->*(handler->second))(client, iss);
 }
 
-void Core::respondPin(Client &client, std::istringstream &)
+void Core::respondPin(Client &client, std::istringstream &iss)
 {
-    client.send(GuiProtocol::formatPin());
+    char hash = 0;
+    int playerId = 0;
+    int x = 0;
+    int y = 0;
+
+    if (!(iss >> x >> y)
+        || x < 0 || y < 0 || x >= _width || y >= _height) {
+        client.send("sbp\n");
+        return;
+    }
+
+    if (!(iss >> hash >> playerId) || hash != '#') {
+        client.send("sbp\n");
+        return;
+    }
+    Client *player = findPlayerById(playerId);
+    if (player == nullptr || player->getPlayer() == nullptr)
+        client.send("pin\n");
+    else
+        client.send(GuiProtocol::formatPin(playerId, *player->getPlayer(), _map.at(x, y)));
 }
 
 void Core::respondMsz(Client &client, std::istringstream &)
