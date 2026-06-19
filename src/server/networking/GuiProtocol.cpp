@@ -75,4 +75,9 @@ std::string GuiProtocol::formatPlv(int playerId, int level)
         + std::to_string(level) + "\n";
 }
 
+std::string GuiProtocol::formatPin()
+{
+
+}
+
 } // namespace Zappy::Server

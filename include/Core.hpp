@@ -52,6 +52,7 @@ private:
     void respondBct(Client &client, std::istringstream &iss);
     void respondPpo(Client &client, std::istringstream &iss);
     void respondPlv(Client &client, std::istringstream &iss);
+    void respondPin(Client &client, std::istringstream &);
     void broadcastToGuis(std::string_view message);
     [[nodiscard]] Client *findPlayerById(int playerId);
     void executeDueCommands();

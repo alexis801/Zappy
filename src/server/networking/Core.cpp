@@ -241,7 +241,7 @@ void Core::handleGuiLine(Client &client, const std::string &line)
         {"msz", &Core::respondMsz}, {"mct", &Core::respondMct},
         {"tna", &Core::respondTna}, {"sgt", &Core::respondSgt},
         {"bct", &Core::respondBct}, {"ppo", &Core::respondPpo},
-        {"plv", &Core::respondPlv},
+        {"plv", &Core::respondPlv}, {"plv", &Core::respondPin},
     };
     std::istringstream iss(line);
     std::string command;
@@ -253,6 +253,11 @@ void Core::handleGuiLine(Client &client, const std::string &line)
         return;
     }
     (this->*(handler->second))(client, iss);
+}
+
+void Core::respondPin(Client &client, std::istringstream &)
+{
+    client.send(GuiProtocol::formatPin());
 }
 
 void Core::respondMsz(Client &client, std::istringstream &)
