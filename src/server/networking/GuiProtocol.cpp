@@ -88,6 +88,7 @@ std::string GuiProtocol::formatPin(int playerId, const Player &player, const Til
 std::string GuiProtocol::formatSst(Clock &clock, int frequency)
 {
     clock.setFrequency(frequency);
+    return "sst " + clock.getFrequency() + '\n';
 }
 
 } // namespace Zappy::Server
