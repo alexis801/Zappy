@@ -75,7 +75,7 @@ std::string GuiProtocol::formatPlv(int playerId, int level)
         + std::to_string(level) + "\n";
 }
 
-std::string GuiProtocol::formatPin(int playerId, const Player &player, const Tile &tile)
+std::string GuiProtocol::formatPin(int playerId, const Player &player)
 {
     std::string out = "pin " + std::to_string(x) + " " + std::to_string(y);
 
@@ -85,7 +85,7 @@ std::string GuiProtocol::formatPin(int playerId, const Player &player, const Til
     out += "\n";
     return "pin #" + std::to_string(playerId) + " "
         + std::to_string(player.getX()) + " "
-        + std::to_string(player.getY()) + " "
+        + std::to_string(player.getY()) + " ";
 }
 
 } // namespace Zappy::Server
