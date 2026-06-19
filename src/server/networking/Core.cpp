@@ -296,6 +296,16 @@ void Core::respondSgt(Client &client, std::istringstream &)
     client.send(GuiProtocol::formatSgt(_clock.getFrequency()));
 }
 
+void Core::respondSst(Client &client, std::istringstream &iss)
+{   
+    int frequency = 0;
+    if (!iss >> frequency) {
+        client.send("sst\n");
+        return;
+    }
+    client.send(GuiProtocol::formatSst(_clock, frequency));
+}
+
 void Core::respondBct(Client &client, std::istringstream &iss)
 {
     int x = 0;

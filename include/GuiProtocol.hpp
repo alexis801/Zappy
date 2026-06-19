@@ -10,6 +10,7 @@
 
 #include "Player.hpp"
 #include "Tile.hpp"
+#include "Clock.hpp"
 #include <string>
 #include <string_view>
 
@@ -37,6 +38,7 @@ public:
         const Player &player);
     [[nodiscard]] static std::string formatPlv(int playerId, int level);
     [[nodiscard]] static std::string formatPin(int playerId, const Player &player, const Tile &tile);
+    [[nodiscard]] static std::string formatSst(Clock &clock, int frequency);
 };
 
 } // namespace Zappy::Server
