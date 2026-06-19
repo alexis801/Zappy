@@ -9,6 +9,8 @@
 
 #include <sstream>
 #include <string>
+#include <map>
+#include <functional>
 
 namespace Zappy::Gui {
 
@@ -198,45 +200,21 @@ void applySmg(std::istringstream &stream, World &world)
 
 void Parser::apply(const std::string &line, World &world) const
 {
+    std::map<std::string, std::function<void(std::istringstream &, World &)>> commands = {
+        {"msz", applyMsz}, {"bct", applyBct}, {"pnw", applyPnw},
+        {"ppo", applyPpo}, {"plv", applyPlv}, {"pdi", applyPdi},
+        {"tna", applyTna}, {"enw", applyEnw}, {"ebo", applyEbo},
+        {"edi", applyEdi}, {"pin", applyPin}, {"pic", applyPic},
+        {"pie", applyPie}, {"sgt", applySgt}, {"sst", applySst},
+        {"seg", applySeg}, {"smg", applySmg}
+    };
     std::istringstream stream(line);
     std::string command;
 
     stream >> command;
-    if (command == "msz")
-        applyMsz(stream, world);
-    else if (command == "bct")
-        applyBct(stream, world);
-    else if (command == "pnw")
-        applyPnw(stream, world);
-    else if (command == "ppo")
-        applyPpo(stream, world);
-    else if (command == "plv")
-        applyPlv(stream, world);
-    else if (command == "pdi")
-        applyPdi(stream, world);
-    else if (command == "tna")
-        applyTna(stream, world);
-    else if (command == "enw")
-        applyEnw(stream, world);
-    else if (command == "ebo")
-        applyEbo(stream, world);
-    else if (command == "edi")
-        applyEdi(stream, world);
-    else if (command == "pin")
-        applyPin(stream, world);
-    else if (command == "pic")
-        applyPic(stream, world);
-    else if (command == "pie")
-        applyPie(stream, world);
-    else if (command == "sgt")
-        applySgt(stream, world);
-    else if (command == "sst")
-        applySst(stream, world);
-    else if (command == "seg")
-        applySeg(stream, world);
-    else if (command == "smg")
-        applySmg(stream, world);
-
+    auto it = commands.find(command);
+    if (it != commands.end())
+        it->second(stream, world);
 }
 
 } // namespace Zappy::Gui
