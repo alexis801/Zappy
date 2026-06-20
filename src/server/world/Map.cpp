@@ -39,4 +39,21 @@ const Tile &Map::at(int x, int y) const noexcept
     return _tiles[ny * _width + nx];
 }
 
+void Map::addPlayer(int playerId, int x, int y) noexcept
+{
+    at(x, y).addPlayer(playerId);
+}
+
+void Map::removePlayer(int playerId, int x, int y) noexcept
+{
+    at(x, y).removePlayer(playerId);
+}
+
+void Map::movePlayer(
+    int playerId, int fromX, int fromY, int toX, int toY) noexcept
+{
+    removePlayer(playerId, fromX, fromY);
+    addPlayer(playerId, toX, toY);
+}
+
 } // namespace Zappy::Server

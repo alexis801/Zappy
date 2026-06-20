@@ -6,6 +6,7 @@
 */
 
 #include "Tile.hpp"
+#include <algorithm>
 
 namespace Zappy::Server {
 
@@ -43,6 +44,29 @@ int Tile::total() const noexcept
     for (int quantity : _quantities)
         sum += quantity;
     return sum;
+}
+
+void Tile::addPlayer(int playerId) noexcept
+{
+    _players.push_back(playerId);
+}
+
+void Tile::removePlayer(int playerId) noexcept
+{
+    auto it = std::find(_players.begin(), _players.end(), playerId);
+
+    if (it != _players.end())
+        _players.erase(it);
+}
+
+const std::vector<int> &Tile::players() const noexcept
+{
+    return _players;
+}
+
+int Tile::resourceCount(Resource resource) const noexcept
+{
+    return get(resource);
 }
 
 } // namespace Zappy::Server

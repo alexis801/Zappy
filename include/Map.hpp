@@ -23,6 +23,11 @@ public:
     [[nodiscard]] Tile &at(int x, int y) noexcept;
     [[nodiscard]] const Tile &at(int x, int y) const noexcept;
 
+    void addPlayer(int playerId, int x, int y) noexcept;
+    void removePlayer(int playerId, int x, int y) noexcept;
+    void movePlayer(
+        int playerId, int fromX, int fromY, int toX, int toY) noexcept;
+
 private:
     [[nodiscard]] int normalize(int value, int size) const noexcept;
 

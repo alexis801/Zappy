@@ -11,6 +11,7 @@
 #include "Macros.hpp"
 #include <array>
 #include <cstddef>
+#include <vector>
 
 namespace Zappy::Server {
 
@@ -22,8 +23,14 @@ public:
     [[nodiscard]] bool isEmpty() const noexcept;
     [[nodiscard]] int total() const noexcept;
 
+    void addPlayer(int playerId) noexcept;
+    void removePlayer(int playerId) noexcept;
+    [[nodiscard]] const std::vector<int> &players() const noexcept;
+    [[nodiscard]] int resourceCount(Resource resource) const noexcept;
+
 private:
     std::array<int, RESOURCE_COUNT> _quantities{};
+    std::vector<int> _players;
 };
 
 } // namespace Zappy::Server
