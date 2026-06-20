@@ -19,10 +19,15 @@ int Player::drawRandomInt(int upperExclusive)
     return distribution(generator);
 }
 
-Player::Player(int x, int y, Direction direction) noexcept
-    : _x(x), _y(y), _direction(direction)
+Player::Player(int x, int y, Direction direction, int id) noexcept
+    : _x(x), _y(y), _direction(direction), _id(id), _level(1), _pendingTime(0)
 {
     _inventory[static_cast<std::size_t>(Resource::FOOD)] = LIFE_UNITS_AT_START;
+}
+
+int Player::getId() const noexcept
+{
+    return _id;
 }
 
 int Player::getX() const noexcept
@@ -38,6 +43,16 @@ int Player::getY() const noexcept
 Direction Player::getDirection() const noexcept
 {
     return _direction;
+}
+
+int Player::getLevel() const noexcept
+{
+    return _level;
+}
+
+int Player::getFood() const noexcept
+{
+    return _inventory[static_cast<std::size_t>(Resource::FOOD)];
 }
 
 int Player::get(Resource resource) const noexcept
@@ -60,10 +75,41 @@ std::string Player::formatInventory() const
     return result;
 }
 
-Player Player::spawnRandom(int width, int height)
+void Player::consumeFood(int elapsedTimeUnits) noexcept
+{
+    if (!isAlive())
+        return;
+    _pendingTime += elapsedTimeUnits;
+    std::size_t foodIndex = static_cast<std::size_t>(Resource::FOOD);
+
+    while (_pendingTime >= TIME_UNITS_PER_FOOD && _inventory[foodIndex] > 0) {
+        _pendingTime -= TIME_UNITS_PER_FOOD;
+        --_inventory[foodIndex];
+    }
+    if (_inventory[foodIndex] <= 0)
+        _pendingTime = 0;
+}
+
+bool Player::isAlive() const noexcept
+{
+    return getFood() > 0;
+}
+
+bool Player::eat(Tile &tile) noexcept
+{
+    std::size_t foodIndex = static_cast<std::size_t>(Resource::FOOD);
+
+    if (tile.get(Resource::FOOD) <= 0)
+        return false;
+    tile.remove(Resource::FOOD, 1);
+    ++_inventory[foodIndex];
+    return true;
+}
+
+Player Player::spawnRandom(int width, int height, int id)
 {
     return Player(drawRandomInt(width), drawRandomInt(height),
-        static_cast<Direction>(drawRandomInt(DIRECTION_COUNT)));
+        static_cast<Direction>(drawRandomInt(DIRECTION_COUNT)), id);
 }
 
 void Player::stepNorth(int height) noexcept

@@ -23,4 +23,9 @@ void Team::claimSlot()
     --_slots;
 }
 
+void Team::releaseSlot() noexcept
+{
+    ++_slots;
+}
+
 } // namespace Zappy::Server
