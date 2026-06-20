@@ -33,6 +33,9 @@ struct TileCoord {
 [[nodiscard]] std::vector<std::vector<std::string>> buildTileContents(
     const Map &map, const std::vector<TileCoord> &coords) noexcept;
 
+[[nodiscard]] std::string formatLookResponse(
+    const std::vector<std::vector<std::string>> &tiles) noexcept;
+
 } // namespace Zappy::Server
 
 #endif

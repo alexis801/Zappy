@@ -93,4 +93,22 @@ std::vector<std::vector<std::string>> buildTileContents(
     return tiles;
 }
 
+std::string formatLookResponse(
+    const std::vector<std::vector<std::string>> &tiles) noexcept
+{
+    std::string result = "[";
+
+    for (std::size_t i = 0; i < tiles.size(); ++i) {
+        if (i > 0)
+            result += ", ";
+        for (std::size_t j = 0; j < tiles[i].size(); ++j) {
+            if (j > 0)
+                result += ' ';
+            result += tiles[i][j];
+        }
+    }
+    result += ']';
+    return result;
+}
+
 } // namespace Zappy::Server
