@@ -31,6 +31,8 @@ std::optional<int> CommandParser::getCommandCost(
         return movement;
     if (line == "Inventory")
         return action_cost::INVENTORY;
+    if (line == "Look")
+        return action_cost::LOOK;
     return std::nullopt;
 }
 
