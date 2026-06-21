@@ -6,7 +6,7 @@
 ##
 
 import sys, getopt
-from communication.AiClient import *
+from ai import AI
 
 def parser(argv):
     port = None
@@ -42,12 +42,12 @@ def main(argv):
     print(f"Team: {team}")
     print(f"Host: {host}")
 
-    client = ZappyClient(host, port, team)
-    if not client.connect():
-        sys.exit(1)
-    
-    while True:
-        None
+    ai = AI(team, host, port)
+    try:
+        ai.my_ai()
+    except (ConnectionError, OSError) as exc:
+        print(f"connexion impossible a {host}:{port} ({exc})", file=sys.stderr)
+        sys.exit(84)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
