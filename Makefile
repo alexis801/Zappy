@@ -14,25 +14,20 @@ OBJ_DIR		=	obj
 
 SERVER		=	zappy_server
 GUI			=	zappy_gui
-AI			=	zappy_ai
 
 SERVER_LIBS	=
 GUI_LIBS	=	-lsfml-graphics -lsfml-window -lsfml-system
-AI_LIBS		=
 
 COMMON_SRC	=	$(shell find $(SRC_DIR)/common -name '*.cpp' 2>/dev/null)
 SERVER_SRC	=	$(shell find $(SRC_DIR)/server -name '*.cpp' 2>/dev/null) $(COMMON_SRC)
 GUI_SRC		=	$(shell find $(SRC_DIR)/gui    -name '*.cpp' 2>/dev/null) $(COMMON_SRC)
-AI_SRC		=	$(shell find $(SRC_DIR)/ai     -name '*.cpp' 2>/dev/null) $(COMMON_SRC)
 
 SERVER_OBJ	=	$(SERVER_SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 GUI_OBJ		=	$(GUI_SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
-AI_OBJ		=	$(AI_SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
-ALL_OBJ		=	$(sort $(SERVER_OBJ) $(GUI_OBJ) $(AI_OBJ))
+ALL_OBJ		=	$(sort $(SERVER_OBJ) $(GUI_OBJ))
 
-all:	$(SERVER) $(GUI) $(AI)
-
+all:	$(SERVER) $(GUI)
 
 $(SERVER):	$(SERVER_OBJ)
 	@if [ -z "$(strip $(SERVER_OBJ))" ]; then \
@@ -50,10 +45,6 @@ $(GUI):	$(GUI_OBJ)
 		echo "  [ok]   $@"; \
 	fi
 
-$(AI):	$(AI_OBJ)
-	cp src/ai/AI_init.py $(AI)
-	chmod +x $(AI)
-
 $(OBJ_DIR)/%.o:	$(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
@@ -62,7 +53,7 @@ clean:
 	$(RM) -r $(OBJ_DIR)
 
 fclean:	clean tests_clean
-	$(RM) $(SERVER) $(GUI) $(AI)
+	$(RM) $(SERVER) $(GUI)
 
 re:	fclean all
 
