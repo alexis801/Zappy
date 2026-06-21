@@ -36,6 +36,9 @@ struct TileCoord {
 [[nodiscard]] std::string formatLookResponse(
     const std::vector<std::vector<std::string>> &tiles) noexcept;
 
+[[nodiscard]] std::string performLook(
+    const Player &player, const Map &map) noexcept;
+
 } // namespace Zappy::Server
 
 #endif

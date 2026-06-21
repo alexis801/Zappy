@@ -117,4 +117,15 @@ std::string formatLookResponse(
     return result;
 }
 
+std::string performLook(const Player &player, const Map &map) noexcept
+{
+    std::vector<TileCoord> coords = computeVisibleTileCoords(
+        player.getX(), player.getY(), player.getDirection(),
+        player.getLevel(), map.getWidth(), map.getHeight());
+    std::vector<std::vector<std::string>> contents =
+        buildTileContents(map, coords);
+
+    return formatLookResponse(contents);
+}
+
 } // namespace Zappy::Server

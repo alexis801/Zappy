@@ -8,6 +8,7 @@
 #include "CommandParser.hpp"
 #include "Core.hpp"
 #include "GuiProtocol.hpp"
+#include "Look.hpp"
 #include "Macros.hpp"
 #include "Tile.hpp"
 #include <algorithm>
@@ -207,6 +208,10 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
             player->getId(), oldX, oldY, player->getX(), player->getY());
     if (outcome.kind == CommandKind::INVENTORY) {
         client.send(outcome.text + "\n");
+        return;
+    }
+    if (outcome.kind == CommandKind::LOOK) {
+        client.send(performLook(*player, _map) + "\n");
         return;
     }
     client.send("ok\n");
