@@ -23,9 +23,9 @@ ENTRY_POINT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ai_algo.
 
 
 class AI:
-    def __init__(self, team_name, host, port, is_boss):
+    def __init__(self, team_name, host, port):
         self.team_name = team_name
-        self.player = Player(team_name, is_boss)
+        self.player = Player(team_name)
         self.client = SocketClient(host, port)
         self.action = Action(self)
         self.decision = Decision(self.player, Mode.SURVIVAL, self.action)
@@ -33,7 +33,6 @@ class AI:
         self.broadcast_queue = queue.Queue()
         self.map_x = 0
         self.map_y = 0
-        self.status = "boss" if is_boss else "worker"
         self.confirmed_players = set()
         self.max_client = 0
         self.last_seen = {}
