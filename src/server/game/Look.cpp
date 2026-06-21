@@ -46,6 +46,16 @@ TileCoord rotateLocalOffset(int dx, int dy, Direction direction) noexcept
     return {dx, dy};
 }
 
+TileCoord localToWorld(
+    int px, int py, int dx, int dy, Direction direction,
+    int width, int height) noexcept
+{
+    TileCoord rotated = rotateLocalOffset(dx, dy, direction);
+
+    return wrapCoords(
+        px + rotated.x, py + rotated.y, width, height);
+}
+
 std::vector<TileCoord> computeVisibleTileCoords(
     int px, int py, Direction direction, int level,
     int width, int height) noexcept
@@ -60,13 +70,9 @@ std::vector<TileCoord> computeVisibleTileCoords(
         while (k > depth * depth + 2 * depth)
             ++depth;
         int lateral = k - depth * depth - depth;
-        TileCoord local{lateral, -depth};
-        TileCoord rotated = rotateLocalOffset(
-            local.x, local.y, direction);
-        TileCoord world = wrapCoords(
-            px + rotated.x, py + rotated.y, width, height);
 
-        coords.push_back(world);
+        coords.push_back(localToWorld(
+            px, py, lateral, -depth, direction, width, height));
     }
     return coords;
 }
