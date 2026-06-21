@@ -9,9 +9,9 @@
 
 from dataclasses import dataclass
 from enum import Enum
-import sys, getopt
 
-from inventory import *
+
+from Inventory import *
 from communication.AiClient import *
 
 class Direction(Enum):
@@ -19,6 +19,11 @@ class Direction(Enum):
     LEFT = 1
     BACKWARD = 2
     RIGHT = 3
+
+class State(Enum):
+    SURVIVE = 1
+    COLLECT = 2
+    EXPLORE = 3
 
 class Tile:
     def __init__(self):
@@ -30,11 +35,6 @@ class Tile:
         self.phiras = 0
         self.thystame = 0
         self.players = 0
-
-class State(Enum):
-    SURVIVE = 1
-    COLLECT = 2
-    EXPLORE = 3
 
 class Resource(Enum):
     FOOD = "food"
@@ -175,47 +175,3 @@ class SurvivalAI:
         response = self.client.receive_response()
         if response == 'ok':
             print("set " + response)
-
-def parser(argv):
-    port = None
-    team = None
-    host = "localhost"
-
-    try:
-        opts, args = getopt.getopt(argv, "p:n:h:", ["help"])
-    except getopt.GetoptError:
-        print("USAGE: ./zappy_ai -p port -n name -h machine")
-        sys.exit(84)
-
-    for opt, arg in opts:
-        if opt == "--help":
-            print("USAGE: ./zappy_ai -p port -n name -h machine")
-            sys.exit(0)
-
-        elif opt == "-p":
-            port = int(arg)
-
-        elif opt == "-n":
-            team = arg
-
-        elif opt == "-h":
-            host = arg
-
-    return port, team, host
-
-def main(argv):
-    port, team, host = parser(argv)
-
-    print(f"Port: {port}")
-    print(f"Team: {team}")
-    print(f"Host: {host}")
-
-    client = ZappyClient(host, port, team)
-    if not client.connect():
-        sys.exit(1)
-    
-    while True:
-        None
-
-if __name__ == "__main__":
-    main(sys.argv[1:])
