@@ -29,6 +29,9 @@ public:
         std::vector<Egg> &eggs, std::string_view teamName,
         std::mt19937 &rng) noexcept;
 
+    static void destroyOnTile(
+        std::vector<Egg> &eggs, int x, int y) noexcept;
+
 private:
     int _id;
     std::string _team;
