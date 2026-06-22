@@ -53,6 +53,7 @@ private:
     void drawRobot(const PlayerVisual &v, const MapView &view);
     void drawEggs(const World &world, const MapView &view);
     void drawIncantations(const World &world, const MapView &view);
+    void drawGameOver(const World &world);
 
     sf::RenderWindow _window;
     RobotAssets _robot;
@@ -62,6 +63,7 @@ private:
     sf::Texture _incantationTexture;
     std::unordered_map<int, PlayerVisual> _visuals;
     sf::Clock _frameClock;
+    sf::Font _font;
 };
 
 } // namespace Zappy::Gui
