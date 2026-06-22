@@ -17,7 +17,6 @@ class Pending:
         self.done = False
         self.result = None
 
-
 class SocketClient:
     MAX_IN_FLIGHT = 10
 

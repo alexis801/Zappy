@@ -12,10 +12,10 @@ import queue
 import subprocess
 
 from strategy.Client import SocketClient
-from strategy.config import Mode, TARGET_PLAYERS, TEAMMATE_TTL
-from strategy.player import Player
-from strategy.action import Action
-from strategy.decision import Decision
+from strategy.Utils import Mode, TARGET_PLAYERS, TEAMMATE_TTL
+from strategy.Player import Player
+from strategy.Action import Action
+from pathfinding.Decision import Decision
 
 ENTRY_POINT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ai_algo.py")
 

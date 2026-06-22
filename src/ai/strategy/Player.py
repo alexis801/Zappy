@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 ##
 ## EPITECH PROJECT, 2026
 ## zappy
@@ -9,11 +7,10 @@
 
 import random
 
-from strategy.config import (Mode, IncantationState, levels, RESOURCE_RARITY,
+from strategy.Utils import (Mode, IncantationState, levels, RESOURCE_RARITY,
                     FOOD_CRITICAL, FOOD_HUNGRY, FOOD_OBJECTIVE)
-from strategy.inventory import Inventory
-from strategy.movement import Movement
-
+from strategy.Inventory import Inventory
+from pathfinding.Movement import Movement
 
 class Player:
     def __init__(self, team_name):

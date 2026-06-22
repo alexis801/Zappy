@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 ##
 ## EPITECH PROJECT, 2026
 ## zappy
@@ -9,7 +7,7 @@
 
 from collections import Counter
 
-from strategy.config import levels, RESOURCE_RARITY
+from strategy.Utils import levels, RESOURCE_RARITY
 
 
 class Inventory:
