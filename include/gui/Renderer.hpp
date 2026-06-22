@@ -39,6 +39,7 @@ public:
     bool pollEvent(sf::Event &event);
     void close();
     void draw(const World &world);
+    void addEvents(const std::vector<GameEvent> &events);
     void drawMenu(Menu &menu);
 
 
@@ -54,6 +55,7 @@ private:
     void drawEggs(const World &world, const MapView &view);
     void drawIncantations(const World &world, const MapView &view);
     void drawGameOver(const World &world);
+    void drawFlashes(const MapView &view, float dt);
 
     sf::RenderWindow _window;
     RobotAssets _robot;
@@ -61,7 +63,16 @@ private:
     sf::Texture _tilesTexture;
     sf::Texture _materialsTexture;
     sf::Texture _incantationTexture;
+
+    struct FlashVisual {
+        int x = 0;
+        int y = 0;
+        std::string text;
+        float life = 0.f;
+    };
+
     std::unordered_map<int, PlayerVisual> _visuals;
+    std::vector<FlashVisual> _flashes;
     sf::Clock _frameClock;
     sf::Font _font;
 };
