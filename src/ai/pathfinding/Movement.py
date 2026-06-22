@@ -1,12 +1,9 @@
-#!/usr/bin/env python3
-
 ##
 ## EPITECH PROJECT, 2026
 ## zappy
 ## File description:
 ## movement - calcul des chemins vers les cases de vision
 ##
-
 
 class Movement:
     def __init__(self, level):

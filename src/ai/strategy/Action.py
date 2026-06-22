@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 ##
 ## EPITECH PROJECT, 2026
 ## zappy
@@ -10,9 +8,8 @@
 import time
 import random
 
-from config import IncantationState, resource_map
-from movement import Movement
-
+from strategy.Utils import IncantationState, resource_map
+from pathfinding.Movement import Movement
 
 class Action:
     def __init__(self, ai):
