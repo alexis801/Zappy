@@ -49,7 +49,16 @@ public:
     [[nodiscard]] static std::string formatPgt(int playerId, int resource);
     [[nodiscard]] static std::string formatPdi(int playerId);
 
+    [[nodiscard]] static std::string formatEnw(int eggId, int playerId,
+        int x, int y);
+    [[nodiscard]] static std::string formatEbo(int eggId);
+    [[nodiscard]] static std::string formatEdi(int eggId);
+
     [[nodiscard]] static std::string formatSst(Clock &clock, int frequency);
+    [[nodiscard]] static std::string formatSeg(std::string_view team);
+    [[nodiscard]] static std::string formatSmg(std::string_view message);
+    [[nodiscard]] static std::string formatSuc();
+    [[nodiscard]] static std::string formatSbp();
 };
 
 } // namespace Zappy::Server

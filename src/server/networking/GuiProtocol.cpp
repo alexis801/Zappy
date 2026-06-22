@@ -137,10 +137,47 @@ std::string GuiProtocol::formatPdi(int playerId)
     return "pdi #" + std::to_string(playerId) + "\n";
 }
 
+std::string GuiProtocol::formatEnw(int eggId, int playerId, int x, int y)
+{
+    return "enw #" + std::to_string(eggId) + " #"
+        + std::to_string(playerId) + " "
+        + std::to_string(x) + " " + std::to_string(y) + "\n";
+}
+
+std::string GuiProtocol::formatEbo(int eggId)
+{
+    return "ebo #" + std::to_string(eggId) + "\n";
+}
+
+std::string GuiProtocol::formatEdi(int eggId)
+{
+    return "edi #" + std::to_string(eggId) + "\n";
+}
+
 std::string GuiProtocol::formatSst(Clock &clock, int frequency)
 {
     clock.setFrequency(frequency);
     return "sst " + std::to_string(clock.getFrequency()) + '\n';
+}
+
+std::string GuiProtocol::formatSeg(std::string_view team)
+{
+    return "seg " + std::string(team) + "\n";
+}
+
+std::string GuiProtocol::formatSmg(std::string_view message)
+{
+    return "smg " + std::string(message) + "\n";
+}
+
+std::string GuiProtocol::formatSuc()
+{
+    return "suc\n";
+}
+
+std::string GuiProtocol::formatSbp()
+{
+    return "sbp\n";
 }
 
 } // namespace Zappy::Server
