@@ -108,6 +108,16 @@ public:
      */
     [[nodiscard]] Command popCommand() noexcept;
 
+    /**
+     * @brief Consulte la premiere cmd sans la retirer 
+     */
+    [[nodiscard]] const Command &peekCommand() const noexcept;
+
+    /**
+     * @brief Vide la file de commandes en attente
+     */
+    void clearCommands() noexcept;
+
 private:
     Socket _socket;
     ReadBuffer _readBuffer;
