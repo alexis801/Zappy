@@ -5,7 +5,9 @@
 ** Player
 */
 
+#include "Egg.hpp"
 #include "Player.hpp"
+#include "Team.hpp"
 #include <random>
 #include <string>
 
@@ -103,6 +105,14 @@ bool Player::eat(Tile &tile) noexcept
         return false;
     tile.remove(Resource::FOOD, 1);
     ++_inventory[foodIndex];
+    return true;
+}
+
+bool Player::fork(
+    Team &team, std::vector<Egg> &eggs, int &nextEggId) noexcept
+{
+    eggs.emplace_back(nextEggId++, team.getName(), _x, _y);
+    team.addSlot();
     return true;
 }
 
