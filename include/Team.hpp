@@ -31,6 +31,8 @@ public:
 
     void releaseSlot() noexcept;
 
+    void addSlot() noexcept;
+
 private:
     std::string _name;
     int _slots;
