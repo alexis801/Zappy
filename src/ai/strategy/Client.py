@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 ##
 ## EPITECH PROJECT, 2026
 ## zappy
@@ -11,7 +9,6 @@ import socket
 import select
 from collections import deque
 
-
 class Pending:
     __slots__ = ("command", "lines", "done", "result")
     def __init__(self, command):
@@ -19,7 +16,6 @@ class Pending:
         self.lines = []
         self.done = False
         self.result = None
-
 
 class SocketClient:
     MAX_IN_FLIGHT = 10
