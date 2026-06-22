@@ -63,7 +63,14 @@ private:
     void executeDueCommands();
     void executePlayerCommand(Client &client, const Command &cmd);
     [[nodiscard]] bool tryStartIncantation(Client &client);
+    void completeIncantation(Player &starter);
+    void finishIncantationFailure(
+        const std::vector<Player *> &players, int x, int y);
+    void finishIncantationSuccess(
+        const std::vector<Player *> &players, int x, int y, int level);
     [[nodiscard]] std::vector<Player *> findIncantationParticipants(
+        int x, int y, int level);
+    [[nodiscard]] std::vector<Player *> gatherFrozenAt(
         int x, int y, int level);
     [[nodiscard]] bool meetsIncantationRequirements(
         const std::vector<Player *> &players, const Tile &tile,

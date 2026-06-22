@@ -215,6 +215,10 @@ void Core::executeDueCommands()
     for (auto &client : _clients) {
         while (client.hasCommands()
             && client.getNextDeadlineMillis() <= now) {
+            Player *player = client.getPlayer();
+            if (player != nullptr && player->isFrozen()
+                && client.peekCommand().text != "Incantation")
+                break;
             Command cmd = client.popCommand();
 
             executePlayerCommand(client, cmd);
@@ -247,6 +251,10 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         broadcastToGui(GuiProtocol::formatEnw(
             egg.getId(), player->getId(), egg.getX(), egg.getY()));
         client.send("ok\n");
+        return;
+    }
+    if (cmd.text == "Incantation") {
+        completeIncantation(*player);
         return;
     }
     CommandOutcome outcome = player->executeCommand(
@@ -320,6 +328,69 @@ bool Core::tryStartIncantation(Client &client)
     for (Player *p : participants)
         p->setFrozen(true);
     return true;
+}
+
+std::vector<Player *> Core::gatherFrozenAt(int x, int y, int level)
+{
+    std::vector<Player *> result;
+
+    for (auto &c : _clients) {
+        if (c.getState() != Client::State::Player)
+            continue;
+        Player *p = c.getPlayer();
+        if (p == nullptr || !p->isFrozen())
+            continue;
+        if (p->getX() == x && p->getY() == y && p->getLevel() == level)
+            result.push_back(p);
+    }
+    return result;
+}
+
+void Core::completeIncantation(Player &starter)
+{
+    int x = starter.getX();
+    int y = starter.getY();
+    int level = starter.getLevel();
+    std::vector<Player *> participants = gatherFrozenAt(x, y, level);
+    bool success = meetsIncantationRequirements(
+        participants, _map.at(x, y), level);
+
+    for (Player *p : participants)
+        p->setFrozen(false);
+    if (success)
+        finishIncantationSuccess(participants, x, y, level);
+    else
+        finishIncantationFailure(participants, x, y);
+}
+
+void Core::finishIncantationFailure(
+    const std::vector<Player *> &players, int x, int y)
+{
+    for (Player *p : players) {
+        Client *c = findPlayerById(p->getId());
+        if (c != nullptr)
+            c->send("ko\n");
+    }
+    broadcastToGui(GuiProtocol::formatPie(x, y, false));
+}
+
+void Core::finishIncantationSuccess(
+    const std::vector<Player *> &players, int x, int y, int level)
+{
+    const IncantationRequirement &req = INCANTATION_TABLE[level - 1];
+    int newLevel = level + 1;
+
+    for (std::size_t i = 0; i < req.stones.size(); ++i)
+        _map.at(x, y).remove(static_cast<Resource>(i + 1), req.stones[i]);
+    broadcastTile(x, y);
+    for (Player *p : players) {
+        p->setLevel(newLevel);
+        Client *c = findPlayerById(p->getId());
+        if (c != nullptr)
+            c->send("Current level: " + std::to_string(newLevel) + "\n");
+        broadcastToGui(GuiProtocol::formatPlv(p->getId(), newLevel));
+    }
+    broadcastToGui(GuiProtocol::formatPie(x, y, true));
 }
 
 void Core::tickResources() noexcept
