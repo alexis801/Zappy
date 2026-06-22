@@ -102,4 +102,16 @@ Command Client::popCommand() noexcept
     return cmd;
 }
 
+const Command &Client::peekCommand() const noexcept
+{
+    return _commands.front();
+}
+
+void Client::clearCommands() noexcept
+{
+    std::queue<Command> empty;
+
+    std::swap(_commands, empty);
+}
+
 } // namespace Zappy::Server
