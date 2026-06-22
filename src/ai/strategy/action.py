@@ -10,8 +10,8 @@
 import time
 import random
 
-from config import IncantationState, resource_map
-from movement import Movement
+from strategy.config import IncantationState, resource_map
+from strategy.movement import Movement
 
 
 class Action:

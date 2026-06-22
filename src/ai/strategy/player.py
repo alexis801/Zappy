@@ -9,10 +9,10 @@
 
 import random
 
-from config import (Mode, IncantationState, levels, RESOURCE_RARITY,
+from strategy.config import (Mode, IncantationState, levels, RESOURCE_RARITY,
                     FOOD_CRITICAL, FOOD_HUNGRY, FOOD_OBJECTIVE)
-from inventory import Inventory
-from movement import Movement
+from strategy.inventory import Inventory
+from strategy.movement import Movement
 
 
 class Player:

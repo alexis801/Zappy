@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 ##
 ## EPITECH PROJECT, 2026
 ## zappy
@@ -13,14 +11,13 @@ import time
 import queue
 import subprocess
 
-from Client import SocketClient
-from config import Mode, TARGET_PLAYERS, TEAMMATE_TTL
-from player import Player
-from action import Action
-from decision import Decision
+from strategy.Client import SocketClient
+from strategy.config import Mode, TARGET_PLAYERS, TEAMMATE_TTL
+from strategy.player import Player
+from strategy.action import Action
+from strategy.decision import Decision
 
 ENTRY_POINT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ai_algo.py")
-
 
 class AI:
     def __init__(self, team_name, host, port):
@@ -40,8 +37,6 @@ class AI:
     def connecting(self):
         client_slots, map_size = self.client.connect(self.team_name)
         self.map_x, self.map_y = (int(v) for v in map_size.split())
-        if not self.player.boss:
-            return
         self.max_client = int(client_slots.strip())
         slots_remaining = int(self.action.execute_action("Connect_nbr"))
         current_players = self.max_client - slots_remaining

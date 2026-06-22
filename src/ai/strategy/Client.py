@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 ##
 ## EPITECH PROJECT, 2026
 ## zappy
@@ -10,7 +8,6 @@
 import socket
 import select
 from collections import deque
-
 
 class Pending:
     __slots__ = ("command", "lines", "done", "result")

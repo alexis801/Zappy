@@ -9,7 +9,7 @@
 
 from collections import Counter
 
-from config import levels, RESOURCE_RARITY
+from strategy.config import levels, RESOURCE_RARITY
 
 
 class Inventory:

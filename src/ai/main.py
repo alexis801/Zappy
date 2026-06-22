@@ -6,7 +6,7 @@
 ##
 
 import sys, getopt
-from ai import AI
+from strategy.ai import AI
 
 def parser(argv):
     port = None
