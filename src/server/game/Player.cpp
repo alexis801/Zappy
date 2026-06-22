@@ -122,6 +122,12 @@ Player Player::spawnRandom(int width, int height, int id)
         static_cast<Direction>(drawRandomInt(DIRECTION_COUNT)), id);
 }
 
+Player Player::spawnFromEgg(const Egg &egg, int id)
+{
+    return Player(egg.getX(), egg.getY(),
+        static_cast<Direction>(drawRandomInt(DIRECTION_COUNT)), id);
+}
+
 void Player::stepNorth(int height) noexcept
 {
     _y = (_y - 1 + height) % height;

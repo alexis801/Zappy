@@ -45,6 +45,8 @@ public:
     [[nodiscard]] static Player spawnRandom(
         int width, int height, int id = 0);
 
+    [[nodiscard]] static Player spawnFromEgg(const Egg &egg, int id);
+
     [[nodiscard]] int getId() const noexcept;
 
     [[nodiscard]] int getX() const noexcept;
