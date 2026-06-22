@@ -30,9 +30,44 @@ std::optional<int> CommandParser::RightCost() noexcept
     return action_cost::RIGHT;
 }
 
+std::optional<int> CommandParser::LookCost() noexcept
+{
+    return action_cost::LOOK;
+}
+
 std::optional<int> CommandParser::InventoryCost() noexcept
 {
     return action_cost::INVENTORY;
+}
+
+std::optional<int> CommandParser::BroadcastCost() noexcept
+{
+    return action_cost::BROADCAST;
+}
+
+std::optional<int> CommandParser::ForkCost() noexcept
+{
+    return action_cost::FORK;
+}
+
+std::optional<int> CommandParser::EjectCost() noexcept
+{
+    return action_cost::EJECT;
+}
+
+std::optional<int> CommandParser::TakeCost() noexcept
+{
+    return action_cost::TAKE;
+}
+
+std::optional<int> CommandParser::SetCost() noexcept
+{
+    return action_cost::SET;
+}
+
+std::optional<int> CommandParser::IncantationCost() noexcept
+{
+    return action_cost::INCANTATION;
 }
 
 std::optional<int> CommandParser::getCommandCost(std::string_view line) noexcept
