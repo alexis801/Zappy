@@ -267,7 +267,7 @@ void Core::killPlayer(int fd)
         Player *player = client->getPlayer();
 
         if (player != nullptr)
-            broadcastToGui("pdi " + std::to_string(player->getId()) + "\n");
+            broadcastToGui(GuiProtocol::formatPdi(player->getId()));
         Team *team = findTeam(client->getTeamName());
 
         if (team != nullptr)
@@ -362,7 +362,7 @@ void Core::handleGuiLine(Client &client, const std::string &line)
     iss >> command;
     auto handler = handlers.find(command);
     if (handler == handlers.end()) {
-        client.send("suc\n");
+        client.send(GuiProtocol::formatSuc());
         return;
     }
     (this->*(handler->second))(client, iss);
@@ -374,12 +374,12 @@ void Core::respondPin(Client &client, std::istringstream &iss)
     int playerId = 0;
 
     if (!(iss >> hash >> playerId) || hash != '#') {
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
         return;
     }
     Client *clientPlayer = findPlayerById(playerId);
     if (clientPlayer == nullptr || clientPlayer->getPlayer() == nullptr)
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
     else {
         const Player &player = *clientPlayer->getPlayer();
         client.send(GuiProtocol::formatPin(playerId, player, _map.at(player.getX(), player.getY())));
@@ -413,7 +413,7 @@ void Core::respondSst(Client &client, std::istringstream &iss)
 {
     int frequency = 0;
     if (!(iss >> frequency) || frequency <= 0) {
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
         return;
     }
     client.send(GuiProtocol::formatSst(_clock, frequency));
@@ -426,7 +426,7 @@ void Core::respondBct(Client &client, std::istringstream &iss)
 
     if (!(iss >> x >> y)
         || x < 0 || y < 0 || x >= _map.getWidth() || y >= _map.getHeight()) {
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
         return;
     }
     client.send(GuiProtocol::formatBct(x, y, _map.at(x, y)));
@@ -438,13 +438,13 @@ void Core::respondPpo(Client &client, std::istringstream &iss)
     int playerId = 0;
 
     if (!(iss >> hash >> playerId) || hash != '#') {
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
         return;
     }
     Client *player = findPlayerById(playerId);
 
     if (player == nullptr || player->getPlayer() == nullptr)
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
     else
         client.send(GuiProtocol::formatPpo(playerId, *player->getPlayer()));
 }
@@ -455,13 +455,13 @@ void Core::respondPlv(Client &client, std::istringstream &iss)
     int playerId = 0;
 
     if (!(iss >> hash >> playerId) || hash != '#') {
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
         return;
     }
     if (findPlayerById(playerId) != nullptr)
         client.send(GuiProtocol::formatPlv(playerId, 1));
     else
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
 }
 
 void Core::broadcastToGuis(std::string_view message)
