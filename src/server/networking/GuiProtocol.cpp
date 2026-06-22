@@ -86,10 +86,98 @@ std::string GuiProtocol::formatPin(int playerId, const Player &player, const Til
     return out;
 }
 
+std::string GuiProtocol::formatPex(int playerId)
+{
+    return "pex #" + std::to_string(playerId) + "\n";
+}
+
+std::string GuiProtocol::formatPbc(int playerId, std::string_view message)
+{
+    return "pbc #" + std::to_string(playerId) + " "
+        + std::string(message) + "\n";
+}
+
+std::string GuiProtocol::formatPic(int x, int y, int level,
+    const std::vector<int> &playerIds)
+{
+    std::string out = "pic " + std::to_string(x) + " " + std::to_string(y)
+        + " " + std::to_string(level);
+
+    for (int id : playerIds)
+        out += " #" + std::to_string(id);
+    out += "\n";
+    return out;
+}
+
+std::string GuiProtocol::formatPie(int x, int y, bool result)
+{
+    return "pie " + std::to_string(x) + " " + std::to_string(y) + " "
+        + std::to_string(result ? 1 : 0) + "\n";
+}
+
+std::string GuiProtocol::formatPfk(int playerId)
+{
+    return "pfk #" + std::to_string(playerId) + "\n";
+}
+
+std::string GuiProtocol::formatPdr(int playerId, int resource)
+{
+    return "pdr #" + std::to_string(playerId) + " "
+        + std::to_string(resource) + "\n";
+}
+
+std::string GuiProtocol::formatPgt(int playerId, int resource)
+{
+    return "pgt #" + std::to_string(playerId) + " "
+        + std::to_string(resource) + "\n";
+}
+
+std::string GuiProtocol::formatPdi(int playerId)
+{
+    return "pdi #" + std::to_string(playerId) + "\n";
+}
+
+std::string GuiProtocol::formatEnw(int eggId, int playerId, int x, int y)
+{
+    return "enw #" + std::to_string(eggId) + " #"
+        + std::to_string(playerId) + " "
+        + std::to_string(x) + " " + std::to_string(y) + "\n";
+}
+
+std::string GuiProtocol::formatEbo(int eggId)
+{
+    return "ebo #" + std::to_string(eggId) + "\n";
+}
+
+std::string GuiProtocol::formatEdi(int eggId)
+{
+    return "edi #" + std::to_string(eggId) + "\n";
+}
+
 std::string GuiProtocol::formatSst(Clock &clock, int frequency)
 {
     clock.setFrequency(frequency);
     return "sst " + std::to_string(clock.getFrequency()) + '\n';
+}
+
+std::string GuiProtocol::formatSeg(std::string_view team)
+{
+    return "seg " + std::string(team) + "\n";
+}
+
+std::string GuiProtocol::formatSmg(std::string_view message)
+{
+    return "smg " + std::string(message) + "\n";
+}
+
+std::string GuiProtocol::formatSuc()
+{
+    return "suc\n";
+}
+
+std::string GuiProtocol::formatSbp()
+{
+    return "sbp\n";
 }
 
 } // namespace Zappy::Server
