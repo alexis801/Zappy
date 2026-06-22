@@ -64,6 +64,7 @@ private:
     void executePlayerCommand(Client &client, const Command &cmd);
     [[nodiscard]] bool tryStartIncantation(Client &client);
     void completeIncantation(Player &starter);
+    void cancelIncantationAt(int x, int y, int level);
     void finishIncantationFailure(
         const std::vector<Player *> &players, int x, int y);
     void finishIncantationSuccess(
