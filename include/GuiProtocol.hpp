@@ -39,6 +39,12 @@ public:
     [[nodiscard]] static std::string formatPlv(int playerId, int level);
     [[nodiscard]] static std::string formatPin(int playerId, const Player &player, const Tile &tile);
     [[nodiscard]] static std::string formatSst(Clock &clock, int frequency);
+
+    [[nodiscard]] static std::string formatPfk(int playerId);
+    [[nodiscard]] static std::string formatEnw(
+        int eggId, int playerId, int x, int y);
+    [[nodiscard]] static std::string formatEbo(int eggId);
+    [[nodiscard]] static std::string formatEdi(int eggId);
 };
 
 } // namespace Zappy::Server

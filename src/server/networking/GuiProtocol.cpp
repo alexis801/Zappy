@@ -92,4 +92,27 @@ std::string GuiProtocol::formatSst(Clock &clock, int frequency)
     return "sst " + std::to_string(clock.getFrequency()) + '\n';
 }
 
+std::string GuiProtocol::formatPfk(int playerId)
+{
+    return "pfk #" + std::to_string(playerId) + "\n";
+}
+
+std::string GuiProtocol::formatEnw(
+    int eggId, int playerId, int x, int y)
+{
+    return "enw #" + std::to_string(eggId) + " #"
+        + std::to_string(playerId) + " "
+        + std::to_string(x) + " " + std::to_string(y) + "\n";
+}
+
+std::string GuiProtocol::formatEbo(int eggId)
+{
+    return "ebo #" + std::to_string(eggId) + "\n";
+}
+
+std::string GuiProtocol::formatEdi(int eggId)
+{
+    return "edi #" + std::to_string(eggId) + "\n";
+}
+
 } // namespace Zappy::Server
