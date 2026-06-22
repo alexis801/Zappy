@@ -9,6 +9,7 @@
 #define ZAPPY_CLIENT_HPP_
 
 #include "Command.hpp"
+#include "Egg.hpp"
 #include "Player.hpp"
 #include "ReadBuffer.hpp"
 #include "Socket.hpp"
@@ -74,6 +75,8 @@ public:
      * @brief Fait apparaitre le joueur sur la carte (pos + dir aleatoires)
      */
     void spawnPlayer(int width, int height, int id);
+
+    void spawnFromEgg(const Egg &egg, int id);
 
     /**
      * @brief Le joueur pilote par ce client, nullptr s'il n'existe pas

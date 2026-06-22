@@ -7,6 +7,7 @@
 
 #include "CommandParser.hpp"
 #include "Core.hpp"
+#include "Egg.hpp"
 #include "GuiProtocol.hpp"
 #include "Macros.hpp"
 #include "Tile.hpp"
@@ -15,6 +16,7 @@
 #include <cstring>
 #include <iostream>
 #include <optional>
+#include <random>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -53,13 +55,44 @@ Core::Core(const Args &args)
     _spawner(DEFAULT_SPAWN_SEED),
     _nextRespawnMillis(0),
     _lastLifeTickMillis(0),
-    _nextPlayerId(0)
+    _nextPlayerId(0),
+    _nextEggId(0),
+    _eggRng(DEFAULT_SPAWN_SEED)
 {
     for (const auto &name : args.getTeams())
         _teams.emplace_back(name, args.getClientsPerTeam());
     _spawner.initialSpawn(_map);
+    spawnInitialEggs(args.getClientsPerTeam());
     _nextRespawnMillis = _clock.getDurationMillis(RESOURCE_SPAWN_INTERVAL);
     _lastLifeTickMillis = _clock.getElapsedMillis();
+}
+
+void Core::spawnInitialEggs(int eggsPerTeam)
+{
+    std::uniform_int_distribution<int> distX(0, _map.getWidth() - 1);
+    std::uniform_int_distribution<int> distY(0, _map.getHeight() - 1);
+
+    for (const Team &team : _teams) {
+        for (int i = 0; i < eggsPerTeam; ++i) {
+            _eggs.emplace_back(_nextEggId++, team.getName(),
+                distX(_eggRng), distY(_eggRng));
+        }
+    }
+}
+
+void Core::sendEggsToGui(Client &gui) const
+{
+    for (const Egg &egg : _eggs)
+        gui.send(GuiProtocol::formatEnw(
+            egg.getId(), 0, egg.getX(), egg.getY()));
+}
+
+void Core::broadcastEggsDestroyedOnTile(int x, int y)
+{
+    std::vector<int> destroyed = Egg::destroyOnTile(_eggs, x, y);
+
+    for (int eggId : destroyed)
+        broadcastToGui(GuiProtocol::formatEdi(eggId));
 }
 
 void Core::run()
@@ -193,6 +226,25 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         client.send("ko\n");
         return;
     }
+    if (cmd.text == "Fork") {
+        Team *team = findTeam(client.getTeamName());
+
+        if (team == nullptr) {
+            client.send("ko\n");
+            return;
+        }
+        if (!player->fork(*team, _eggs, _nextEggId)) {
+            client.send("ko\n");
+            return;
+        }
+        const Egg &egg = _eggs.back();
+
+        broadcastToGui(GuiProtocol::formatPfk(player->getId()));
+        broadcastToGui(GuiProtocol::formatEnw(
+            egg.getId(), player->getId(), egg.getX(), egg.getY()));
+        client.send("ok\n");
+        return;
+    }
     CommandOutcome outcome = player->executeCommand(
         cmd.text, _map.getWidth(), _map.getHeight());
 
@@ -305,6 +357,7 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
     if (teamName == Zappy::GRAPHIC_TEAM_NAME) {
         client.setAsGui();
         sendGuiInitialState(client);
+        sendEggsToGui(client);
         return true;
     }
     Team *team = findTeam(teamName);
@@ -312,13 +365,23 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
     if (team == nullptr || !team->canAcceptClient())
         return false;
     team->claimSlot();
+    int playerId = _nextPlayerId++;
+
     client.setAsPlayer(teamName);
-    client.spawnPlayer(_map.getWidth(), _map.getHeight(), _nextPlayerId++);
+    std::optional<Egg> hatched = Egg::pickRandomForTeam(
+        _eggs, teamName, _eggRng);
+
+    if (hatched.has_value()) {
+        client.spawnFromEgg(*hatched, playerId);
+        broadcastToGui(GuiProtocol::formatEbo(hatched->getId()));
+    } else {
+        client.spawnPlayer(_map.getWidth(), _map.getHeight(), playerId);
+    }
     client.send(buildHandshakeResponse(
         team->getRemainingSlots(), _map.getWidth(), _map.getHeight()));
     if (client.getPlayer() != nullptr)
         broadcastToGuis(GuiProtocol::formatPnw(
-            client.getPlayer()->getId(), *client.getPlayer(), 1, teamName));
+            playerId, *client.getPlayer(), 1, teamName));
     return true;
 }
 
