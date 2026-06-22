@@ -74,7 +74,9 @@ std::optional<int> CommandParser::getCommandCost(std::string_view line) noexcept
 {
     std::map<std::string_view, std::function<std::optional<int>()>> commands = {
         {"Forward", ForwardCost}, {"Left", LeftCost}, {"Right", RightCost},
-        {"Inventory", InventoryCost}
+        {"Inventory", InventoryCost}, {"Look", LookCost}, {"Broadcast", BroadcastCost},
+        {"Fork", ForkCost}, {"Eject", EjectCost}, {"Take", TakeCost},
+        {"Set", SetCost}, {"Incantation", IncantationCost}
     };
 
     auto it = commands.find(line);
