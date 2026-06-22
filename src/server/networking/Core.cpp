@@ -304,8 +304,7 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
 {
     if (teamName == Zappy::GRAPHIC_TEAM_NAME) {
         client.setAsGui();
-        client.send(buildHandshakeResponse(0, _map.getWidth(), _map.getHeight()));
-        sendMapToGui(client);
+        sendGuiInitialState(client);
         return true;
     }
     Team *team = findTeam(teamName);
@@ -486,8 +485,15 @@ void Core::sendGuiInitialState(Client &client)
     std::istringstream empty;
 
     respondMsz(client, empty);
-    respondTna(client, empty);
+    respondSgt(client, empty);
     respondMct(client, empty);
+    respondTna(client, empty);
+
+    for (auto &other : _clients) {
+        Player *player = other.getPlayer();
+        if (other.getState() == Client::State::Player && player != nullptr)
+            client.send(GuiProtocol::formatPnw(player->getId(), *player, player->getLevel(), other.getTeamName()));
+    }
 }
 
 } // namespace Zappy::Server
