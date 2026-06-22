@@ -205,6 +205,7 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         return;
     }
     client.send("ok\n");
+    broadcastToGui(GuiProtocol::formatPpo(player->getId(), *player));
 }
 
 void Core::tickResources() noexcept
