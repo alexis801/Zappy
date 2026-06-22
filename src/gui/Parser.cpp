@@ -196,6 +196,55 @@ void applySmg(std::istringstream &stream, World &world)
     world.setServerMessage(message);
 }
 
+void applyPbc(std::istringstream &stream, World &world)
+{
+    int id = 0;
+    std::string msg;
+
+    if (!readId(stream, id))
+        return;
+    std::getline(stream, msg);
+    if (!msg.empty() && msg.front() == ' ')
+        msg.erase(0, 1);
+    if (msg.size() > 24)
+        msg = msg.substr(0, 24);
+    world.pushPlayerEvent(id, msg.empty() ? "..." : msg);
+}
+
+void applyPex(std::istringstream &stream, World &world)
+{
+    int id = 0;
+
+    if (readId(stream, id))
+        world.pushPlayerEvent(id, "PUSH");
+}
+
+void applyPfk(std::istringstream &stream, World &world)
+{
+    int id = 0;
+
+    if (readId(stream, id))
+        world.pushPlayerEvent(id, "EGG");
+}
+
+void applyPdr(std::istringstream &stream, World &world)
+{
+    int id = 0;
+    int ressource = 0;
+
+    if (readId(stream, id) && (stream >> ressource))
+        world.pushPlayerEvent(id, "DROP" + std::to_string(ressource));
+}
+
+void applyPgt(std::istringstream &stream, World &world)
+{
+    int id = 0;
+    int resource = 0;
+
+    if (readId(stream, id) && (stream >> resource))
+        world.pushPlayerEvent(id, "GET " + std::to_string(resource));
+}
+
 } // anonymous namespace
 
 void Parser::apply(const std::string &line, World &world) const
@@ -206,7 +255,9 @@ void Parser::apply(const std::string &line, World &world) const
         {"tna", applyTna}, {"enw", applyEnw}, {"ebo", applyEbo},
         {"edi", applyEdi}, {"pin", applyPin}, {"pic", applyPic},
         {"pie", applyPie}, {"sgt", applySgt}, {"sst", applySst},
-        {"seg", applySeg}, {"smg", applySmg}
+        {"seg", applySeg}, {"smg", applySmg}, {"pbc", applyPbc},
+        {"pex", applyPex}, {"pdr", applyPdr}, {"pgt", applyPgt},
+        {"pfk", applyPfk}
     };
     std::istringstream stream(line);
     std::string command;
