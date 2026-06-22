@@ -192,6 +192,10 @@ void Core::handlePlayerLine(Client &client, const std::string &line)
         client.send("ko\n");
         return;
     }
+    if (line == "Incantation" && !tryStartIncantation(client)) {
+        client.send("ko\n");
+        return;
+    }
     long now = _clock.getElapsedMillis();
     long duration = _clock.getDurationMillis(*cost);
 
@@ -258,6 +262,64 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
     }
     client.send("ok\n");
     broadcastToGui(GuiProtocol::formatPpo(player->getId(), *player));
+}
+
+std::vector<Player *> Core::findIncantationParticipants(
+    int x, int y, int level)
+{
+    std::vector<Player *> result;
+
+    for (auto &client : _clients) {
+        if (client.getState() != Client::State::Player)
+            continue;
+        Player *player = client.getPlayer();
+        if (player == nullptr)
+            continue;
+        if (player->getX() == x && player->getY() == y
+            && player->getLevel() == level)
+            result.push_back(player);
+    }
+    return result;
+}
+
+bool Core::meetsIncantationRequirements(
+    const std::vector<Player *> &players, const Tile &tile,
+    int level) noexcept
+{
+    if (level < 1 || level >= MAX_PLAYER_LEVEL)
+        return false;
+    const IncantationRequirement &req = INCANTATION_TABLE[level - 1];
+    if (static_cast<int>(players.size()) < req.players)
+        return false;
+    for (std::size_t i = 0; i < req.stones.size(); ++i)
+        if (tile.get(static_cast<Resource>(i + 1)) < req.stones[i])
+            return false;
+    return true;
+}
+
+bool Core::tryStartIncantation(Client &client)
+{
+    Player *starter = client.getPlayer();
+
+    if (starter == nullptr)
+        return false;
+    int x = starter->getX();
+    int y = starter->getY();
+    int level = starter->getLevel();
+    std::vector<Player *> participants = findIncantationParticipants(
+        x, y, level);
+
+    if (!meetsIncantationRequirements(participants, _map.at(x, y), level))
+        return false;
+    client.send("Elevation underway\n");
+    client.clearCommands();
+    std::vector<int> ids;
+    for (Player *p : participants)
+        ids.push_back(p->getId());
+    broadcastToGui(GuiProtocol::formatPic(x, y, level, ids));
+    for (Player *p : participants)
+        p->setFrozen(true);
+    return true;
 }
 
 void Core::tickResources() noexcept
