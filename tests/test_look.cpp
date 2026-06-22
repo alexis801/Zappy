@@ -12,6 +12,7 @@
 #include "Macros.hpp"
 #include "Map.hpp"
 #include "Player.hpp"
+#include "Vision.hpp"
 
 using Zappy::Resource;
 using Zappy::Server::CommandKind;
@@ -21,7 +22,7 @@ using Zappy::Server::Player;
 using Zappy::Server::TileCoord;
 using Zappy::Server::buildTileContents;
 using Zappy::Server::CommandParser;
-using Zappy::Server::computeVisibleTileCoords;
+using Zappy::Server::getVisibleTileCoords;
 using Zappy::Server::formatLookResponse;
 using Zappy::Server::performLook;
 using Zappy::Server::wrapCoords;
@@ -60,7 +61,7 @@ Test(look, wrap_bord_gauche)
 
 Test(look, niveau_1_quatre_tuiles)
 {
-    auto tiles = computeVisibleTileCoords(
+    auto tiles = getVisibleTileCoords(
         5, 5, Direction::NORTH, 1, 10, 10);
 
     cr_assert_eq(tiles.size(), 4U);
@@ -68,7 +69,7 @@ Test(look, niveau_1_quatre_tuiles)
 
 Test(look, niveau_2_neuf_tuiles)
 {
-    auto tiles = computeVisibleTileCoords(
+    auto tiles = getVisibleTileCoords(
         5, 5, Direction::NORTH, 2, 10, 10);
 
     cr_assert_eq(tiles.size(), 9U);
@@ -76,7 +77,7 @@ Test(look, niveau_2_neuf_tuiles)
 
 Test(look, niveau_3_seize_tuiles)
 {
-    auto tiles = computeVisibleTileCoords(
+    auto tiles = getVisibleTileCoords(
         5, 5, Direction::NORTH, 3, 10, 10);
 
     cr_assert_eq(tiles.size(), 16U);
@@ -84,7 +85,7 @@ Test(look, niveau_3_seize_tuiles)
 
 Test(look, nord_depuis_origine_devant_en_bas)
 {
-    auto tiles = computeVisibleTileCoords(
+    auto tiles = getVisibleTileCoords(
         0, 0, Direction::NORTH, 1, 10, 10);
 
     cr_assert_eq(tiles[2].x, 0);
@@ -93,7 +94,7 @@ Test(look, nord_depuis_origine_devant_en_bas)
 
 Test(look, est_depuis_origine_devant_a_droite)
 {
-    auto tiles = computeVisibleTileCoords(
+    auto tiles = getVisibleTileCoords(
         0, 0, Direction::EAST, 1, 10, 10);
 
     cr_assert_eq(tiles[2].x, 1);
@@ -102,7 +103,7 @@ Test(look, est_depuis_origine_devant_a_droite)
 
 Test(look, sud_depuis_origine_devant_en_bas)
 {
-    auto tiles = computeVisibleTileCoords(
+    auto tiles = getVisibleTileCoords(
         0, 0, Direction::SOUTH, 1, 10, 10);
 
     cr_assert_eq(tiles[2].x, 0);
@@ -111,7 +112,7 @@ Test(look, sud_depuis_origine_devant_en_bas)
 
 Test(look, ouest_depuis_origine_devant_a_gauche)
 {
-    auto tiles = computeVisibleTileCoords(
+    auto tiles = getVisibleTileCoords(
         0, 0, Direction::WEST, 1, 10, 10);
 
     cr_assert_eq(tiles[2].x, 9);
