@@ -6,6 +6,7 @@
 */
 
 #include "Egg.hpp"
+#include <algorithm>
 #include <utility>
 
 namespace Zappy::Server {
@@ -53,6 +54,17 @@ std::optional<Egg> Egg::pickRandomForTeam(
     Egg picked = eggs[index];
     eggs.erase(eggs.begin() + static_cast<std::ptrdiff_t>(index));
     return picked;
+}
+
+void Egg::destroyOnTile(
+    std::vector<Egg> &eggs, int x, int y) noexcept
+{
+    auto newEnd = std::remove_if(eggs.begin(), eggs.end(),
+        [x, y](const Egg &egg) {
+            return egg.getX() == x && egg.getY() == y;
+        });
+
+    eggs.erase(newEnd, eggs.end());
 }
 
 } // namespace Zappy::Server
