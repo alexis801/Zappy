@@ -451,8 +451,12 @@ void Core::killPlayer(int fd)
     if (client->getState() == Client::State::Player) {
         Player *player = client->getPlayer();
 
-        if (player != nullptr)
+        if (player != nullptr) {
+            if (player->isFrozen())
+                cancelIncantationAt(player->getX(), player->getY(),
+                    player->getLevel());
             broadcastToGui(GuiProtocol::formatPdi(player->getId()));
+        }
         Team *team = findTeam(client->getTeamName());
 
         if (team != nullptr)
@@ -460,6 +464,21 @@ void Core::killPlayer(int fd)
         client->send("dead\n");
     }
     removeClient(fd);
+}
+
+void Core::cancelIncantationAt(int x, int y, int level)
+{
+    std::vector<Player *> frozen = gatherFrozenAt(x, y, level);
+
+    if (frozen.empty())
+        return;
+    for (Player *p : frozen) {
+        p->setFrozen(false);
+        Client *c = findPlayerById(p->getId());
+        if (c != nullptr)
+            c->send("ko\n");
+    }
+    broadcastToGui(GuiProtocol::formatPie(x, y, false));
 }
 
 void Core::sendMapToGui(Client &gui) const
