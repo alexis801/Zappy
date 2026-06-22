@@ -11,12 +11,14 @@
 #include "Args.hpp"
 #include "Client.hpp"
 #include "Clock.hpp"
+#include "Egg.hpp"
 #include "Macros.hpp"
 #include "Map.hpp"
 #include "ResourceSpawner.hpp"
 #include "Socket.hpp"
 #include "Team.hpp"
 #include <poll.h>
+#include <random>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -65,6 +67,9 @@ private:
     void broadcastToGui(const std::string &message);
     void broadcastTile(int x, int y);
     void removeClient(int fd);
+    void spawnInitialEggs(int eggsPerTeam);
+    void sendEggsToGui(Client &gui) const;
+    void broadcastEggsDestroyedOnTile(int x, int y);
 
     [[nodiscard]] Client *findClient(int fd);
     [[nodiscard]] Team *findTeam(const std::string &name);
@@ -78,6 +83,9 @@ private:
     long _nextRespawnMillis;
     long _lastLifeTickMillis;
     int _nextPlayerId;
+    std::vector<Egg> _eggs;
+    int _nextEggId;
+    std::mt19937 _eggRng;
 };
 
 } // namespace Zappy::Server

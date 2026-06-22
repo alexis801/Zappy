@@ -118,3 +118,17 @@ Test(egg, eclosion_complete_retire_oeuf_et_spawn)
     cr_assert_eq(player.getX(), 4);
     cr_assert_eq(player.getY(), 8);
 }
+
+Test(egg, destroy_on_tile_retourne_les_ids_detruits)
+{
+    std::vector<Egg> eggs = {
+        Egg(1, "Red", 2, 3),
+        Egg(2, "Red", 2, 3),
+        Egg(3, "Blue", 5, 5),
+    };
+    std::vector<int> destroyed = Egg::destroyOnTile(eggs, 2, 3);
+
+    cr_assert_eq(destroyed.size(), 2);
+    cr_assert_eq(eggs.size(), 1);
+    cr_assert_eq(eggs[0].getId(), 3);
+}

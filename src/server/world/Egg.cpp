@@ -56,15 +56,22 @@ std::optional<Egg> Egg::pickRandomForTeam(
     return picked;
 }
 
-void Egg::destroyOnTile(
+std::vector<int> Egg::destroyOnTile(
     std::vector<Egg> &eggs, int x, int y) noexcept
 {
+    std::vector<int> destroyed;
+
     auto newEnd = std::remove_if(eggs.begin(), eggs.end(),
-        [x, y](const Egg &egg) {
-            return egg.getX() == x && egg.getY() == y;
+        [&](const Egg &egg) {
+            if (egg.getX() == x && egg.getY() == y) {
+                destroyed.push_back(egg.getId());
+                return true;
+            }
+            return false;
         });
 
     eggs.erase(newEnd, eggs.end());
+    return destroyed;
 }
 
 } // namespace Zappy::Server

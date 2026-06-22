@@ -64,6 +64,11 @@ void Client::spawnPlayer(int width, int height, int id)
     _player = Player::spawnRandom(width, height, id);
 }
 
+void Client::spawnFromEgg(const Egg &egg, int id)
+{
+    _player = Player::spawnFromEgg(egg, id);
+}
+
 Player *Client::getPlayer() noexcept
 {
     if (!_player.has_value())
