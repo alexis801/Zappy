@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 ##
 ## EPITECH PROJECT, 2026
 ## zappy
@@ -7,9 +5,9 @@
 ## decision - machine a etats de la strategie (boss / worker)
 ##
 
-from config import (IncantationState, levels, players_needed, REPOP_PERIOD,
+from strategy.Utils import (IncantationState, levels, players_needed, REPOP_PERIOD,
                     FOOD_SURVIVAL_TARGET, FOOD_RECOVERY_TARGET)
-from movement import Movement
+from pathfinding.Movement import Movement
 
 
 class Decision:
