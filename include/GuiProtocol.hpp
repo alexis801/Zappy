@@ -13,6 +13,7 @@
 #include "Clock.hpp"
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace Zappy::Server {
 
@@ -38,6 +39,16 @@ public:
         const Player &player);
     [[nodiscard]] static std::string formatPlv(int playerId, int level);
     [[nodiscard]] static std::string formatPin(int playerId, const Player &player, const Tile &tile);
+    [[nodiscard]] static std::string formatPex(int playerId);
+    [[nodiscard]] static std::string formatPbc(int playerId, std::string_view message);
+    [[nodiscard]] static std::string formatPic(int x, int y, int level,
+        const std::vector<int> &playerIds);
+    [[nodiscard]] static std::string formatPie(int x, int y, bool result);
+    [[nodiscard]] static std::string formatPfk(int playerId);
+    [[nodiscard]] static std::string formatPdr(int playerId, int resource);
+    [[nodiscard]] static std::string formatPgt(int playerId, int resource);
+    [[nodiscard]] static std::string formatPdi(int playerId);
+
     [[nodiscard]] static std::string formatSst(Clock &clock, int frequency);
 };
 
