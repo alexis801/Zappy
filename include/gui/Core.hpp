@@ -31,6 +31,13 @@ public:
     bool update();
 
     [[nodiscard]] const World &getWorld() const noexcept { return _world; }
+    [[nodiscard]] std::vector<GameEvent> takeEvents() { return _world.takeEvents(); } // drain to renderer
+
+
+    /**
+    * @brief demande au serveur de changer vitesse du jeu
+    */
+   void requestTimeUnit(int unit);
 
 private:
     void handleLine(const std::string &line);

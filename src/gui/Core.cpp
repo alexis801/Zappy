@@ -28,6 +28,11 @@ void Core::handleLine(const std::string &line)
     _parser.apply(line, _world);
 }
 
+void Core::requestTimeUnit(int unit)
+{
+    _connection.send("sst " + std::to_string(unit) + "\n");
+}
+
 bool Core::update()
 {
     pollfd watched = {_connection.getFd(), POLLIN, 0};

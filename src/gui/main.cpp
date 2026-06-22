@@ -16,6 +16,8 @@
 
 namespace {
 
+constexpr int TIME_STEP = 10;
+
 using Zappy::Gui::Args;
 using Zappy::Gui::Core;
 using Zappy::Gui::Menu;
@@ -47,6 +49,19 @@ void onMenuAction(Menu::ButtonAction action, const Args &args, std::optional<Cor
     // Menu::ButtonAction::Options a implementer
 }
 
+void handleGameKeys(const sf::Event &event, Core &core)
+{
+    if (event.type != sf::Event::KeyPressed)
+        return;
+
+    int unit = core.getWorld().getTimeUnit();
+
+    if (event.key.code == sf::Keyboard::Add || event.key.code == sf::Keyboard::Equal)
+        core.requestTimeUnit(unit + TIME_STEP);
+    else if (event.key.code == sf::Keyboard::Subtract || event.key.code == sf::Keyboard::Hyphen)
+        core.requestTimeUnit(unit - TIME_STEP < 1 ? 1 : unit - TIME_STEP);
+}
+
 void handleEvents(Renderer &renderer, Menu &menu, const Args &args, std::optional<Core> &core)
 {
     sf::Event event;
@@ -55,7 +70,7 @@ void handleEvents(Renderer &renderer, Menu &menu, const Args &args, std::optiona
         if (event.type == sf::Event::Closed)
             renderer.close();
         else if (core)
-            continue; // en jeu : pas d'interaction menu
+            handleGameKeys(event, *core); // en jeu handle la vitesse
         else if (event.type == sf::Event::MouseMoved)
             menu.updateHover(at(event.mouseMove));
         else if (event.type == sf::Event::MouseButtonPressed)
@@ -73,6 +88,7 @@ bool updateAndRender(Renderer &renderer, Menu &menu, std::optional<Core> &core)
     }
     if (!core->update())
         return false;
+    renderer.addEvents(core->takeEvents());
     renderer.draw(core->getWorld());
     return true;
 }
