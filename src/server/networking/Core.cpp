@@ -352,8 +352,9 @@ void Core::handleGuiLine(Client &client, const std::string &line)
     static const std::unordered_map<std::string, GuiMember> handlers = {
         {"msz", &Core::respondMsz}, {"mct", &Core::respondMct},
         {"tna", &Core::respondTna}, {"sgt", &Core::respondSgt},
-        {"bct", &Core::respondBct}, {"ppo", &Core::respondPpo},
-        {"plv", &Core::respondPlv}, {"plv", &Core::respondPin},
+        {"sst", &Core::respondSst}, {"bct", &Core::respondBct},
+        {"ppo", &Core::respondPpo}, {"plv", &Core::respondPlv},
+        {"pin", &Core::respondPin},
     };
     std::istringstream iss(line);
     std::string command;
@@ -378,7 +379,7 @@ void Core::respondPin(Client &client, std::istringstream &iss)
     }
     Client *clientPlayer = findPlayerById(playerId);
     if (clientPlayer == nullptr || clientPlayer->getPlayer() == nullptr)
-        client.send("pin\n");
+        client.send("sbp\n");
     else {
         const Player &player = *clientPlayer->getPlayer();
         client.send(GuiProtocol::formatPin(playerId, player, _map.at(player.getX(), player.getY())));
@@ -409,10 +410,10 @@ void Core::respondSgt(Client &client, std::istringstream &)
 }
 
 void Core::respondSst(Client &client, std::istringstream &iss)
-{   
+{
     int frequency = 0;
-    if (!iss >> frequency) {
-        client.send("sst\n");
+    if (!(iss >> frequency) || frequency <= 0) {
+        client.send("sbp\n");
         return;
     }
     client.send(GuiProtocol::formatSst(_clock, frequency));
