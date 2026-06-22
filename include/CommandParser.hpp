@@ -26,8 +26,11 @@ public:
         std::string_view line) noexcept;
 
 private:
-    [[nodiscard]] static std::optional<int> getMovementCost(
-        std::string_view line) noexcept;
+    [[nodiscard]] static std::optional<int> ForwardCost(std::string_view line) noexcept;
+    [[nodiscard]] static std::optional<int> LeftCost(std::string_view line) noexcept;
+    [[nodiscard]] static std::optional<int> RightCost(std::string_view line) noexcept;
+    [[nodiscard]] static std::optional<int> InventoryCost(std::string_view line) noexcept;
+    
 };
 
 } // namespace Zappy::Server
