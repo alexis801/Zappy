@@ -39,3 +39,7 @@ core
 *.swp
 *.tmp
 .DS_Store
+
+# Python Cache files
+
+__pycache__
