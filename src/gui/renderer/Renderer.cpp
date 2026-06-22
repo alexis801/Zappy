@@ -30,7 +30,7 @@ constexpr float SRC_WIDTH = 682.f; // largeur real 1 frame robot
 constexpr float ROBOT_SCALE = 1.2f; // robot par rapport a la largeur de case
 constexpr float EGG_SCALE = 0.3f; //oeuf scale
 constexpr float INCANT_SCALE = 0.9f; // cercle incantation
-constexpr float ROBOT_FOOT = 0.70f; 
+constexpr float ROBOT_FOOT = 0.70f;
 
 // dalles en iso
 
@@ -43,6 +43,11 @@ constexpr float TILE_Y_OFFSET = 0.f; // ajustement vertical
 
 constexpr int MAT_CELL = 64;
 constexpr float MATERIAL_SCALE = 0.3f;
+
+// texte des joeurs
+
+constexpr float FLASH_DURATION = 1.6f; // duree d'un texte event
+constexpr float FLASH_RISE = 45.f; // monte en s'effacant
 
 const std::array<int, Zappy::RESOURCE_COUNT> RESOURCE_TILES = {{
     0, // FOOD -> vert
@@ -135,6 +140,8 @@ Renderer::Renderer() : _window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Zapp
     if (!_incantationTexture.loadFromFile("assets/incantation.png"))
         throw std::runtime_error("Renderer: incantation sheet not found (assets/materials.png)");
      _incantationTexture.setSmooth(false);
+    if (!_font.loadFromFile("assets/font.ttf") && !_font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"))
+        throw std::runtime_error("Renderer: font not found(add a ..ttf in assets/font.ttf)");
 }
 
 bool Renderer::isOpen() const
@@ -339,6 +346,51 @@ void Renderer::drawIncantations(const World &world, const MapView &view)
     }
 }
 
+void Renderer::addEvents(const std::vector<GameEvent> &events)
+{
+    for (const auto &event : events)
+        _flashes.push_back({event.x, event.y, event.txt, FLASH_DURATION});
+}
+
+// texture qui montent et s'affacent au desssus des joeurs
+void Renderer::drawFlashes(const MapView &view, float dt)
+{
+    for (auto it = _flashes.begin(); it != _flashes.end();) {
+        it->life -= dt;
+        if (it->life <= 0.f) {
+            it = _flashes.erase(it);
+            continue;
+        }
+        float ratio = it->life / FLASH_DURATION;
+        sf::Vector2f center = tileCenter(view, it->x, it->y);
+        sf::Uint8 alpha = static_cast<sf::Uint8>(255.f * ratio);
+        sf::Text label = factory::text(_font, it->text, 46, sf::Color(255, 255, 255, alpha));
+
+        factory::centerText(label, center.x, center.y - view.tileH - (1.f - ratio) * FLASH_RISE);
+        _window.draw(label);
+        it++;
+    }
+}
+
+// ecran de fin
+void Renderer::drawGameOver(const World &world)
+{
+    sf::RectangleShape overlay(sf::Vector2f(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT)));
+    sf::Text title = factory::text(_font, "FIN DE PARTIE", 90, sf::Color::White);
+    float centerX = static_cast<float>(WINDOW_WIDTH) / 2.f;
+
+    overlay.setFillColor(sf::Color(10, 10, 15, 220));
+    _window.draw(overlay);
+    factory::centerText(title, centerX, 380.f);
+    _window.draw(title);
+    if (!world.getWinner().empty()) {
+        sf::Text winner = factory::text(_font, "Winner : " + world.getWinner(), 50, sf::Color(220, 200, 90));
+
+        factory::centerText(winner, centerX, 520.f);
+        _window.draw(winner);
+    }
+}
+
 void Renderer::draw(const World &world)
 {
     float dt = _frameClock.restart().asSeconds();
@@ -352,7 +404,10 @@ void Renderer::draw(const World &world)
         drawIncantations(world, view);
         drawEggs(world, view);
         drawPlayers(world, view, dt);
+        drawFlashes(view, dt);
     }
+    if (world.isGameOver())
+        drawGameOver(world);
     _window.display();
 }
 
