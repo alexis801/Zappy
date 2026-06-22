@@ -339,6 +339,25 @@ void Renderer::drawIncantations(const World &world, const MapView &view)
     }
 }
 
+// ecran de fin 
+void Renderer::drawGameOver(const World &world)
+{
+    sf::RectangleShape overlay(sf::Vector2f(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT)));
+    sf::Text title = factory::text(_font, "FIN DE PARTIE", 90, sf::Color::White);
+    float centerX = static_cast<float>(WINDOW_WIDTH) / 2.f;
+
+    overlay.setFillColor(sf::Color(10, 10, 15, 220));
+    _window.draw(overlay);
+    factory::centerText(title, centerX, 380.f);
+    _window.draw(title);
+    if (!world.getWinner().empty()) {
+        sf::Text winner = factory::text(_font, "Winner : " + world.getWinner(), 50, sf::Color(220, 200, 90));
+
+        factory::centerText(winner, centerX, 520.f);
+        _window.draw(winner);
+    }
+}
+
 void Renderer::draw(const World &world)
 {
     float dt = _frameClock.restart().asSeconds();
@@ -353,6 +372,8 @@ void Renderer::draw(const World &world)
         drawEggs(world, view);
         drawPlayers(world, view, dt);
     }
+    if (world.isGameOver())
+        drawGameOver(world);
     _window.display();
 }
 
