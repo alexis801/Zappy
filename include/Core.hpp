@@ -14,9 +14,11 @@
 #include "Egg.hpp"
 #include "Macros.hpp"
 #include "Map.hpp"
+#include "Player.hpp"
 #include "ResourceSpawner.hpp"
 #include "Socket.hpp"
 #include "Team.hpp"
+#include "Tile.hpp"
 #include <poll.h>
 #include <random>
 #include <sstream>
@@ -60,6 +62,12 @@ private:
     [[nodiscard]] Client *findPlayerById(int playerId);
     void executeDueCommands();
     void executePlayerCommand(Client &client, const Command &cmd);
+    [[nodiscard]] bool tryStartIncantation(Client &client);
+    [[nodiscard]] std::vector<Player *> findIncantationParticipants(
+        int x, int y, int level);
+    [[nodiscard]] bool meetsIncantationRequirements(
+        const std::vector<Player *> &players, const Tile &tile,
+        int level) noexcept;
     void tickResources() noexcept;
     void tickLife() noexcept;
     void killPlayer(int fd);
