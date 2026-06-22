@@ -26,10 +26,10 @@ public:
         std::string_view line) noexcept;
 
 private:
-    [[nodiscard]] static std::optional<int> ForwardCost(std::string_view line) noexcept;
-    [[nodiscard]] static std::optional<int> LeftCost(std::string_view line) noexcept;
-    [[nodiscard]] static std::optional<int> RightCost(std::string_view line) noexcept;
-    [[nodiscard]] static std::optional<int> InventoryCost(std::string_view line) noexcept;
+    [[nodiscard]] static std::optional<int> ForwardCost() noexcept;
+    [[nodiscard]] static std::optional<int> LeftCost() noexcept;
+    [[nodiscard]] static std::optional<int> RightCost() noexcept;
+    [[nodiscard]] static std::optional<int> InventoryCost() noexcept;
     
 };
 
