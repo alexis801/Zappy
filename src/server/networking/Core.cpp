@@ -318,7 +318,7 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
         team->getRemainingSlots(), _map.getWidth(), _map.getHeight()));
     if (client.getPlayer() != nullptr)
         broadcastToGuis(GuiProtocol::formatPnw(
-            client.getFd(), *client.getPlayer(), 1, teamName));
+            client.getPlayer()->getId(), *client.getPlayer(), 1, teamName));
     return true;
 }
 
@@ -472,8 +472,9 @@ void Core::broadcastToGuis(std::string_view message)
 Client *Core::findPlayerById(int playerId)
 {
     for (auto &client : _clients)
-        if (client.getFd() == playerId
-            && client.getState() == Client::State::Player)
+        if (client.getState() == Client::State::Player
+            && client.getPlayer() != nullptr
+            && client.getPlayer()->getId() == playerId)
             return &client;
     return nullptr;
 }
