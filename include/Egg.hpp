@@ -8,7 +8,11 @@
 #ifndef ZAPPY_EGG_HPP_
 #define ZAPPY_EGG_HPP_
 
+#include <optional>
+#include <random>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace Zappy::Server {
 
@@ -20,6 +24,10 @@ public:
     [[nodiscard]] const std::string &getTeam() const noexcept;
     [[nodiscard]] int getX() const noexcept;
     [[nodiscard]] int getY() const noexcept;
+
+    [[nodiscard]] static std::optional<Egg> pickRandomForTeam(
+        std::vector<Egg> &eggs, std::string_view teamName,
+        std::mt19937 &rng) noexcept;
 
 private:
     int _id;
