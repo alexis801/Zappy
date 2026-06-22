@@ -192,6 +192,10 @@ void Core::handlePlayerLine(Client &client, const std::string &line)
         client.send("ko\n");
         return;
     }
+    if (line == "Incantation" && !tryStartIncantation(client)) {
+        client.send("ko\n");
+        return;
+    }
     long now = _clock.getElapsedMillis();
     long duration = _clock.getDurationMillis(*cost);
 
@@ -211,6 +215,10 @@ void Core::executeDueCommands()
     for (auto &client : _clients) {
         while (client.hasCommands()
             && client.getNextDeadlineMillis() <= now) {
+            Player *player = client.getPlayer();
+            if (player != nullptr && player->isFrozen()
+                && client.peekCommand().text != "Incantation")
+                break;
             Command cmd = client.popCommand();
 
             executePlayerCommand(client, cmd);
@@ -245,6 +253,10 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         client.send("ok\n");
         return;
     }
+    if (cmd.text == "Incantation") {
+        completeIncantation(*player);
+        return;
+    }
     CommandOutcome outcome = player->executeCommand(
         cmd.text, _map.getWidth(), _map.getHeight());
 
@@ -258,6 +270,127 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
     }
     client.send("ok\n");
     broadcastToGui(GuiProtocol::formatPpo(player->getId(), *player));
+}
+
+std::vector<Player *> Core::findIncantationParticipants(
+    int x, int y, int level)
+{
+    std::vector<Player *> result;
+
+    for (auto &client : _clients) {
+        if (client.getState() != Client::State::Player)
+            continue;
+        Player *player = client.getPlayer();
+        if (player == nullptr)
+            continue;
+        if (player->getX() == x && player->getY() == y
+            && player->getLevel() == level)
+            result.push_back(player);
+    }
+    return result;
+}
+
+bool Core::meetsIncantationRequirements(
+    const std::vector<Player *> &players, const Tile &tile,
+    int level) noexcept
+{
+    if (level < 1 || level >= MAX_PLAYER_LEVEL)
+        return false;
+    const IncantationRequirement &req = INCANTATION_TABLE[level - 1];
+    if (static_cast<int>(players.size()) < req.players)
+        return false;
+    for (std::size_t i = 0; i < req.stones.size(); ++i)
+        if (tile.get(static_cast<Resource>(i + 1)) < req.stones[i])
+            return false;
+    return true;
+}
+
+bool Core::tryStartIncantation(Client &client)
+{
+    Player *starter = client.getPlayer();
+
+    if (starter == nullptr)
+        return false;
+    int x = starter->getX();
+    int y = starter->getY();
+    int level = starter->getLevel();
+    std::vector<Player *> participants = findIncantationParticipants(
+        x, y, level);
+
+    if (!meetsIncantationRequirements(participants, _map.at(x, y), level))
+        return false;
+    client.send("Elevation underway\n");
+    client.clearCommands();
+    std::vector<int> ids;
+    for (Player *p : participants)
+        ids.push_back(p->getId());
+    broadcastToGui(GuiProtocol::formatPic(x, y, level, ids));
+    for (Player *p : participants)
+        p->setFrozen(true);
+    return true;
+}
+
+std::vector<Player *> Core::gatherFrozenAt(int x, int y, int level)
+{
+    std::vector<Player *> result;
+
+    for (auto &c : _clients) {
+        if (c.getState() != Client::State::Player)
+            continue;
+        Player *p = c.getPlayer();
+        if (p == nullptr || !p->isFrozen())
+            continue;
+        if (p->getX() == x && p->getY() == y && p->getLevel() == level)
+            result.push_back(p);
+    }
+    return result;
+}
+
+void Core::completeIncantation(Player &starter)
+{
+    int x = starter.getX();
+    int y = starter.getY();
+    int level = starter.getLevel();
+    std::vector<Player *> participants = gatherFrozenAt(x, y, level);
+    bool success = meetsIncantationRequirements(
+        participants, _map.at(x, y), level);
+
+    for (Player *p : participants)
+        p->setFrozen(false);
+    if (success)
+        finishIncantationSuccess(participants, x, y, level);
+    else
+        finishIncantationFailure(participants, x, y);
+}
+
+void Core::finishIncantationFailure(
+    const std::vector<Player *> &players, int x, int y)
+{
+    for (Player *p : players) {
+        Client *c = findPlayerById(p->getId());
+        if (c != nullptr)
+            c->send("ko\n");
+    }
+    broadcastToGui(GuiProtocol::formatPie(x, y, false));
+}
+
+void Core::finishIncantationSuccess(
+    const std::vector<Player *> &players, int x, int y, int level)
+{
+    const IncantationRequirement &req = INCANTATION_TABLE[level - 1];
+    int newLevel = level + 1;
+
+    for (std::size_t i = 0; i < req.stones.size(); ++i)
+        _map.at(x, y).remove(static_cast<Resource>(i + 1), req.stones[i]);
+    broadcastTile(x, y);
+    for (Player *p : players) {
+        p->setLevel(newLevel);
+        Client *c = findPlayerById(p->getId());
+        if (c != nullptr)
+            c->send("Current level: " + std::to_string(newLevel) + "\n");
+        broadcastToGui(GuiProtocol::formatPlv(p->getId(), newLevel));
+    }
+    broadcastToGui(GuiProtocol::formatPie(x, y, true));
 }
 
 void Core::tickResources() noexcept
@@ -318,8 +451,12 @@ void Core::killPlayer(int fd)
     if (client->getState() == Client::State::Player) {
         Player *player = client->getPlayer();
 
-        if (player != nullptr)
+        if (player != nullptr) {
+            if (player->isFrozen())
+                cancelIncantationAt(player->getX(), player->getY(),
+                    player->getLevel());
             broadcastToGui(GuiProtocol::formatPdi(player->getId()));
+        }
         Team *team = findTeam(client->getTeamName());
 
         if (team != nullptr)
@@ -327,6 +464,21 @@ void Core::killPlayer(int fd)
         client->send("dead\n");
     }
     removeClient(fd);
+}
+
+void Core::cancelIncantationAt(int x, int y, int level)
+{
+    std::vector<Player *> frozen = gatherFrozenAt(x, y, level);
+
+    if (frozen.empty())
+        return;
+    for (Player *p : frozen) {
+        p->setFrozen(false);
+        Client *c = findPlayerById(p->getId());
+        if (c != nullptr)
+            c->send("ko\n");
+    }
+    broadcastToGui(GuiProtocol::formatPie(x, y, false));
 }
 
 void Core::sendMapToGui(Client &gui) const
