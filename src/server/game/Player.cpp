@@ -52,6 +52,21 @@ int Player::getLevel() const noexcept
     return _level;
 }
 
+void Player::setLevel(int level) noexcept
+{
+    _level = level;
+}
+
+bool Player::isFrozen() const noexcept
+{
+    return _frozen;
+}
+
+void Player::setFrozen(bool frozen) noexcept
+{
+    _frozen = frozen;
+}
+
 int Player::getFood() const noexcept
 {
     return _inventory[static_cast<std::size_t>(Resource::FOOD)];

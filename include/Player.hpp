@@ -53,6 +53,9 @@ public:
     [[nodiscard]] int getY() const noexcept;
     [[nodiscard]] Direction getDirection() const noexcept;
     [[nodiscard]] int getLevel() const noexcept;
+    void setLevel(int level) noexcept;
+    [[nodiscard]] bool isFrozen() const noexcept;
+    void setFrozen(bool frozen) noexcept;
     [[nodiscard]] int getFood() const noexcept;
     [[nodiscard]] int get(Resource resource) const noexcept;
 
@@ -91,6 +94,7 @@ private:
     int _id;
     int _level;
     int _pendingTime;
+    bool _frozen{false};
     std::array<int, RESOURCE_COUNT> _inventory{};
 };
 
