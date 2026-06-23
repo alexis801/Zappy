@@ -19,6 +19,7 @@
 #include "Socket.hpp"
 #include "Team.hpp"
 #include "Tile.hpp"
+#include "Victory.hpp"
 #include <poll.h>
 #include <random>
 #include <sstream>
@@ -86,6 +87,8 @@ private:
     void spawnInitialEggs(int eggsPerTeam);
     void sendEggsToGui(Client &gui) const;
     void broadcastEggsDestroyedOnTile(int x, int y);
+    void checkVictory();
+    void endGame(const std::string &winnerTeam);
 
     [[nodiscard]] Client *findClient(int fd);
     [[nodiscard]] Team *findTeam(const std::string &name);
@@ -102,6 +105,7 @@ private:
     std::vector<Egg> _eggs;
     int _nextEggId;
     std::mt19937 _eggRng;
+    bool _gameEnded{false};
 };
 
 } // namespace Zappy::Server
