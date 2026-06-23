@@ -37,7 +37,8 @@ private:
     [[nodiscard]] static std::optional<int> TakeCost() noexcept;
     [[nodiscard]] static std::optional<int> SetCost() noexcept;
     [[nodiscard]] static std::optional<int> IncantationCost() noexcept;
-    
+    [[nodiscard]] static std::optional<int> ConnectNbrCost() noexcept;
+
 };
 
 } // namespace Zappy::Server

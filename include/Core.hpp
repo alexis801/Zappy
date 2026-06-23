@@ -63,6 +63,7 @@ private:
     [[nodiscard]] Client *findPlayerById(int playerId);
     void executeDueCommands();
     void executePlayerCommand(Client &client, const Command &cmd);
+    void handleBroadcast(Client &sender, const std::string &command);
     [[nodiscard]] bool tryStartIncantation(Client &client);
     void completeIncantation(Player &starter);
     void cancelIncantationAt(int x, int y, int level);
