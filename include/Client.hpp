@@ -82,6 +82,7 @@ public:
      * @brief Le joueur pilote par ce client, nullptr s'il n'existe pas
      */
     [[nodiscard]] Player *getPlayer() noexcept;
+    [[nodiscard]] const Player *getPlayer() const noexcept;
 
     /**
      * @brief Met une cmd en file (max 10). False = file pleine
