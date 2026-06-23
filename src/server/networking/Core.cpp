@@ -47,7 +47,7 @@ int wrapDistance(int distance, int mapsize) noexcept
     if (distance > mapsize / 2)
         distance -= mapsize;
     else if (distance < -mapsize / 2)
-        distance += Mapsize;
+        distance += mapsize;
     return distance;
 }
 
@@ -84,7 +84,7 @@ int soundDirection(const Player &source, const Player &receiver,
             relativeRight = -globalDeltaY;
             break;
     }
-    return table[signOf(forward) + 1][signOf(right) + 1];
+    return table[signOf(relativeForward) + 1][signOf(relativeRight) + 1];
 }
 
 std::string buildBctLine(int x, int y, const Tile &tile)
@@ -92,7 +92,7 @@ std::string buildBctLine(int x, int y, const Tile &tile)
     std::string line = "bct " + std::to_string(x) + " "
         + std::to_string(y);
 
-    for (std::Mapsize_t i = 0; i < RESOURCE_COUNT; ++i)
+    for (std::size_t i = 0; i < RESOURCE_COUNT; ++i)
         line += " " + std::to_string(tile.get(static_cast<Resource>(i)));
     line += "\n";
     return line;
