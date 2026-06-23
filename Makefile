@@ -82,6 +82,17 @@ tests_clean:
 	$(RM) -r $(TEST_OBJ_DIR)
 	$(RM) *.gcno *.gcda
 
+stress:	$(SERVER)
+	@for scenario in stress_connections stress_spam stress_reconnect; do \
+		./$(SERVER) -p 4242 -x 20 -y 20 -n red blue -c 500 -f 1000 \
+			>/dev/null 2>&1 & \
+		server_pid=$$!; \
+		sleep 1; \
+		python3 tests/stress/$$scenario.py --team red; \
+		kill $$server_pid 2>/dev/null; \
+		wait $$server_pid 2>/dev/null; \
+	done
+
 docs:
 	doxygen Doxyfile
 	xdg-open docs/html/index.html
@@ -91,4 +102,4 @@ doc_clean:
 
 -include $(ALL_OBJ:.o=.d)
 
-.PHONY:	all clean fclean re dev tests_run tests_clean docs doc_clean
+.PHONY:	all clean fclean re dev tests_run tests_clean stress docs doc_clean

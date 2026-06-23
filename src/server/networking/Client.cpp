@@ -76,6 +76,13 @@ Player *Client::getPlayer() noexcept
     return &*_player;
 }
 
+const Player *Client::getPlayer() const noexcept
+{
+    if (!_player.has_value())
+        return nullptr;
+    return &*_player;
+}
+
 bool Client::enqueueCommand(
     std::string text, long nowMillis, long durationMillis)
 {
