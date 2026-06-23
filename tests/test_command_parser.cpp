@@ -37,5 +37,6 @@ Test(command_parser, inventory_coute_1)
 
 Test(command_parser, commande_inconnue)
 {
-    cr_assert_not(CommandParser::getCommandCost("Look").has_value());
+    cr_assert_eq(CommandParser::getCommandCost("Look").value(),
+        Zappy::action_cost::LOOK);
 }

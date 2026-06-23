@@ -94,6 +94,25 @@ inline constexpr int INCANTATION = 300;
 // Auth GUI
 inline constexpr std::string_view GRAPHIC_TEAM_NAME = "GRAPHIC";
 
+// Incantation : niveau max et truc equis pour passer du niveau N a N+1
+inline constexpr int MAX_PLAYER_LEVEL = 8;
+
+struct IncantationRequirement {
+    int players;
+    std::array<int, RESOURCE_COUNT - 1> stones;
+};
+
+// Indexe par niveau de depart
+inline constexpr std::array<IncantationRequirement, 7> INCANTATION_TABLE = {{
+    {1, {1, 0, 0, 0, 0, 0}},
+    {2, {1, 1, 1, 0, 0, 0}},
+    {2, {2, 0, 1, 0, 2, 0}},
+    {4, {1, 1, 2, 0, 1, 0}},
+    {4, {1, 2, 1, 3, 0, 0}},
+    {6, {1, 2, 3, 0, 1, 0}},
+    {6, {2, 2, 2, 2, 2, 1}},
+}};
+
 } // namespace Zappy
 
 #endif

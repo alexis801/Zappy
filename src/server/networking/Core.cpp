@@ -7,6 +7,7 @@
 
 #include "CommandParser.hpp"
 #include "Core.hpp"
+#include "Egg.hpp"
 #include "GuiProtocol.hpp"
 #include "Macros.hpp"
 #include "Tile.hpp"
@@ -15,6 +16,7 @@
 #include <cstring>
 #include <iostream>
 #include <optional>
+#include <random>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -53,13 +55,44 @@ Core::Core(const Args &args)
     _spawner(DEFAULT_SPAWN_SEED),
     _nextRespawnMillis(0),
     _lastLifeTickMillis(0),
-    _nextPlayerId(0)
+    _nextPlayerId(0),
+    _nextEggId(0),
+    _eggRng(DEFAULT_SPAWN_SEED)
 {
     for (const auto &name : args.getTeams())
         _teams.emplace_back(name, args.getClientsPerTeam());
     _spawner.initialSpawn(_map);
+    spawnInitialEggs(args.getClientsPerTeam());
     _nextRespawnMillis = _clock.getDurationMillis(RESOURCE_SPAWN_INTERVAL);
     _lastLifeTickMillis = _clock.getElapsedMillis();
+}
+
+void Core::spawnInitialEggs(int eggsPerTeam)
+{
+    std::uniform_int_distribution<int> distX(0, _map.getWidth() - 1);
+    std::uniform_int_distribution<int> distY(0, _map.getHeight() - 1);
+
+    for (const Team &team : _teams) {
+        for (int i = 0; i < eggsPerTeam; ++i) {
+            _eggs.emplace_back(_nextEggId++, team.getName(),
+                distX(_eggRng), distY(_eggRng));
+        }
+    }
+}
+
+void Core::sendEggsToGui(Client &gui) const
+{
+    for (const Egg &egg : _eggs)
+        gui.send(GuiProtocol::formatEnw(
+            egg.getId(), 0, egg.getX(), egg.getY()));
+}
+
+void Core::broadcastEggsDestroyedOnTile(int x, int y)
+{
+    std::vector<int> destroyed = Egg::destroyOnTile(_eggs, x, y);
+
+    for (int eggId : destroyed)
+        broadcastToGui(GuiProtocol::formatEdi(eggId));
 }
 
 void Core::run()
@@ -159,6 +192,10 @@ void Core::handlePlayerLine(Client &client, const std::string &line)
         client.send("ko\n");
         return;
     }
+    if (line == "Incantation" && !tryStartIncantation(client)) {
+        client.send("ko\n");
+        return;
+    }
     long now = _clock.getElapsedMillis();
     long duration = _clock.getDurationMillis(*cost);
 
@@ -178,6 +215,10 @@ void Core::executeDueCommands()
     for (auto &client : _clients) {
         while (client.hasCommands()
             && client.getNextDeadlineMillis() <= now) {
+            Player *player = client.getPlayer();
+            if (player != nullptr && player->isFrozen()
+                && client.peekCommand().text != "Incantation")
+                break;
             Command cmd = client.popCommand();
 
             executePlayerCommand(client, cmd);
@@ -193,6 +234,29 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         client.send("ko\n");
         return;
     }
+    if (cmd.text == "Fork") {
+        Team *team = findTeam(client.getTeamName());
+
+        if (team == nullptr) {
+            client.send("ko\n");
+            return;
+        }
+        if (!player->fork(*team, _eggs, _nextEggId)) {
+            client.send("ko\n");
+            return;
+        }
+        const Egg &egg = _eggs.back();
+
+        broadcastToGui(GuiProtocol::formatPfk(player->getId()));
+        broadcastToGui(GuiProtocol::formatEnw(
+            egg.getId(), player->getId(), egg.getX(), egg.getY()));
+        client.send("ok\n");
+        return;
+    }
+    if (cmd.text == "Incantation") {
+        completeIncantation(*player);
+        return;
+    }
     CommandOutcome outcome = player->executeCommand(
         cmd.text, _map.getWidth(), _map.getHeight());
 
@@ -205,6 +269,128 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         return;
     }
     client.send("ok\n");
+    broadcastToGui(GuiProtocol::formatPpo(player->getId(), *player));
+}
+
+std::vector<Player *> Core::findIncantationParticipants(
+    int x, int y, int level)
+{
+    std::vector<Player *> result;
+
+    for (auto &client : _clients) {
+        if (client.getState() != Client::State::Player)
+            continue;
+        Player *player = client.getPlayer();
+        if (player == nullptr)
+            continue;
+        if (player->getX() == x && player->getY() == y
+            && player->getLevel() == level)
+            result.push_back(player);
+    }
+    return result;
+}
+
+bool Core::meetsIncantationRequirements(
+    const std::vector<Player *> &players, const Tile &tile,
+    int level) noexcept
+{
+    if (level < 1 || level >= MAX_PLAYER_LEVEL)
+        return false;
+    const IncantationRequirement &req = INCANTATION_TABLE[level - 1];
+    if (static_cast<int>(players.size()) < req.players)
+        return false;
+    for (std::size_t i = 0; i < req.stones.size(); ++i)
+        if (tile.get(static_cast<Resource>(i + 1)) < req.stones[i])
+            return false;
+    return true;
+}
+
+bool Core::tryStartIncantation(Client &client)
+{
+    Player *starter = client.getPlayer();
+
+    if (starter == nullptr)
+        return false;
+    int x = starter->getX();
+    int y = starter->getY();
+    int level = starter->getLevel();
+    std::vector<Player *> participants = findIncantationParticipants(
+        x, y, level);
+
+    if (!meetsIncantationRequirements(participants, _map.at(x, y), level))
+        return false;
+    client.send("Elevation underway\n");
+    client.clearCommands();
+    std::vector<int> ids;
+    for (Player *p : participants)
+        ids.push_back(p->getId());
+    broadcastToGui(GuiProtocol::formatPic(x, y, level, ids));
+    for (Player *p : participants)
+        p->setFrozen(true);
+    return true;
+}
+
+std::vector<Player *> Core::gatherFrozenAt(int x, int y, int level)
+{
+    std::vector<Player *> result;
+
+    for (auto &c : _clients) {
+        if (c.getState() != Client::State::Player)
+            continue;
+        Player *p = c.getPlayer();
+        if (p == nullptr || !p->isFrozen())
+            continue;
+        if (p->getX() == x && p->getY() == y && p->getLevel() == level)
+            result.push_back(p);
+    }
+    return result;
+}
+
+void Core::completeIncantation(Player &starter)
+{
+    int x = starter.getX();
+    int y = starter.getY();
+    int level = starter.getLevel();
+    std::vector<Player *> participants = gatherFrozenAt(x, y, level);
+    bool success = meetsIncantationRequirements(
+        participants, _map.at(x, y), level);
+
+    for (Player *p : participants)
+        p->setFrozen(false);
+    if (success)
+        finishIncantationSuccess(participants, x, y, level);
+    else
+        finishIncantationFailure(participants, x, y);
+}
+
+void Core::finishIncantationFailure(
+    const std::vector<Player *> &players, int x, int y)
+{
+    for (Player *p : players) {
+        Client *c = findPlayerById(p->getId());
+        if (c != nullptr)
+            c->send("ko\n");
+    }
+    broadcastToGui(GuiProtocol::formatPie(x, y, false));
+}
+
+void Core::finishIncantationSuccess(
+    const std::vector<Player *> &players, int x, int y, int level)
+{
+    const IncantationRequirement &req = INCANTATION_TABLE[level - 1];
+    int newLevel = level + 1;
+
+    for (std::size_t i = 0; i < req.stones.size(); ++i)
+        _map.at(x, y).remove(static_cast<Resource>(i + 1), req.stones[i]);
+    broadcastTile(x, y);
+    for (Player *p : players) {
+        p->setLevel(newLevel);
+        Client *c = findPlayerById(p->getId());
+        if (c != nullptr)
+            c->send("Current level: " + std::to_string(newLevel) + "\n");
+        broadcastToGui(GuiProtocol::formatPlv(p->getId(), newLevel));
+    }
+    broadcastToGui(GuiProtocol::formatPie(x, y, true));
 }
 
 void Core::tickResources() noexcept
@@ -265,8 +451,12 @@ void Core::killPlayer(int fd)
     if (client->getState() == Client::State::Player) {
         Player *player = client->getPlayer();
 
-        if (player != nullptr)
-            broadcastToGui("pdi " + std::to_string(player->getId()) + "\n");
+        if (player != nullptr) {
+            if (player->isFrozen())
+                cancelIncantationAt(player->getX(), player->getY(),
+                    player->getLevel());
+            broadcastToGui(GuiProtocol::formatPdi(player->getId()));
+        }
         Team *team = findTeam(client->getTeamName());
 
         if (team != nullptr)
@@ -274,6 +464,21 @@ void Core::killPlayer(int fd)
         client->send("dead\n");
     }
     removeClient(fd);
+}
+
+void Core::cancelIncantationAt(int x, int y, int level)
+{
+    std::vector<Player *> frozen = gatherFrozenAt(x, y, level);
+
+    if (frozen.empty())
+        return;
+    for (Player *p : frozen) {
+        p->setFrozen(false);
+        Client *c = findPlayerById(p->getId());
+        if (c != nullptr)
+            c->send("ko\n");
+    }
+    broadcastToGui(GuiProtocol::formatPie(x, y, false));
 }
 
 void Core::sendMapToGui(Client &gui) const
@@ -303,8 +508,8 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
 {
     if (teamName == Zappy::GRAPHIC_TEAM_NAME) {
         client.setAsGui();
-        client.send(buildHandshakeResponse(0, _map.getWidth(), _map.getHeight()));
-        sendMapToGui(client);
+        sendGuiInitialState(client);
+        sendEggsToGui(client);
         return true;
     }
     Team *team = findTeam(teamName);
@@ -312,13 +517,23 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
     if (team == nullptr || !team->canAcceptClient())
         return false;
     team->claimSlot();
+    int playerId = _nextPlayerId++;
+
     client.setAsPlayer(teamName);
-    client.spawnPlayer(_map.getWidth(), _map.getHeight(), _nextPlayerId++);
+    std::optional<Egg> hatched = Egg::pickRandomForTeam(
+        _eggs, teamName, _eggRng);
+
+    if (hatched.has_value()) {
+        client.spawnFromEgg(*hatched, playerId);
+        broadcastToGui(GuiProtocol::formatEbo(hatched->getId()));
+    } else {
+        client.spawnPlayer(_map.getWidth(), _map.getHeight(), playerId);
+    }
     client.send(buildHandshakeResponse(
         team->getRemainingSlots(), _map.getWidth(), _map.getHeight()));
     if (client.getPlayer() != nullptr)
         broadcastToGuis(GuiProtocol::formatPnw(
-            client.getFd(), *client.getPlayer(), 1, teamName));
+            playerId, *client.getPlayer(), 1, teamName));
     return true;
 }
 
@@ -351,8 +566,9 @@ void Core::handleGuiLine(Client &client, const std::string &line)
     static const std::unordered_map<std::string, GuiMember> handlers = {
         {"msz", &Core::respondMsz}, {"mct", &Core::respondMct},
         {"tna", &Core::respondTna}, {"sgt", &Core::respondSgt},
-        {"bct", &Core::respondBct}, {"ppo", &Core::respondPpo},
-        {"plv", &Core::respondPlv}, {"plv", &Core::respondPin},
+        {"sst", &Core::respondSst}, {"bct", &Core::respondBct},
+        {"ppo", &Core::respondPpo}, {"plv", &Core::respondPlv},
+        {"pin", &Core::respondPin},
     };
     std::istringstream iss(line);
     std::string command;
@@ -360,7 +576,7 @@ void Core::handleGuiLine(Client &client, const std::string &line)
     iss >> command;
     auto handler = handlers.find(command);
     if (handler == handlers.end()) {
-        client.send("suc\n");
+        client.send(GuiProtocol::formatSuc());
         return;
     }
     (this->*(handler->second))(client, iss);
@@ -372,12 +588,12 @@ void Core::respondPin(Client &client, std::istringstream &iss)
     int playerId = 0;
 
     if (!(iss >> hash >> playerId) || hash != '#') {
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
         return;
     }
     Client *clientPlayer = findPlayerById(playerId);
     if (clientPlayer == nullptr || clientPlayer->getPlayer() == nullptr)
-        client.send("pin\n");
+        client.send(GuiProtocol::formatSbp());
     else {
         const Player &player = *clientPlayer->getPlayer();
         client.send(GuiProtocol::formatPin(playerId, player, _map.at(player.getX(), player.getY())));
@@ -408,10 +624,10 @@ void Core::respondSgt(Client &client, std::istringstream &)
 }
 
 void Core::respondSst(Client &client, std::istringstream &iss)
-{   
+{
     int frequency = 0;
-    if (!iss >> frequency) {
-        client.send("sst\n");
+    if (!(iss >> frequency) || frequency <= 0) {
+        client.send(GuiProtocol::formatSbp());
         return;
     }
     client.send(GuiProtocol::formatSst(_clock, frequency));
@@ -424,7 +640,7 @@ void Core::respondBct(Client &client, std::istringstream &iss)
 
     if (!(iss >> x >> y)
         || x < 0 || y < 0 || x >= _map.getWidth() || y >= _map.getHeight()) {
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
         return;
     }
     client.send(GuiProtocol::formatBct(x, y, _map.at(x, y)));
@@ -436,13 +652,13 @@ void Core::respondPpo(Client &client, std::istringstream &iss)
     int playerId = 0;
 
     if (!(iss >> hash >> playerId) || hash != '#') {
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
         return;
     }
     Client *player = findPlayerById(playerId);
 
     if (player == nullptr || player->getPlayer() == nullptr)
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
     else
         client.send(GuiProtocol::formatPpo(playerId, *player->getPlayer()));
 }
@@ -453,13 +669,13 @@ void Core::respondPlv(Client &client, std::istringstream &iss)
     int playerId = 0;
 
     if (!(iss >> hash >> playerId) || hash != '#') {
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
         return;
     }
     if (findPlayerById(playerId) != nullptr)
         client.send(GuiProtocol::formatPlv(playerId, 1));
     else
-        client.send("sbp\n");
+        client.send(GuiProtocol::formatSbp());
 }
 
 void Core::broadcastToGuis(std::string_view message)
@@ -472,8 +688,9 @@ void Core::broadcastToGuis(std::string_view message)
 Client *Core::findPlayerById(int playerId)
 {
     for (auto &client : _clients)
-        if (client.getFd() == playerId
-            && client.getState() == Client::State::Player)
+        if (client.getState() == Client::State::Player
+            && client.getPlayer() != nullptr
+            && client.getPlayer()->getId() == playerId)
             return &client;
     return nullptr;
 }
@@ -483,8 +700,15 @@ void Core::sendGuiInitialState(Client &client)
     std::istringstream empty;
 
     respondMsz(client, empty);
-    respondTna(client, empty);
+    respondSgt(client, empty);
     respondMct(client, empty);
+    respondTna(client, empty);
+
+    for (auto &other : _clients) {
+        Player *player = other.getPlayer();
+        if (other.getState() == Client::State::Player && player != nullptr)
+            client.send(GuiProtocol::formatPnw(player->getId(), *player, player->getLevel(), other.getTeamName()));
+    }
 }
 
 } // namespace Zappy::Server

@@ -35,6 +35,12 @@ struct Egg {
     int y = 0;
 };
 
+struct GameEvent {
+    int x = 0;
+    int y = 0;
+    std::string txt;
+};
+
 /**
  * @class World
  * @brief Copie locale du monde taille de la carte + cases (ressources)
@@ -178,6 +184,21 @@ public:
         return _serverMessage;
     }
 
+// event ponctuel ratache a la case du joeur pbc/pex/pdr/pgt/pfk
+
+void pushPlayerEvent(int id, const std::string &txt)
+{
+    auto it = _players.find(id);
+    if (it != _players.end())
+        _events.push_back({it->second.x, it->second.y, txt});
+}
+
+[[nodiscard]] std::vector<GameEvent> takeEvents()
+{
+    std::vector<GameEvent> out = std::move(_events);
+    _events.clear();
+    return out;
+}
 
 private:
 
@@ -195,6 +216,7 @@ private:
     int _height = 0;
     std::vector<Tile> _tiles;
     std::unordered_map<int, Player> _players;
+    std::vector<GameEvent> _events;
     std::vector<std::string> _teams;
     std::unordered_map<int, Egg> _eggs;
     std::vector<std::pair<int, int>> _incantations;
