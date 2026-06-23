@@ -22,6 +22,8 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <map>
+#include <functional>
 
 namespace Zappy::Server {
 
@@ -245,7 +247,7 @@ void Core::executeDueCommands()
     }
 }
 
-void Core::executeFork(Client &client, Player *player)
+void Core::executeFork(Client &client, Player &player)
 {
     Team *team = findTeam(client.getTeamName());
 
@@ -253,35 +255,45 @@ void Core::executeFork(Client &client, Player *player)
         client.send("ko\n");
         return;
     }
-    if (!player->fork(*team, _eggs, _nextEggId)) {
+    if (!player.fork(*team, _eggs, _nextEggId)) {
         client.send("ko\n");
         return;
     }
     const Egg &egg = _eggs.back();
 
-    broadcastToGui(GuiProtocol::formatPfk(player->getId()));
+    broadcastToGui(GuiProtocol::formatPfk(player.getId()));
     broadcastToGui(GuiProtocol::formatEnw(
-        egg.getId(), player->getId(), egg.getX(), egg.getY()));
+        egg.getId(), player.getId(), egg.getX(), egg.getY()));
     client.send("ok\n");
     return;
 }
 
+void Core::executeEject(Client &client, Player &player)
+{
+    (void)client;
+    (void)player;
+}
+
+
 void Core::executePlayerCommand(Client &client, const Command &cmd)
 {
     Player *player = client.getPlayer();
+    using CommandHandler = void (Core::*)(Client &, Player &);
+
+    std::map<std::string, CommandHandler> commands = {
+        {"Fork", &Core::executeFork}, {"Incantation", &Core::completeIncantation},
+        {"Eject", &Core::executeEject}
+    };
 
     if (player == nullptr) {
         client.send("ko\n");
         return;
     }
-    if (cmd.text == "Fork") {
-        executeFork(client, player);
-        return;
-    }
-    if (cmd.text == "Incantation") {
-        completeIncantation(*player);
-        return;
-    }
+
+    auto it = commands.find(cmd.text);
+    if (it != commands.end())
+        return (this->*(it->second))(client, *player);
+
     CommandOutcome outcome = player->executeCommand(
         cmd.text, _map.getWidth(), _map.getHeight());
 
@@ -371,8 +383,9 @@ std::vector<Player *> Core::gatherFrozenAt(int x, int y, int level)
     return result;
 }
 
-void Core::completeIncantation(Player &starter)
+void Core::completeIncantation(Client &client, Player &starter)
 {
+    (void)client;
     int x = starter.getX();
     int y = starter.getY();
     int level = starter.getLevel();
