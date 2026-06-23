@@ -94,6 +94,8 @@ private:
     void executeFork(Client &client, Player &player);
     void executeEject(Client &client, Player &player);
     void completeIncantation(Client &client, Player &starter);
+    void executeSet(Client &client, Player &player);
+    void executeTake(Client &client, Player &player);
 
     [[nodiscard]] Client *findClient(int fd);
     [[nodiscard]] Team *findTeam(const std::string &name);

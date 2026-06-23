@@ -274,6 +274,17 @@ void Core::executeEject(Client &client, Player &player)
     (void)player;
 }
 
+void Core::executeTake(Client &client, Player &player)
+{
+    (void)client;
+    (void)player;
+}
+
+void Core::executeSet(Client &client, Player &player)
+{
+    (void)client;
+    (void)player;
+}
 
 void Core::executePlayerCommand(Client &client, const Command &cmd)
 {
@@ -282,7 +293,8 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
 
     std::map<std::string, CommandHandler> commands = {
         {"Fork", &Core::executeFork}, {"Incantation", &Core::completeIncantation},
-        {"Eject", &Core::executeEject}
+        {"Eject", &Core::executeEject}, {"Take", &Core::executeTake},
+        {"Set", &Core::executeSet}
     };
 
     if (player == nullptr) {
