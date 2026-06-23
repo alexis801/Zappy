@@ -234,6 +234,12 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         client.send("ko\n");
         return;
     }
+    if (cmd.text == "Connect_nbr") {
+        Team *team = findTeam(client.getTeamName());
+        client.send(std::to_string(
+            team != nullptr ? team->getRemainingSlots() : 0) + "\n");
+        return;
+    }
     if (cmd.text == "Fork") {
         Team *team = findTeam(client.getTeamName());
 
