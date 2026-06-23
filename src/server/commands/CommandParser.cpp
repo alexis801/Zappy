@@ -70,18 +70,25 @@ std::optional<int> CommandParser::IncantationCost() noexcept
     return action_cost::INCANTATION;
 }
 
+std::optional<int> CommandParser::ConnectNbrCost() noexcept
+{
+    return action_cost::CONNECT_NBR;
+}
+
 std::optional<int> CommandParser::getCommandCost(std::string_view line) noexcept
 {
     std::map<std::string_view, std::function<std::optional<int>()>> commands = {
         {"Forward", ForwardCost}, {"Left", LeftCost}, {"Right", RightCost},
         {"Inventory", InventoryCost}, {"Look", LookCost}, {"Broadcast", BroadcastCost},
         {"Fork", ForkCost}, {"Eject", EjectCost}, {"Take", TakeCost},
-        {"Set", SetCost}, {"Incantation", IncantationCost}
+        {"Set", SetCost}, {"Incantation", IncantationCost},
+        {"Connect_nbr", ConnectNbrCost}
     };
 
-    auto it = commands.find(line);
-    if (it != commands.end())
-        return it->second();
+    std::string_view commandName = line.substr(0, line.find(' '));
+    auto matchedCommand = commands.find(commandName);
+    if (matchedCommand != commands.end())
+        return matchedCommand->second();
     return std::nullopt;
 }
 

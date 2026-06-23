@@ -36,6 +36,57 @@ std::string buildHandshakeResponse(int slots, int width, int height)
         + std::to_string(height) + "\n";
 }
 
+int signOf(int value) noexcept
+{
+    return (value > 0) - (value < 0);
+}
+
+int wrapDistance(int distance, int mapsize) noexcept
+{
+    distance %= mapsize;
+    if (distance > mapsize / 2)
+        distance -= mapsize;
+    else if (distance < -mapsize / 2)
+        distance += mapsize;
+    return distance;
+}
+
+int soundDirection(const Player &source, const Player &receiver,
+    int mapwidth, int mapheight)
+{
+    int globalDeltaX = wrapDistance(source.getX() - receiver.getX(), mapwidth);
+    int globalDeltaY = wrapDistance(source.getY() - receiver.getY(), mapheight);
+    int relativeForward = 0;
+    int relativeRight = 0;
+    static const int table[3][3] = {
+        {4, 5, 6},
+        {3, 0, 7},
+        {2, 1, 8},
+    };
+
+    if (globalDeltaX == 0 && globalDeltaY == 0)
+        return 0;
+    switch (receiver.getDirection()) {
+        case Direction::NORTH:
+            relativeForward = -globalDeltaY;
+            relativeRight = globalDeltaX;
+            break;
+        case Direction::EAST:
+            relativeForward = globalDeltaX;
+            relativeRight = globalDeltaY;
+            break;
+        case Direction::SOUTH:
+            relativeForward = globalDeltaY;
+            relativeRight = -globalDeltaX;
+            break;
+        case Direction::WEST:
+            relativeForward = -globalDeltaX;
+            relativeRight = -globalDeltaY;
+            break;
+    }
+    return table[signOf(relativeForward) + 1][signOf(relativeRight) + 1];
+}
+
 std::string buildBctLine(int x, int y, const Tile &tile)
 {
     std::string line = "bct " + std::to_string(x) + " "
@@ -253,6 +304,17 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         client.send("ko\n");
         return;
     }
+    if (cmd.text == "Connect_nbr") {
+        Team *team = findTeam(client.getTeamName());
+        client.send(std::to_string(
+            team != nullptr ? team->getRemainingSlots() : 0) + "\n");
+        return;
+    }
+    if (cmd.text.rfind("Broadcast", 0) == 0) {
+        handleBroadcast(client, cmd.text);
+        client.send("ok\n");
+        return;
+    }
     if (cmd.text == "Fork") {
         Team *team = findTeam(client.getTeamName());
 
@@ -289,6 +351,29 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
     }
     client.send("ok\n");
     broadcastToGui(GuiProtocol::formatPpo(player->getId(), *player));
+}
+
+void Core::handleBroadcast(Client &sender, const std::string &command)
+{
+    Player *src = sender.getPlayer();
+    std::string::size_type pos = command.find(' ');
+    std::string text;
+
+    if (src == nullptr)
+        return;
+    if (pos != std::string::npos)
+        text = command.substr(pos + 1);
+    for (auto &client : _clients) {
+        Player *receiver = client.getPlayer();
+
+        if (client.getState() != Client::State::Player
+            || client.getFd() == sender.getFd() || receiver == nullptr)
+            continue;
+        client.send("message " + std::to_string(soundDirection(
+            *src, *receiver, _map.getWidth(), _map.getHeight()))
+            + ", " + text + "\n");
+    }
+    broadcastToGuis(GuiProtocol::formatPbc(src->getId(), text));
 }
 
 std::vector<Player *> Core::findIncantationParticipants(
