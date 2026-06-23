@@ -13,8 +13,12 @@
 #include <array>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace Zappy::Server {
+
+class Egg;
+class Team;
 
 enum class Direction {
     NORTH,
@@ -41,12 +45,17 @@ public:
     [[nodiscard]] static Player spawnRandom(
         int width, int height, int id = 0);
 
+    [[nodiscard]] static Player spawnFromEgg(const Egg &egg, int id);
+
     [[nodiscard]] int getId() const noexcept;
 
     [[nodiscard]] int getX() const noexcept;
     [[nodiscard]] int getY() const noexcept;
     [[nodiscard]] Direction getDirection() const noexcept;
     [[nodiscard]] int getLevel() const noexcept;
+    void setLevel(int level) noexcept;
+    [[nodiscard]] bool isFrozen() const noexcept;
+    void setFrozen(bool frozen) noexcept;
     [[nodiscard]] int getFood() const noexcept;
     [[nodiscard]] int get(Resource resource) const noexcept;
 
@@ -55,6 +64,9 @@ public:
     void consumeFood(int elapsedTimeUnits) noexcept;
     [[nodiscard]] bool isAlive() const noexcept;
     [[nodiscard]] bool eat(Tile &tile) noexcept;
+
+    [[nodiscard]] bool fork(
+        Team &team, std::vector<Egg> &eggs, int &nextEggId) noexcept;
 
     void forward(int width, int height) noexcept;
     void turnLeft() noexcept;
@@ -82,6 +94,7 @@ private:
     int _id;
     int _level;
     int _pendingTime;
+    bool _frozen{false};
     std::array<int, RESOURCE_COUNT> _inventory{};
 };
 
