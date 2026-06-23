@@ -245,6 +245,27 @@ void Core::executeDueCommands()
     }
 }
 
+void Core::executeFork(Client &client, Player *player)
+{
+    Team *team = findTeam(client.getTeamName());
+
+    if (team == nullptr) {
+        client.send("ko\n");
+        return;
+    }
+    if (!player->fork(*team, _eggs, _nextEggId)) {
+        client.send("ko\n");
+        return;
+    }
+    const Egg &egg = _eggs.back();
+
+    broadcastToGui(GuiProtocol::formatPfk(player->getId()));
+    broadcastToGui(GuiProtocol::formatEnw(
+        egg.getId(), player->getId(), egg.getX(), egg.getY()));
+    client.send("ok\n");
+    return;
+}
+
 void Core::executePlayerCommand(Client &client, const Command &cmd)
 {
     Player *player = client.getPlayer();
@@ -254,22 +275,7 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         return;
     }
     if (cmd.text == "Fork") {
-        Team *team = findTeam(client.getTeamName());
-
-        if (team == nullptr) {
-            client.send("ko\n");
-            return;
-        }
-        if (!player->fork(*team, _eggs, _nextEggId)) {
-            client.send("ko\n");
-            return;
-        }
-        const Egg &egg = _eggs.back();
-
-        broadcastToGui(GuiProtocol::formatPfk(player->getId()));
-        broadcastToGui(GuiProtocol::formatEnw(
-            egg.getId(), player->getId(), egg.getX(), egg.getY()));
-        client.send("ok\n");
+        executeFork(client, player);
         return;
     }
     if (cmd.text == "Incantation") {
