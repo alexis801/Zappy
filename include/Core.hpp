@@ -88,6 +88,7 @@ private:
     void sendEggsToGui(Client &gui) const;
     void broadcastEggsDestroyedOnTile(int x, int y);
     void checkVictory();
+    void executeFork(Client &client, Player *player);
     void endGame(const std::string &winnerTeam);
 
     [[nodiscard]] Client *findClient(int fd);
