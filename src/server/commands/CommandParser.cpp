@@ -85,9 +85,10 @@ std::optional<int> CommandParser::getCommandCost(std::string_view line) noexcept
         {"Connect_nbr", ConnectNbrCost}
     };
 
-    auto it = commands.find(line);
-    if (it != commands.end())
-        return it->second();
+    std::string_view commandName = line.substr(0, line.find(' '));
+    auto matchedCommand = commands.find(commandName);
+    if (matchedCommand != commands.end())
+        return matchedCommand->second();
     return std::nullopt;
 }
 
