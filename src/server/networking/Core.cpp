@@ -11,6 +11,7 @@
 #include "GuiProtocol.hpp"
 #include "Macros.hpp"
 #include "Tile.hpp"
+#include "Victory.hpp"
 #include <algorithm>
 #include <cerrno>
 #include <cstring>
@@ -44,6 +45,24 @@ std::string buildBctLine(int x, int y, const Tile &tile)
         line += " " + std::to_string(tile.get(static_cast<Resource>(i)));
     line += "\n";
     return line;
+}
+
+std::vector<PlayerSnapshot> gatherPlayerSnapshots(
+    const std::vector<Client> &clients)
+{
+    std::vector<PlayerSnapshot> players;
+
+    for (const Client &client : clients) {
+        if (client.getState() != Client::State::Player)
+            continue;
+        const Player *player = client.getPlayer();
+
+        if (player == nullptr)
+            continue;
+        players.push_back(PlayerSnapshot{
+            client.getTeamName(), player->getLevel(), player->isAlive()});
+    }
+    return players;
 }
 
 } // namespace
@@ -97,7 +116,7 @@ void Core::broadcastEggsDestroyedOnTile(int x, int y)
 
 void Core::run()
 {
-    while (true) {
+    while (!_gameEnded) {
         std::vector<pollfd> fds = buildPollFds();
 
         if (::poll(fds.data(), fds.size(), getPollTimeoutMillis()) < 0) {
@@ -391,6 +410,27 @@ void Core::finishIncantationSuccess(
         broadcastToGui(GuiProtocol::formatPlv(p->getId(), newLevel));
     }
     broadcastToGui(GuiProtocol::formatPie(x, y, true));
+    checkVictory();
+}
+
+void Core::checkVictory()
+{
+    if (_gameEnded)
+        return;
+    std::optional<std::string> winner = Victory::detectWinner(
+        gatherPlayerSnapshots(_clients), _teams);
+
+    if (winner.has_value())
+        endGame(*winner);
+}
+
+void Core::endGame(const std::string &winnerTeam)
+{
+    if (_gameEnded)
+        return;
+    _gameEnded = true;
+    broadcastToGui(GuiProtocol::formatSeg(winnerTeam));
+    std::cerr << "[serveur] victoire de l'equipe " << winnerTeam << "\n";
 }
 
 void Core::tickResources() noexcept
