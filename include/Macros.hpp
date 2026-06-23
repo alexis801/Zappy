@@ -97,6 +97,9 @@ inline constexpr std::string_view GRAPHIC_TEAM_NAME = "GRAPHIC";
 // Incantation : niveau max et truc equis pour passer du niveau N a N+1
 inline constexpr int MAX_PLAYER_LEVEL = 8;
 
+// Victoire : 6 joueurs au niveau max
+inline constexpr int VICTORY_REQUIRED_PLAYERS = 6;
+
 struct IncantationRequirement {
     int players;
     std::array<int, RESOURCE_COUNT - 1> stones;
