@@ -321,8 +321,16 @@ void Core::executeFork(Client &client, Player &player)
 
 void Core::executeEject(Client &client, Player &player)
 {
-    (void)client;
-    (void)player;
+    Tile tile = _map.at(player.getX(), player.getY());
+
+    for (Client &cl : _clients) {
+        Player *pl = cl.getPlayer();
+        if ((player.getX() != pl->getX()) || (player.getY() != pl->getY()))
+            continue;
+
+        cl.send("eject: " + player.directionToString() + "\n");
+    }
+
 }
 
 void Core::executeTake(Client &client, Player &player)
