@@ -333,6 +333,10 @@ void Core::executeEject(Client &client, Player &player, std::string cmd)
             continue;
         if ((player.getX() != pl->getX()) || (player.getY() != pl->getY()))
             continue;
+        for (Egg &egg : _eggs) {
+            if ((egg.getX() == player.getX()) && (egg.getY() == player.getY()))
+                (void)egg.destroyOnTile(_eggs, egg.getX(), egg.getY());
+        }
         pl->ejectFromTile(player.getDirection(), _map.getWidth(), _map.getHeight());
         cl.send("eject: " + player.directionToString() + "\n");
     }
