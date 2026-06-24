@@ -16,10 +16,10 @@ namespace Zappy {
 Resource searchResource(const std::string &res)
 {
     static const std::unordered_map<std::string, Resource> resources = {
-        {"Food", Resource::FOOD}, {"Linemate", Resource::LINEMATE},
-        {"Deraumere", Resource::DERAUMERE}, {"Sibur", Resource::SIBUR},
-        {"Mendiane", Resource::MENDIANE}, {"Phiras", Resource::PHIRAS},
-        {"Thystame", Resource::THYSTAME}
+        {"food", Resource::FOOD}, {"linemate", Resource::LINEMATE},
+        {"deraumere", Resource::DERAUMERE}, {"sibur", Resource::SIBUR},
+        {"mendiane", Resource::MENDIANE}, {"phiras", Resource::PHIRAS},
+        {"thystame", Resource::THYSTAME}
     };
 
     auto it = resources.find(res);
@@ -27,7 +27,6 @@ Resource searchResource(const std::string &res)
         throw std::invalid_argument("Unknown resource: " + res);
     return it->second;
 }
-
 
 std::string getRestCommand(const std::string &cmd)
 {
