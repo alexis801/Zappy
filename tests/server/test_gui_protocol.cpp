@@ -12,6 +12,7 @@
 #include "Clock.hpp"
 #include "Macros.hpp"
 #include <string>
+#include <vector>
 
 using Zappy::DEFAULT_FREQUENCY;
 using Zappy::Resource;
@@ -173,6 +174,65 @@ Test(gui_protocol, format_pbc)
     std::string msg = GuiProtocol::formatPbc(4, "hello");
 
     cr_assert_str_eq(msg.c_str(), "pbc #4 hello\n");
+}
+
+Test(gui_protocol, format_pic_empty_list)
+{
+    std::vector<int> ids;
+    std::string msg = GuiProtocol::formatPic(1, 2, 3, ids);
+
+    cr_assert_str_eq(msg.c_str(), "pic 1 2 3\n");
+}
+
+Test(gui_protocol, format_pic_multiple_players)
+{
+    std::vector<int> ids = {1, 2, 7};
+    std::string msg = GuiProtocol::formatPic(4, 5, 2, ids);
+
+    cr_assert_str_eq(msg.c_str(), "pic 4 5 2 #1 #2 #7\n");
+}
+
+Test(gui_protocol, format_pie_success)
+{
+    std::string msg = GuiProtocol::formatPie(3, 4, true);
+
+    cr_assert_str_eq(msg.c_str(), "pie 3 4 1\n");
+}
+
+Test(gui_protocol, format_pie_failure)
+{
+    std::string msg = GuiProtocol::formatPie(3, 4, false);
+
+    cr_assert_str_eq(msg.c_str(), "pie 3 4 0\n");
+}
+
+Test(gui_protocol, format_pdr)
+{
+    std::string msg = GuiProtocol::formatPdr(2, 4);
+
+    cr_assert_str_eq(msg.c_str(), "pdr #2 4\n");
+}
+
+Test(gui_protocol, format_pgt)
+{
+    std::string msg = GuiProtocol::formatPgt(6, 1);
+
+    cr_assert_str_eq(msg.c_str(), "pgt #6 1\n");
+}
+
+Test(gui_protocol, format_pdi)
+{
+    std::string msg = GuiProtocol::formatPdi(12);
+
+    cr_assert_str_eq(msg.c_str(), "pdi #12\n");
+}
+
+Test(gui_protocol, direction_code_returns_protocol_values)
+{
+    cr_assert_eq(GuiProtocol::getDirectionCode(Direction::NORTH), 1);
+    cr_assert_eq(GuiProtocol::getDirectionCode(Direction::EAST), 2);
+    cr_assert_eq(GuiProtocol::getDirectionCode(Direction::SOUTH), 3);
+    cr_assert_eq(GuiProtocol::getDirectionCode(Direction::WEST), 4);
 }
 
 Test(gui_protocol, format_pfk)
