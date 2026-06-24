@@ -53,6 +53,8 @@ enum class Resource : std::size_t {
 };
 inline constexpr std::size_t RESOURCE_COUNT = 7;
 
+Resource searchResource(const std::string &res);
+
 // Densites de spawn : quantite = larg * h * d
 inline constexpr std::array<double, RESOURCE_COUNT> RESOURCE_DENSITY = {{
     0.5,   // FOOD
@@ -116,6 +118,9 @@ inline constexpr std::array<IncantationRequirement, 7> INCANTATION_TABLE = {{
     {6, {1, 2, 3, 0, 1, 0}},
     {6, {2, 2, 2, 2, 2, 1}},
 }};
+
+std::string getRestCommand(const std::string &cmd);
+std::string getFirstCommand(const std::string &cmd);
 
 } // namespace Zappy
 
