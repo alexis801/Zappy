@@ -226,4 +226,19 @@ std::string Player::directionToString()
     return "UNKNOWN";
 }
 
+void Player::addResource(Resource res)
+{
+    ++_inventory[static_cast<std::size_t>(res)];
+}
+
+bool Player::removeResource(Resource res)
+{
+    std::size_t index = static_cast<std::size_t>(res);
+
+    if (_inventory[index] <= 0)
+        return false;
+    --_inventory[index];
+    return true;
+}
+
 } // namespace Zappy::Server
