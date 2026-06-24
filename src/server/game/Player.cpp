@@ -42,6 +42,16 @@ int Player::getY() const noexcept
     return _y;
 }
 
+void Player::ejectFromTile(Direction dir, int width, int height) noexcept
+{
+    switch (dir) {
+        case Direction::NORTH: stepNorth(height);
+        case Direction::EAST: stepEast(width);
+        case Direction::WEST: stepWest(width);
+        case Direction::SOUTH: stepSouth(height);
+    }
+}
+
 Direction Player::getDirection() const noexcept
 {
     return _direction;
@@ -213,6 +223,32 @@ CommandOutcome Player::executeCommand(
     if (runMovement(command, width, height))
         return {CommandKind::OK, {}};
     return {CommandKind::KO, {}};
+}
+
+std::string Player::directionToString()
+{
+    switch (_direction) {
+        case Direction::NORTH: return "NORTH";
+        case Direction::EAST:  return "EAST";
+        case Direction::SOUTH: return "SOUTH";
+        case Direction::WEST:  return "WEST";
+    }
+    return "UNKNOWN";
+}
+
+void Player::addResource(Resource res) noexcept
+{
+    ++_inventory[static_cast<std::size_t>(res)];
+}
+
+bool Player::removeResource(Resource res) noexcept
+{
+    std::size_t index = static_cast<std::size_t>(res);
+
+    if (_inventory[index] <= 0)
+        return false;
+    --_inventory[index];
+    return true;
 }
 
 } // namespace Zappy::Server

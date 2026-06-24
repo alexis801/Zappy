@@ -62,10 +62,8 @@ private:
     void broadcastToGuis(std::string_view message);
     [[nodiscard]] Client *findPlayerById(int playerId);
     void executeDueCommands();
-    void executePlayerCommand(Client &client, const Command &cmd);
-    void handleBroadcast(Client &sender, const std::string &command);
+
     [[nodiscard]] bool tryStartIncantation(Client &client);
-    void completeIncantation(Player &starter);
     void cancelIncantationAt(int x, int y, int level);
     void finishIncantationFailure(
         const std::vector<Player *> &players, int x, int y);
@@ -90,6 +88,17 @@ private:
     void broadcastEggsDestroyedOnTile(int x, int y);
     void checkVictory();
     void endGame(const std::string &winnerTeam);
+
+    // ! Execute player command on server
+    void executePlayerCommand(Client &client, const Command &cmd);
+    void executeFork(Client &client, Player &player, std::string cmd);
+    void executeEject(Client &client, Player &player, std::string cmd);
+    void completeIncantation(Client &client, Player &starter, std::string cmd);
+    void executeSet(Client &client, Player &player, std::string cmd);
+    void executeTake(Client &client, Player &player, std::string cmd);
+    void executeConnect_nbr(Client &client, Player &player, std::string cmd);
+    void handleBroadcast(Client &sender, const std::string &command);
+    
 
     [[nodiscard]] Client *findClient(int fd);
     [[nodiscard]] Team *findTeam(const std::string &name);
