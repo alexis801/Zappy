@@ -73,6 +73,9 @@ public:
     void turnLeft() noexcept;
     void turnRight() noexcept;
 
+    [[nodiscard]] void addResource(Resource res) noexcept;
+    [[nodiscard]] bool removeResource(Resource res) noexcept;
+
     [[nodiscard]] CommandOutcome executeCommand(
         std::string_view command, int width, int height) noexcept;
 
