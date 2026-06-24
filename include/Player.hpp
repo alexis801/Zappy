@@ -31,6 +31,7 @@ enum class CommandKind {
     KO,
     OK,
     INVENTORY,
+    LOOK,
 };
 
 struct CommandOutcome {

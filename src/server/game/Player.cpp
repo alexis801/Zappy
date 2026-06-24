@@ -220,6 +220,8 @@ CommandOutcome Player::executeCommand(
 {
     if (command == "Inventory")
         return {CommandKind::INVENTORY, formatInventory()};
+    if (command == "Look")
+        return {CommandKind::LOOK, {}};
     if (runMovement(command, width, height))
         return {CommandKind::OK, {}};
     return {CommandKind::KO, {}};

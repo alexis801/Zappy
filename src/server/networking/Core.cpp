@@ -9,6 +9,7 @@
 #include "Core.hpp"
 #include "Egg.hpp"
 #include "GuiProtocol.hpp"
+#include "Look.hpp"
 #include "Macros.hpp"
 #include "Tile.hpp"
 #include "Victory.hpp"
@@ -404,6 +405,8 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         client.send("ko\n");
         return;
     }
+    int oldX = player->getX();
+    int oldY = player->getY();
 
     if (cmd.text.rfind("Broadcast", 0) == 0) {
         handleBroadcast(client, cmd.text);
@@ -422,8 +425,15 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         client.send("ko\n");
         return;
     }
+    if (player->getX() != oldX || player->getY() != oldY)
+        _map.movePlayer(
+            player->getId(), oldX, oldY, player->getX(), player->getY());
     if (outcome.kind == CommandKind::INVENTORY) {
         client.send(outcome.text + "\n");
+        return;
+    }
+    if (outcome.kind == CommandKind::LOOK) {
+        client.send(performLook(*player, _map) + "\n");
         return;
     }
     client.send("ok\n");
@@ -656,6 +666,8 @@ void Core::killPlayer(int fd)
         Player *player = client->getPlayer();
 
         if (player != nullptr) {
+            _map.removePlayer(
+                player->getId(), player->getX(), player->getY());
             if (player->isFrozen())
                 cancelIncantationAt(player->getX(), player->getY(),
                     player->getLevel());
@@ -733,6 +745,11 @@ bool Core::handleHandshake(Client &client, const std::string &teamName)
     } else {
         client.spawnPlayer(_map.getWidth(), _map.getHeight(), playerId);
     }
+    if (client.getPlayer() != nullptr) {
+        const Player &player = *client.getPlayer();
+
+        _map.addPlayer(player.getId(), player.getX(), player.getY());
+    }
     client.send(buildHandshakeResponse(
         team->getRemainingSlots(), _map.getWidth(), _map.getHeight()));
     if (client.getPlayer() != nullptr)
@@ -759,6 +776,15 @@ Team *Core::findTeam(const std::string &name)
 
 void Core::removeClient(int fd)
 {
+    Client *client = findClient(fd);
+
+    if (client != nullptr && client->getState() == Client::State::Player) {
+        Player *player = client->getPlayer();
+
+        if (player != nullptr && player->isAlive())
+            _map.removePlayer(
+                player->getId(), player->getX(), player->getY());
+    }
     std::cerr << "[serveur] client deconnecte (fd " << fd << ")\n";
     std::erase_if(_clients,
         [fd](const Client &client) { return client.getFd() == fd; });

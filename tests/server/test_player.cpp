@@ -156,10 +156,18 @@ Test(player, execute_command_forward_ok)
     cr_assert_eq(player.getY(), 4);
 }
 
-Test(player, execute_command_inconnue_ko)
+Test(player, execute_command_look)
 {
     Player player(0, 0, Direction::NORTH);
     CommandOutcome outcome = player.executeCommand("Look", 10, 10);
+
+    cr_assert(outcome.kind == CommandKind::LOOK);
+}
+
+Test(player, execute_command_inconnue_ko)
+{
+    Player player(0, 0, Direction::NORTH);
+    CommandOutcome outcome = player.executeCommand("Incantation", 10, 10);
 
     cr_assert(outcome.kind == CommandKind::KO);
 }
