@@ -53,7 +53,4 @@ def required_players_for(level):
     return getattr(levels, name).value.get("Player", 0)
 
 def players_needed(level):
-    req = required_players_for(level)
-    if req == 0:
-        return 0
-    return max(req, COHORT_SIZE)
+    return required_players_for(level)
