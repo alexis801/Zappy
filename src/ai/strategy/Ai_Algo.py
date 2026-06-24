@@ -17,12 +17,14 @@ from strategy.Player import Player
 from strategy.Action import Action
 from pathfinding.Decision import Decision
 
-ENTRY_POINT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ai_algo.py")
+AI_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ENTRY_POINT = os.path.join(AI_DIR, "main.py")
 
 class AI:
-    def __init__(self, team_name, host, port):
+    def __init__(self, team_name, host, port, is_boss=True):
         self.team_name = team_name
-        self.player = Player(team_name)
+        self.player = Player(team_name, is_boss)
+        self.status = "boss" if is_boss else "worker"
         self.client = SocketClient(host, port)
         self.action = Action(self)
         self.decision = Decision(self.player, Mode.SURVIVAL, self.action)
@@ -38,6 +40,8 @@ class AI:
         client_slots, map_size = self.client.connect(self.team_name)
         self.map_x, self.map_y = (int(v) for v in map_size.split())
         self.max_client = int(client_slots.strip())
+        if not self.player.boss:
+            return
         slots_remaining = int(self.action.execute_action("Connect_nbr"))
         current_players = self.max_client - slots_remaining
         if current_players < TARGET_PLAYERS:
@@ -83,7 +87,7 @@ class AI:
                 "-n", self.team_name,
                 "-h", self.client.host,
                 "--worker",
-            ])
+            ], cwd=AI_DIR)
 
     def parse_broadcast(self, message):
         try:
