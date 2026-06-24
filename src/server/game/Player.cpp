@@ -215,4 +215,15 @@ CommandOutcome Player::executeCommand(
     return {CommandKind::KO, {}};
 }
 
+std::string Player::directionToString()
+{
+    switch (_direction) {
+        case Direction::NORTH: return "NORTH";
+        case Direction::EAST:  return "EAST";
+        case Direction::SOUTH: return "SOUTH";
+        case Direction::WEST:  return "WEST";
+    }
+    return "UNKNOWN";
+}
+
 } // namespace Zappy::Server
