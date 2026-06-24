@@ -22,6 +22,8 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <map>
+#include <functional>
 
 namespace Zappy::Server {
 
@@ -296,48 +298,102 @@ void Core::executeDueCommands()
     }
 }
 
+void Core::executeFork(Client &client, Player &player, std::string cmd)
+{
+    (void)cmd;
+    Team *team = findTeam(client.getTeamName());
+
+    if (team == nullptr) {
+        client.send("ko\n");
+        return;
+    }
+    if (!player.fork(*team, _eggs, _nextEggId)) {
+        client.send("ko\n");
+        return;
+    }
+    const Egg &egg = _eggs.back();
+
+    broadcastToGui(GuiProtocol::formatPfk(player.getId()));
+    broadcastToGui(GuiProtocol::formatEnw(
+        egg.getId(), player.getId(), egg.getX(), egg.getY()));
+    client.send("ok\n");
+    return;
+}
+
+void Core::executeEject(Client &client, Player &player, std::string cmd)
+{
+    (void)client;
+    (void)cmd;
+
+    for (Client &cl : _clients) {
+        Player *pl = cl.getPlayer();
+
+        if (!pl || pl == &player)
+            continue;
+        if ((player.getX() != pl->getX()) || (player.getY() != pl->getY()))
+            continue;
+        pl->ejectFromTile(player.getDirection(), _map.getWidth(), _map.getHeight());
+        cl.send("eject: " + player.directionToString() + "\n");
+    }
+}
+
+void Core::executeTake(Client &client, Player &player, std::string cmd)
+{
+    (void)client;
+    Tile tile = _map.at(player.getX(), player.getY());
+    Resource res = searchResource(cmd);
+    int nb = tile.get(res);
+    if (nb > 0) {
+        tile.remove(res, 1);
+        player.addResource(res);
+    }
+}
+
+void Core::executeSet(Client &client, Player &player, std::string cmd)
+{
+    (void)client;
+    Tile tile = _map.at(player.getX(), player.getY());
+    Resource res = searchResource(cmd);
+    bool ret = player.removeResource(res);
+    if (ret)
+        tile.add(res, 1);
+}
+
+void Core::executeConnect_nbr(Client &client, Player &player, std::string cmd)
+{
+    (void)cmd;
+    (void)player;
+    Team *team = findTeam(client.getTeamName());
+    client.send(std::to_string(
+        team != nullptr ? team->getRemainingSlots() : 0) + "\n");
+}
+
 void Core::executePlayerCommand(Client &client, const Command &cmd)
 {
     Player *player = client.getPlayer();
+    using CommandHandler = void (Core::*)(Client &, Player &, std::string);
+
+    std::map<std::string, CommandHandler> commands = {
+        {"Fork", &Core::executeFork}, {"Incantation", &Core::completeIncantation},
+        {"Eject", &Core::executeEject}, {"Take", &Core::executeTake},
+        {"Set", &Core::executeSet}, {"Connect_nbr", &Core::executeConnect_nbr}
+    };
 
     if (player == nullptr) {
         client.send("ko\n");
         return;
     }
-    if (cmd.text == "Connect_nbr") {
-        Team *team = findTeam(client.getTeamName());
-        client.send(std::to_string(
-            team != nullptr ? team->getRemainingSlots() : 0) + "\n");
-        return;
-    }
+
     if (cmd.text.rfind("Broadcast", 0) == 0) {
         handleBroadcast(client, cmd.text);
         client.send("ok\n");
         return;
     }
-    if (cmd.text == "Fork") {
-        Team *team = findTeam(client.getTeamName());
 
-        if (team == nullptr) {
-            client.send("ko\n");
-            return;
-        }
-        if (!player->fork(*team, _eggs, _nextEggId)) {
-            client.send("ko\n");
-            return;
-        }
-        const Egg &egg = _eggs.back();
+    auto it = commands.find(getFirstCommand(cmd.text));
+    if (it != commands.end())
+        return (this->*(it->second))(client, *player, getRestCommand(cmd.text));
 
-        broadcastToGui(GuiProtocol::formatPfk(player->getId()));
-        broadcastToGui(GuiProtocol::formatEnw(
-            egg.getId(), player->getId(), egg.getX(), egg.getY()));
-        client.send("ok\n");
-        return;
-    }
-    if (cmd.text == "Incantation") {
-        completeIncantation(*player);
-        return;
-    }
     CommandOutcome outcome = player->executeCommand(
         cmd.text, _map.getWidth(), _map.getHeight());
 
@@ -450,8 +506,10 @@ std::vector<Player *> Core::gatherFrozenAt(int x, int y, int level)
     return result;
 }
 
-void Core::completeIncantation(Player &starter)
+void Core::completeIncantation(Client &client, Player &starter, std::string cmd)
 {
+    (void)cmd;
+    (void)client;
     int x = starter.getX();
     int y = starter.getY();
     int level = starter.getLevel();

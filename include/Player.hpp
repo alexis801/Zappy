@@ -51,7 +51,9 @@ public:
 
     [[nodiscard]] int getX() const noexcept;
     [[nodiscard]] int getY() const noexcept;
+    void ejectFromTile(Direction dir, int width, int height) noexcept;
     [[nodiscard]] Direction getDirection() const noexcept;
+    std::string directionToString();
     [[nodiscard]] int getLevel() const noexcept;
     void setLevel(int level) noexcept;
     [[nodiscard]] bool isFrozen() const noexcept;
@@ -71,6 +73,9 @@ public:
     void forward(int width, int height) noexcept;
     void turnLeft() noexcept;
     void turnRight() noexcept;
+
+    void addResource(Resource res) noexcept;
+    [[nodiscard]] bool removeResource(Resource res) noexcept;
 
     [[nodiscard]] CommandOutcome executeCommand(
         std::string_view command, int width, int height) noexcept;
