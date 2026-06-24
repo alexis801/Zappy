@@ -51,6 +51,7 @@ public:
 
     [[nodiscard]] int getX() const noexcept;
     [[nodiscard]] int getY() const noexcept;
+    void ejectFromTile(Direction dir, int width, int height) noexcept;
     [[nodiscard]] Direction getDirection() const noexcept;
     std::string directionToString();
     [[nodiscard]] int getLevel() const noexcept;
