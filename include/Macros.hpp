@@ -89,6 +89,7 @@ inline constexpr int EJECT       = 7;
 inline constexpr int TAKE        = 7;
 inline constexpr int SET         = 7;
 inline constexpr int INCANTATION = 300;
+inline constexpr int CONNECT_NBR = 0;
 } // namespace action_cost
 
 // Auth GUI
