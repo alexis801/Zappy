@@ -7,9 +7,13 @@
 
 #include <criterion/criterion.h>
 #include "Macros.hpp"
+#include "Player.hpp"
 #include "Tile.hpp"
 
+using Zappy::LIFE_UNITS_AT_START;
 using Zappy::Resource;
+using Zappy::Server::Direction;
+using Zappy::Server::Player;
 using Zappy::Server::Tile;
 
 Test(tile_edge, vide_a_la_creation)
@@ -48,4 +52,56 @@ Test(tile_edge, redevient_vide_apres_remove)
     cr_assert_not(tile.isEmpty());
     tile.remove(Resource::SIBUR, 2);
     cr_assert(tile.isEmpty());
+}
+
+Test(player_edge, niveau_initial_a_un)
+{
+    Player player(0, 0, Direction::NORTH, 1);
+
+    cr_assert_eq(player.getLevel(), 1);
+}
+
+Test(player_edge, set_level_modifie_la_valeur)
+{
+    Player player(0, 0, Direction::NORTH, 1);
+
+    player.setLevel(5);
+    cr_assert_eq(player.getLevel(), 5);
+}
+
+Test(player_edge, gele_par_defaut_a_faux)
+{
+    Player player(0, 0, Direction::NORTH, 1);
+
+    cr_assert_not(player.isFrozen());
+}
+
+Test(player_edge, set_frozen_change_etat)
+{
+    Player player(0, 0, Direction::NORTH, 1);
+
+    player.setFrozen(true);
+    cr_assert(player.isFrozen());
+    player.setFrozen(false);
+    cr_assert_not(player.isFrozen());
+}
+
+Test(player_edge, nourriture_initiale)
+{
+    Player player(0, 0, Direction::NORTH, 1);
+
+    cr_assert_eq(player.getFood(), LIFE_UNITS_AT_START);
+    cr_assert(player.isAlive());
+}
+
+Test(player_edge, mange_seulement_si_food_sur_case)
+{
+    Player player(0, 0, Direction::NORTH, 1);
+    Tile empty;
+
+    cr_assert_not(player.eat(empty));
+    Tile tile;
+    tile.add(Resource::FOOD, 1);
+    cr_assert(player.eat(tile));
+    cr_assert_eq(tile.get(Resource::FOOD), 0);
 }
