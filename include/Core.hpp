@@ -62,6 +62,7 @@ private:
     void broadcastToGuis(std::string_view message);
     [[nodiscard]] Client *findPlayerById(int playerId);
     void executeDueCommands();
+    void executePlayerCommand(Client &client, const Command &cmd);
 
     [[nodiscard]] bool tryStartIncantation(Client &client);
     void cancelIncantationAt(int x, int y, int level);
@@ -96,6 +97,9 @@ private:
     void completeIncantation(Client &client, Player &starter);
     void executeSet(Client &client, Player &player);
     void executeTake(Client &client, Player &player);
+    void executeConnect_nbr(Client &client, Player &player);
+    void handleBroadcast(Client &sender, const std::string &command);
+    
 
     [[nodiscard]] Client *findClient(int fd);
     [[nodiscard]] Team *findTeam(const std::string &name);
