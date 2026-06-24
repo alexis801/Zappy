@@ -73,7 +73,7 @@ public:
     void turnLeft() noexcept;
     void turnRight() noexcept;
 
-    [[nodiscard]] void addResource(Resource res) noexcept;
+    void addResource(Resource res) noexcept;
     [[nodiscard]] bool removeResource(Resource res) noexcept;
 
     [[nodiscard]] CommandOutcome executeCommand(

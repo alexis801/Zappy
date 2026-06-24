@@ -351,7 +351,11 @@ void Core::executeTake(Client &client, Player &player, std::string cmd)
 void Core::executeSet(Client &client, Player &player, std::string cmd)
 {
     (void)client;
-    (void)player;
+    Tile tile = _map.at(player.getX(), player.getY());
+    Resource res = searchResource(cmd);
+    bool ret = player.removeResource(res);
+    if (ret)
+        tile.add(res, 1);
 }
 
 void Core::executeConnect_nbr(Client &client, Player &player, std::string cmd)
@@ -361,37 +365,6 @@ void Core::executeConnect_nbr(Client &client, Player &player, std::string cmd)
     Team *team = findTeam(client.getTeamName());
     client.send(std::to_string(
         team != nullptr ? team->getRemainingSlots() : 0) + "\n");
-}
-
-Resource searchResource(const std::string &res)
-{
-    static const std::unordered_map<std::string, Resource> resources = {
-        {"Food", Resource::FOOD}, {"Linemate", Resource::LINEMATE},
-        {"Deraumere", Resource::DERAUMERE}, {"Sibur", Resource::SIBUR},
-        {"Mendiane", Resource::MENDIANE}, {"Phiras", Resource::PHIRAS},
-        {"Thystame", Resource::THYSTAME}
-    };
-
-    auto it = resources.find(res);
-    if (it == resources.end())
-        throw std::invalid_argument("Unknown resource: " + res);
-    return it->second;
-}
-
-std::string getRestCommand(const std::string &cmd)
-{
-    size_t pos = cmd.find(' ');
-    if (pos != std::string::npos)
-        return cmd.substr(pos + 1);
-    return "";
-}
-
-std::string getFirstCommand(const std::string &cmd)
-{
-    std::string firstCmd;
-    std::istringstream iss(cmd);
-    iss >> firstCmd;
-    return firstCmd;
 }
 
 void Core::executePlayerCommand(Client &client, const Command &cmd)
