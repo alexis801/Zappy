@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 ##
 ## EPITECH PROJECT, 2026
 ## zappy
@@ -9,7 +7,6 @@
 
 from enum import Enum
 
-
 class IncantationState(Enum):
     IDLE = 0
     GATHERING_PLAYERS = 1
@@ -17,15 +14,12 @@ class IncantationState(Enum):
     EXECUTING = 3
     RECOVERY = 4
 
-
 class Mode(Enum):
     NORMAL = "normal"
     SURVIVAL = "survival"
 
-
 resource_map = {"food": "f", "linemate": "l", "deraumere": "d", "sibur": "s",
                 "mendiane": "m", "phiras": "p", "thystame": "t"}
-
 
 class levels(Enum):
     LEVEL_2 = {"Player": 1, "Linemate": 1}
@@ -37,7 +31,6 @@ class levels(Enum):
     LEVEL_8 = {"Player": 6, "Linemate": 2, "Deraumere": 2, "Sibur": 2,
                "Mendiane": 2, "Phiras": 2, "Thystame": 1}
 
-
 COHORT_SIZE = 6
 TARGET_PLAYERS = 6
 TEAMMATE_TTL = 15.0
@@ -48,19 +41,16 @@ FOOD_SURVIVAL_TARGET = 100
 FOOD_RECOVERY_TARGET = 60
 FOOD_OBJECTIVE = 90
 
-
 RESOURCE_RARITY = {
     "food": 1, "linemate": 2, "deraumere": 3, "sibur": 4,
     "mendiane": 5, "phiras": 6, "thystame": 7,
 }
-
 
 def required_players_for(level):
     name = f"LEVEL_{level + 1}"
     if name not in levels.__members__:
         return 0
     return getattr(levels, name).value.get("Player", 0)
-
 
 def players_needed(level):
     req = required_players_for(level)

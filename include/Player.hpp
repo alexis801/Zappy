@@ -13,8 +13,12 @@
 #include <array>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace Zappy::Server {
+
+class Egg;
+class Team;
 
 enum class Direction {
     NORTH,
@@ -42,12 +46,19 @@ public:
     [[nodiscard]] static Player spawnRandom(
         int width, int height, int id = 0);
 
+    [[nodiscard]] static Player spawnFromEgg(const Egg &egg, int id);
+
     [[nodiscard]] int getId() const noexcept;
 
     [[nodiscard]] int getX() const noexcept;
     [[nodiscard]] int getY() const noexcept;
+    void ejectFromTile(Direction dir, int width, int height) noexcept;
     [[nodiscard]] Direction getDirection() const noexcept;
+    std::string directionToString();
     [[nodiscard]] int getLevel() const noexcept;
+    void setLevel(int level) noexcept;
+    [[nodiscard]] bool isFrozen() const noexcept;
+    void setFrozen(bool frozen) noexcept;
     [[nodiscard]] int getFood() const noexcept;
     [[nodiscard]] int get(Resource resource) const noexcept;
 
@@ -57,9 +68,15 @@ public:
     [[nodiscard]] bool isAlive() const noexcept;
     [[nodiscard]] bool eat(Tile &tile) noexcept;
 
+    [[nodiscard]] bool fork(
+        Team &team, std::vector<Egg> &eggs, int &nextEggId) noexcept;
+
     void forward(int width, int height) noexcept;
     void turnLeft() noexcept;
     void turnRight() noexcept;
+
+    void addResource(Resource res) noexcept;
+    [[nodiscard]] bool removeResource(Resource res) noexcept;
 
     [[nodiscard]] CommandOutcome executeCommand(
         std::string_view command, int width, int height) noexcept;
@@ -83,6 +100,7 @@ private:
     int _id;
     int _level;
     int _pendingTime;
+    bool _frozen{false};
     std::array<int, RESOURCE_COUNT> _inventory{};
 };
 

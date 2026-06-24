@@ -9,6 +9,7 @@
 #define ZAPPY_CLIENT_HPP_
 
 #include "Command.hpp"
+#include "Egg.hpp"
 #include "Player.hpp"
 #include "ReadBuffer.hpp"
 #include "Socket.hpp"
@@ -75,10 +76,13 @@ public:
      */
     void spawnPlayer(int width, int height, int id);
 
+    void spawnFromEgg(const Egg &egg, int id);
+
     /**
      * @brief Le joueur pilote par ce client, nullptr s'il n'existe pas
      */
     [[nodiscard]] Player *getPlayer() noexcept;
+    [[nodiscard]] const Player *getPlayer() const noexcept;
 
     /**
      * @brief Met une cmd en file (max 10). False = file pleine
@@ -104,6 +108,16 @@ public:
      * @brief Retire la premiere cmd de la file et la renvoie
      */
     [[nodiscard]] Command popCommand() noexcept;
+
+    /**
+     * @brief Consulte la premiere cmd sans la retirer 
+     */
+    [[nodiscard]] const Command &peekCommand() const noexcept;
+
+    /**
+     * @brief Vide la file de commandes en attente
+     */
+    void clearCommands() noexcept;
 
 private:
     Socket _socket;

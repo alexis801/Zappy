@@ -11,12 +11,17 @@
 #include "Args.hpp"
 #include "Client.hpp"
 #include "Clock.hpp"
+#include "Egg.hpp"
 #include "Macros.hpp"
 #include "Map.hpp"
+#include "Player.hpp"
 #include "ResourceSpawner.hpp"
 #include "Socket.hpp"
 #include "Team.hpp"
+#include "Tile.hpp"
+#include "Victory.hpp"
 #include <poll.h>
+#include <random>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -57,7 +62,20 @@ private:
     void broadcastToGuis(std::string_view message);
     [[nodiscard]] Client *findPlayerById(int playerId);
     void executeDueCommands();
-    void executePlayerCommand(Client &client, const Command &cmd);
+
+    [[nodiscard]] bool tryStartIncantation(Client &client);
+    void cancelIncantationAt(int x, int y, int level);
+    void finishIncantationFailure(
+        const std::vector<Player *> &players, int x, int y);
+    void finishIncantationSuccess(
+        const std::vector<Player *> &players, int x, int y, int level);
+    [[nodiscard]] std::vector<Player *> findIncantationParticipants(
+        int x, int y, int level);
+    [[nodiscard]] std::vector<Player *> gatherFrozenAt(
+        int x, int y, int level);
+    [[nodiscard]] bool meetsIncantationRequirements(
+        const std::vector<Player *> &players, const Tile &tile,
+        int level) noexcept;
     void tickResources() noexcept;
     void tickLife() noexcept;
     void killPlayer(int fd);
@@ -65,6 +83,22 @@ private:
     void broadcastToGui(const std::string &message);
     void broadcastTile(int x, int y);
     void removeClient(int fd);
+    void spawnInitialEggs(int eggsPerTeam);
+    void sendEggsToGui(Client &gui) const;
+    void broadcastEggsDestroyedOnTile(int x, int y);
+    void checkVictory();
+    void endGame(const std::string &winnerTeam);
+
+    // ! Execute player command on server
+    void executePlayerCommand(Client &client, const Command &cmd);
+    void executeFork(Client &client, Player &player, std::string cmd);
+    void executeEject(Client &client, Player &player, std::string cmd);
+    void completeIncantation(Client &client, Player &starter, std::string cmd);
+    void executeSet(Client &client, Player &player, std::string cmd);
+    void executeTake(Client &client, Player &player, std::string cmd);
+    void executeConnect_nbr(Client &client, Player &player, std::string cmd);
+    void handleBroadcast(Client &sender, const std::string &command);
+    
 
     [[nodiscard]] Client *findClient(int fd);
     [[nodiscard]] Team *findTeam(const std::string &name);
@@ -78,6 +112,10 @@ private:
     long _nextRespawnMillis;
     long _lastLifeTickMillis;
     int _nextPlayerId;
+    std::vector<Egg> _eggs;
+    int _nextEggId;
+    std::mt19937 _eggRng;
+    bool _gameEnded{false};
 };
 
 } // namespace Zappy::Server

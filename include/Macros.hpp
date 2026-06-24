@@ -53,6 +53,8 @@ enum class Resource : std::size_t {
 };
 inline constexpr std::size_t RESOURCE_COUNT = 7;
 
+Resource searchResource(const std::string &res);
+
 // Densites de spawn : quantite = larg * h * d
 inline constexpr std::array<double, RESOURCE_COUNT> RESOURCE_DENSITY = {{
     0.5,   // FOOD
@@ -89,10 +91,36 @@ inline constexpr int EJECT       = 7;
 inline constexpr int TAKE        = 7;
 inline constexpr int SET         = 7;
 inline constexpr int INCANTATION = 300;
+inline constexpr int CONNECT_NBR = 0;
 } // namespace action_cost
 
 // Auth GUI
 inline constexpr std::string_view GRAPHIC_TEAM_NAME = "GRAPHIC";
+
+// Incantation : niveau max et truc equis pour passer du niveau N a N+1
+inline constexpr int MAX_PLAYER_LEVEL = 8;
+
+// Victoire : 6 joueurs au niveau max
+inline constexpr int VICTORY_REQUIRED_PLAYERS = 6;
+
+struct IncantationRequirement {
+    int players;
+    std::array<int, RESOURCE_COUNT - 1> stones;
+};
+
+// Indexe par niveau de depart
+inline constexpr std::array<IncantationRequirement, 7> INCANTATION_TABLE = {{
+    {1, {1, 0, 0, 0, 0, 0}},
+    {2, {1, 1, 1, 0, 0, 0}},
+    {2, {2, 0, 1, 0, 2, 0}},
+    {4, {1, 1, 2, 0, 1, 0}},
+    {4, {1, 2, 1, 3, 0, 0}},
+    {6, {1, 2, 3, 0, 1, 0}},
+    {6, {2, 2, 2, 2, 2, 1}},
+}};
+
+std::string getRestCommand(const std::string &cmd);
+std::string getFirstCommand(const std::string &cmd);
 
 } // namespace Zappy
 

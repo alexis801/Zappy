@@ -5,7 +5,9 @@
 ** Player
 */
 
+#include "Egg.hpp"
 #include "Player.hpp"
+#include "Team.hpp"
 #include <random>
 #include <string>
 
@@ -40,6 +42,16 @@ int Player::getY() const noexcept
     return _y;
 }
 
+void Player::ejectFromTile(Direction dir, int width, int height) noexcept
+{
+    switch (dir) {
+        case Direction::NORTH: stepNorth(height);
+        case Direction::EAST: stepEast(width);
+        case Direction::WEST: stepWest(width);
+        case Direction::SOUTH: stepSouth(height);
+    }
+}
+
 Direction Player::getDirection() const noexcept
 {
     return _direction;
@@ -48,6 +60,21 @@ Direction Player::getDirection() const noexcept
 int Player::getLevel() const noexcept
 {
     return _level;
+}
+
+void Player::setLevel(int level) noexcept
+{
+    _level = level;
+}
+
+bool Player::isFrozen() const noexcept
+{
+    return _frozen;
+}
+
+void Player::setFrozen(bool frozen) noexcept
+{
+    _frozen = frozen;
 }
 
 int Player::getFood() const noexcept
@@ -106,9 +133,23 @@ bool Player::eat(Tile &tile) noexcept
     return true;
 }
 
+bool Player::fork(
+    Team &team, std::vector<Egg> &eggs, int &nextEggId) noexcept
+{
+    eggs.emplace_back(nextEggId++, team.getName(), _x, _y);
+    team.addSlot();
+    return true;
+}
+
 Player Player::spawnRandom(int width, int height, int id)
 {
     return Player(drawRandomInt(width), drawRandomInt(height),
+        static_cast<Direction>(drawRandomInt(DIRECTION_COUNT)), id);
+}
+
+Player Player::spawnFromEgg(const Egg &egg, int id)
+{
+    return Player(egg.getX(), egg.getY(),
         static_cast<Direction>(drawRandomInt(DIRECTION_COUNT)), id);
 }
 
@@ -184,6 +225,32 @@ CommandOutcome Player::executeCommand(
     if (runMovement(command, width, height))
         return {CommandKind::OK, {}};
     return {CommandKind::KO, {}};
+}
+
+std::string Player::directionToString()
+{
+    switch (_direction) {
+        case Direction::NORTH: return "NORTH";
+        case Direction::EAST:  return "EAST";
+        case Direction::SOUTH: return "SOUTH";
+        case Direction::WEST:  return "WEST";
+    }
+    return "UNKNOWN";
+}
+
+void Player::addResource(Resource res) noexcept
+{
+    ++_inventory[static_cast<std::size_t>(res)];
+}
+
+bool Player::removeResource(Resource res) noexcept
+{
+    std::size_t index = static_cast<std::size_t>(res);
+
+    if (_inventory[index] <= 0)
+        return false;
+    --_inventory[index];
+    return true;
 }
 
 } // namespace Zappy::Server

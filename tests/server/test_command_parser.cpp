@@ -43,5 +43,5 @@ Test(command_parser, look_coute_7)
 
 Test(command_parser, commande_inconnue)
 {
-    cr_assert_not(CommandParser::getCommandCost("Incantation").has_value());
+    cr_assert_not(CommandParser::getCommandCost("Unknown").has_value());
 }
