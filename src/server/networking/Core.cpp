@@ -340,24 +340,45 @@ void Core::executeEject(Client &client, Player &player, std::string cmd)
 
 void Core::executeTake(Client &client, Player &player, std::string cmd)
 {
-    (void)client;
-    Tile tile = _map.at(player.getX(), player.getY());
-    Resource res = searchResource(cmd);
-    int nb = tile.get(res);
-    if (nb > 0) {
-        tile.remove(res, 1);
-        player.addResource(res);
+    Resource res;
+    Tile &tile = _map.at(player.getX(), player.getY());
+
+    try {
+        res = searchResource(cmd);
+    } catch (const std::invalid_argument &) {
+        client.send("ko\n");
+        return;
     }
+    if (tile.get(res) <= 0) {
+        client.send("ko\n");
+        return;
+    }
+    tile.remove(res, 1);
+    player.addResource(res);
+    client.send("ok\n");
+    broadcastToGui(GuiProtocol::formatPgt(player.getId(), static_cast<int>(res)));
+    broadcastToGui(buildBctLine(player.getX(), player.getY(), tile));
 }
 
 void Core::executeSet(Client &client, Player &player, std::string cmd)
 {
-    (void)client;
-    Tile tile = _map.at(player.getX(), player.getY());
-    Resource res = searchResource(cmd);
-    bool ret = player.removeResource(res);
-    if (ret)
-        tile.add(res, 1);
+    Resource res;
+    Tile &tile = _map.at(player.getX(), player.getY());
+
+    try {
+        res = searchResource(cmd);
+    } catch (const std::invalid_argument &) {
+        client.send("ko\n");
+        return;
+    }
+    if (!player.removeResource(res)) {
+        client.send("ko\n");
+        return;
+    }
+    tile.add(res, 1);
+    client.send("ok\n");
+    broadcastToGui(GuiProtocol::formatPdr(player.getId(), static_cast<int>(res)));
+    broadcastToGui(buildBctLine(player.getX(), player.getY(), tile));
 }
 
 void Core::executeConnect_nbr(Client &client, Player &player, std::string cmd)
