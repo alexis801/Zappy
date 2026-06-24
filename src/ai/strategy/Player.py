@@ -13,7 +13,7 @@ from strategy.Inventory import Inventory
 from pathfinding.Movement import Movement
 
 class Player:
-    def __init__(self, team_name):
+    def __init__(self, team_name, is_boss=True):
         self.team_name = team_name
         self.player_id = random.randint(1, 1000000)
         self.level = 1
@@ -21,6 +21,7 @@ class Player:
         self.mode = Mode.NORMAL
         self.movement = Movement(self.level)
         self.incantation_state = IncantationState.IDLE
+        self.boss = is_boss
         self.can_subsist = False
         self.is_immobile = False
         self.immobility_reason = None
