@@ -62,7 +62,6 @@ private:
     void broadcastToGuis(std::string_view message);
     [[nodiscard]] Client *findPlayerById(int playerId);
     void executeDueCommands();
-    void executePlayerCommand(Client &client, const Command &cmd);
 
     [[nodiscard]] bool tryStartIncantation(Client &client);
     void cancelIncantationAt(int x, int y, int level);
@@ -92,12 +91,12 @@ private:
 
     // ! Execute player command on server
     void executePlayerCommand(Client &client, const Command &cmd);
-    void executeFork(Client &client, Player &player);
-    void executeEject(Client &client, Player &player);
-    void completeIncantation(Client &client, Player &starter);
-    void executeSet(Client &client, Player &player);
-    void executeTake(Client &client, Player &player);
-    void executeConnect_nbr(Client &client, Player &player);
+    void executeFork(Client &client, Player &player, std::string cmd);
+    void executeEject(Client &client, Player &player, std::string cmd);
+    void completeIncantation(Client &client, Player &starter, std::string cmd);
+    void executeSet(Client &client, Player &player, std::string cmd);
+    void executeTake(Client &client, Player &player, std::string cmd);
+    void executeConnect_nbr(Client &client, Player &player, std::string cmd);
     void handleBroadcast(Client &sender, const std::string &command);
     
 

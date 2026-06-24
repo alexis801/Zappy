@@ -298,8 +298,9 @@ void Core::executeDueCommands()
     }
 }
 
-void Core::executeFork(Client &client, Player &player)
+void Core::executeFork(Client &client, Player &player, std::string cmd)
 {
+    (void)cmd;
     Team *team = findTeam(client.getTeamName());
 
     if (team == nullptr) {
@@ -319,9 +320,11 @@ void Core::executeFork(Client &client, Player &player)
     return;
 }
 
-void Core::executeEject(Client &client, Player &player)
+void Core::executeEject(Client &client, Player &player, std::string cmd)
 {
-    Tile tile = _map.at(player.getX(), player.getY());
+    (void)client;
+    (void)cmd;
+    //Tile tile = _map.at(player.getX(), player.getY());
 
     for (Client &cl : _clients) {
         Player *pl = cl.getPlayer();
@@ -333,30 +336,47 @@ void Core::executeEject(Client &client, Player &player)
 
 }
 
-void Core::executeTake(Client &client, Player &player)
+void Core::executeTake(Client &client, Player &player, std::string cmd)
 {
     (void)client;
     (void)player;
 }
 
-void Core::executeSet(Client &client, Player &player)
+void Core::executeSet(Client &client, Player &player, std::string cmd)
 {
     (void)client;
     (void)player;
 }
 
-void Core::executeConnect_nbr(Client &client, Player &player)
+void Core::executeConnect_nbr(Client &client, Player &player, std::string cmd)
 {
+    (void)cmd;
     (void)player;
     Team *team = findTeam(client.getTeamName());
     client.send(std::to_string(
         team != nullptr ? team->getRemainingSlots() : 0) + "\n");
 }
 
+std::string getRestCommand(const std::string &cmd)
+{
+    size_t pos = cmd.find(' ');
+    if (pos != std::string::npos)
+        return cmd.substr(pos + 1);
+    return "";
+}
+
+std::string getFirstCommand(const std::string &cmd)
+{
+    std::string firstCmd;
+    std::istringstream iss(cmd);
+    iss >> firstCmd;
+    return firstCmd;
+}
+
 void Core::executePlayerCommand(Client &client, const Command &cmd)
 {
     Player *player = client.getPlayer();
-    using CommandHandler = void (Core::*)(Client &, Player &);
+    using CommandHandler = void (Core::*)(Client &, Player &, std::string);
 
     std::map<std::string, CommandHandler> commands = {
         {"Fork", &Core::executeFork}, {"Incantation", &Core::completeIncantation},
@@ -374,10 +394,10 @@ void Core::executePlayerCommand(Client &client, const Command &cmd)
         client.send("ok\n");
         return;
     }
-   
-    auto it = commands.find(cmd.text);
+
+    auto it = commands.find(getFirstCommand(cmd.text));
     if (it != commands.end())
-        return (this->*(it->second))(client, *player);
+        return (this->*(it->second))(client, *player, getRestCommand(cmd.text));
 
     CommandOutcome outcome = player->executeCommand(
         cmd.text, _map.getWidth(), _map.getHeight());
@@ -491,8 +511,9 @@ std::vector<Player *> Core::gatherFrozenAt(int x, int y, int level)
     return result;
 }
 
-void Core::completeIncantation(Client &client, Player &starter)
+void Core::completeIncantation(Client &client, Player &starter, std::string cmd)
 {
+    (void)cmd;
     (void)client;
     int x = starter.getX();
     int y = starter.getY();
