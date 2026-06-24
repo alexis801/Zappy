@@ -226,12 +226,12 @@ std::string Player::directionToString()
     return "UNKNOWN";
 }
 
-void Player::addResource(Resource res)
+void Player::addResource(Resource res) noexcept
 {
     ++_inventory[static_cast<std::size_t>(res)];
 }
 
-bool Player::removeResource(Resource res)
+bool Player::removeResource(Resource res) noexcept
 {
     std::size_t index = static_cast<std::size_t>(res);
 
