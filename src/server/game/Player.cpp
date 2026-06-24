@@ -42,6 +42,16 @@ int Player::getY() const noexcept
     return _y;
 }
 
+void Player::ejectFromTile(Direction dir, int width, int height) noexcept
+{
+    switch (dir) {
+        case Direction::NORTH: stepNorth(height);
+        case Direction::EAST: stepEast(width);
+        case Direction::WEST: stepWest(width);
+        case Direction::SOUTH: stepSouth(height);
+    }
+}
+
 Direction Player::getDirection() const noexcept
 {
     return _direction;

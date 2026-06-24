@@ -324,16 +324,17 @@ void Core::executeEject(Client &client, Player &player, std::string cmd)
 {
     (void)client;
     (void)cmd;
-    //Tile tile = _map.at(player.getX(), player.getY());
 
     for (Client &cl : _clients) {
         Player *pl = cl.getPlayer();
+
+        if (!pl || pl == &player)
+            continue;
         if ((player.getX() != pl->getX()) || (player.getY() != pl->getY()))
             continue;
-
+        pl->ejectFromTile(player.getDirection(), _map.getWidth(), _map.getHeight());
         cl.send("eject: " + player.directionToString() + "\n");
     }
-
 }
 
 void Core::executeTake(Client &client, Player &player, std::string cmd)
