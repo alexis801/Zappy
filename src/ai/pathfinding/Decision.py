@@ -52,7 +52,7 @@ class Decision:
             self.action.ai.maintain_population()
 
         if (self.player.boss and self.player.level < 8
-                and self.player.get_food_level() >= 60
+                and self.player.get_food_level() >= 30
                 and self.player.can_team_upgrade(self.player.level)):
             if not self.player.is_immobile:
                 self.player.set_immobile("incantation")
