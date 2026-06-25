@@ -424,3 +424,69 @@ Test(core_integration, gui_sgt_renvoie_la_frequence)
     server.detach();
     std::exit(0);
 }
+Test(core_integration, gui_repond_aux_requetes_bct_ppo_plv_pin)
+{
+    Args args = makeArgs(48837);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48837);
+    int player = connectAndJoin(48837, "red");
+    cr_assert_geq(player, 0);
+    int gui = connectAndGreetAsGui(48837);
+    cr_assert_geq(gui, 0);
+    std::string mct = sendAndReceive(gui, "mct\n");
+
+    cr_assert(mct.find("bct") != std::string::npos,
+        "mct: '%s'", mct.c_str());
+    ::close(player);
+    ::close(gui);
+    server.detach();
+    std::exit(0);
+}
+
+Test(core_integration, gui_commande_inconnue_renvoie_suc)
+{
+    Args args = makeArgs(48838);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48838);
+    int fd = connectClient(48838);
+    cr_assert_geq(fd, 0);
+    char buf[2048] = {};
+    ::recv(fd, buf, sizeof(buf), 0);
+    ::send(fd, "GRAPHIC\n", 8, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+    ::recv(fd, buf, sizeof(buf), 0);
+    std::string response = sendAndReceive(fd, "unknown\n");
+
+    cr_assert(response.find("suc\n") != std::string::npos,
+        "reponse: '%s'", response.c_str());
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
+
+Test(core_integration, gui_sst_modifie_la_frequence)
+{
+    Args args = makeArgs(48839);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48839);
+    int fd = connectClient(48839);
+    cr_assert_geq(fd, 0);
+    char buf[2048] = {};
+    ::recv(fd, buf, sizeof(buf), 0);
+    ::send(fd, "GRAPHIC\n", 8, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+    ::recv(fd, buf, sizeof(buf), 0);
+    std::string response = sendAndReceive(fd, "sst 200\n");
+
+    cr_assert(response.find("sst") != std::string::npos,
+        "reponse: '%s'", response.c_str());
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
