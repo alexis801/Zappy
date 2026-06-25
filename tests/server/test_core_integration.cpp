@@ -98,3 +98,95 @@ Test(core_integration, deux_serveurs_meme_port_lance_une_erreur)
     }
     cr_assert(threw);
 }
+namespace {
+
+std::string readUntilNewline(int fd, int maxBytes = 4096)
+{
+    std::string out;
+    char buf[1024];
+
+    while (static_cast<int>(out.size()) < maxBytes) {
+        ssize_t n = ::recv(fd, buf, sizeof(buf), 0);
+        if (n <= 0)
+            break;
+        out.append(buf, static_cast<std::size_t>(n));
+        if (out.find('\n') != std::string::npos)
+            break;
+    }
+    return out;
+}
+
+void waitForPortOpen(int port)
+{
+    for (int i = 0; i < 20; ++i) {
+        int fd = connectClient(port);
+        if (fd >= 0) {
+            ::close(fd);
+            return;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+}
+
+} // namespace
+
+Test(core_integration, client_recoit_welcome_a_la_connexion)
+{
+    Args args = makeArgs(48824);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48824);
+    int fd = connectClient(48824);
+    cr_assert_geq(fd, 0);
+    std::string welcome = readUntilNewline(fd);
+
+    cr_assert_str_eq(welcome.c_str(), "WELCOME\n");
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
+
+Test(core_integration, handshake_player_renvoie_slots_et_carte)
+{
+    Args args = makeArgs(48825);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48825);
+    int fd = connectClient(48825);
+    cr_assert_geq(fd, 0);
+    readUntilNewline(fd);
+    ::send(fd, "red\n", 4, 0);
+    char buf[64] = {};
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    ssize_t n = ::recv(fd, buf, sizeof(buf) - 1, 0);
+
+    cr_assert_gt(n, 0);
+    std::string response(buf, static_cast<std::size_t>(n));
+    cr_assert(response.find("5 5\n") != std::string::npos,
+        "reponse: '%s'", response.c_str());
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
+
+Test(core_integration, equipe_inconnue_ferme_la_connexion)
+{
+    Args args = makeArgs(48826);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48826);
+    int fd = connectClient(48826);
+    cr_assert_geq(fd, 0);
+    readUntilNewline(fd);
+    ::send(fd, "unknown\n", 8, 0);
+    char buf[64];
+    ssize_t n = ::recv(fd, buf, sizeof(buf), 0);
+
+    cr_assert_eq(n, 0, "le serveur ferme la connexion");
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
