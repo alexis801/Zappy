@@ -66,15 +66,14 @@ class AI:
 
     def maintain_population(self):
         self._prune_dead_teammates(time.time())
-        living = len([pid for pid in self.player.inventory.team_inventory
-                      if pid != "total"])
-        if living >= TARGET_PLAYERS:
-            return
-        missing = TARGET_PLAYERS - living
         try:
             slots_remaining = int(self.action.execute_action("Connect_nbr"))
         except (TypeError, ValueError):
             slots_remaining = 0
+        current_players = self.max_client - slots_remaining
+        missing = TARGET_PLAYERS - current_players
+        if missing <= 0:
+            return
         for _ in range(max(0, missing - slots_remaining)):
             self.action.fork_player()
         self.launch_workers(missing)

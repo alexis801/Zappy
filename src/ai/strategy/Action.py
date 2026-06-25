@@ -220,12 +220,14 @@ class Action:
             elif broadcast_type == "RESET" and not self.player.boss:
                 self.player.incantation_state = IncantationState.IDLE
             elif broadcast_type == "G" and not self.player.boss:
+                if self.player.incantation_state == IncantationState.MASTER_DROPPING:
+                    return True
                 self.player.incantation_state = IncantationState.GATHERING_PLAYERS
                 if direction == 0:
                     self.player.incantation_state = IncantationState.MASTER_DROPPING
                     self.broadcast_worker_arrived()
-                elif not self.move_to_sound_source(direction):
-                    self.explore_randomly()
+                else:
+                    self.move_to_sound_source(direction)
             elif broadcast_type == "ARRIVED" and self.player.boss:
                 self.ai.confirmed_players.add(player_id)
             elif broadcast_type == "RECOVERY" and not self.player.boss:
