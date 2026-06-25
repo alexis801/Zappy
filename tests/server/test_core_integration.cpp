@@ -357,3 +357,70 @@ Test(core_integration, connect_nbr_renvoie_un_chiffre)
     server.detach();
     std::exit(0);
 }
+Test(core_integration, gui_handshake_renvoie_la_taille_de_la_carte)
+{
+    Args args = makeArgs(48827);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48827);
+    int fd = connectClient(48827);
+    cr_assert_geq(fd, 0);
+    readUntilNewline(fd);
+    ::send(fd, "GRAPHIC\n", 8, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+    char buf[2048] = {};
+    ssize_t n = ::recv(fd, buf, sizeof(buf) - 1, 0);
+
+    cr_assert_gt(n, 0);
+    std::string response(buf, static_cast<std::size_t>(n));
+    cr_assert(response.find("msz 5 5\n") != std::string::npos);
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
+Test(core_integration, gui_msz_renvoie_la_taille_de_la_carte)
+{
+    Args args = makeArgs(48832);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48832);
+    int fd = connectClient(48832);
+    cr_assert_geq(fd, 0);
+    char buf[2048] = {};
+    ::recv(fd, buf, sizeof(buf), 0);
+    ::send(fd, "GRAPHIC\n", 8, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+    ::recv(fd, buf, sizeof(buf), 0);
+    std::string response = sendAndReceive(fd, "msz\n");
+
+    cr_assert(response.find("msz 5 5\n") != std::string::npos,
+        "reponse: '%s'", response.c_str());
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
+
+Test(core_integration, gui_sgt_renvoie_la_frequence)
+{
+    Args args = makeArgs(48833);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48833);
+    int fd = connectClient(48833);
+    cr_assert_geq(fd, 0);
+    char buf[2048] = {};
+    ::recv(fd, buf, sizeof(buf), 0);
+    ::send(fd, "GRAPHIC\n", 8, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+    ::recv(fd, buf, sizeof(buf), 0);
+    std::string response = sendAndReceive(fd, "sgt\n");
+
+    cr_assert(response.find("sgt ") != std::string::npos,
+        "reponse: '%s'", response.c_str());
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
