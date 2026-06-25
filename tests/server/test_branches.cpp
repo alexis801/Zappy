@@ -58,6 +58,70 @@ Test(branches, executeCommand_inventory_renvoie_kind_inventory)
     cr_assert_str_neq(outcome.text.c_str(), "");
 }
 
+Test(branches, forward_north_decrement_y)
+{
+    Player player(0, 2, Direction::NORTH, 1);
+
+    player.forward(5, 5);
+    cr_assert_eq(player.getY(), 1);
+}
+
+Test(branches, forward_east_incremente_x)
+{
+    Player player(2, 0, Direction::EAST, 1);
+
+    player.forward(5, 5);
+    cr_assert_eq(player.getX(), 3);
+}
+
+Test(branches, forward_south_incremente_y)
+{
+    Player player(0, 2, Direction::SOUTH, 1);
+
+    player.forward(5, 5);
+    cr_assert_eq(player.getY(), 3);
+}
+
+Test(branches, forward_west_decremente_x)
+{
+    Player player(2, 0, Direction::WEST, 1);
+
+    player.forward(5, 5);
+    cr_assert_eq(player.getX(), 1);
+}
+
+Test(branches, forward_north_boucle_au_bord_haut)
+{
+    Player player(0, 0, Direction::NORTH, 1);
+
+    player.forward(5, 5);
+    cr_assert_eq(player.getY(), 4);
+}
+
+Test(branches, forward_west_boucle_au_bord_gauche)
+{
+    Player player(0, 0, Direction::WEST, 1);
+
+    player.forward(5, 5);
+    cr_assert_eq(player.getX(), 4);
+}
+
+Test(branches, forward_south_boucle_au_bord_bas)
+{
+    Player player(0, 4, Direction::SOUTH, 1);
+
+    player.forward(5, 5);
+    cr_assert_eq(player.getY(), 0);
+}
+
+Test(branches, forward_east_boucle_au_bord_droit)
+{
+    Player player(4, 0, Direction::EAST, 1);
+
+    player.forward(5, 5);
+    cr_assert_eq(player.getX(), 0);
+}
+
 Test(branches, turn_left_quatre_fois_revient_au_depart)
 {
     Player player(0, 0, Direction::NORTH, 1);
