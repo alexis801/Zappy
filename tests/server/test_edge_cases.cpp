@@ -7,13 +7,17 @@
 
 #include <criterion/criterion.h>
 #include "Macros.hpp"
+#include "Map.hpp"
 #include "Player.hpp"
+#include "Team.hpp"
 #include "Tile.hpp"
 
 using Zappy::LIFE_UNITS_AT_START;
 using Zappy::Resource;
 using Zappy::Server::Direction;
+using Zappy::Server::Map;
 using Zappy::Server::Player;
+using Zappy::Server::Team;
 using Zappy::Server::Tile;
 
 Test(tile_edge, vide_a_la_creation)
@@ -104,4 +108,56 @@ Test(player_edge, mange_seulement_si_food_sur_case)
     tile.add(Resource::FOOD, 1);
     cr_assert(player.eat(tile));
     cr_assert_eq(tile.get(Resource::FOOD), 0);
+}
+
+Test(map_edge, taille_correcte)
+{
+    Map map(5, 3);
+
+    cr_assert_eq(map.getWidth(), 5);
+    cr_assert_eq(map.getHeight(), 3);
+}
+
+Test(map_edge, toutes_les_cases_vides_a_la_creation)
+{
+    Map map(2, 2);
+
+    for (int y = 0; y < 2; ++y)
+        for (int x = 0; x < 2; ++x)
+            cr_assert(map.at(x, y).isEmpty());
+}
+
+Test(team_edge, place_libre_a_la_creation)
+{
+    Team team("red", 3);
+
+    cr_assert_eq(team.getRemainingSlots(), 3);
+    cr_assert(team.canAcceptClient());
+}
+
+Test(team_edge, refuse_quand_plus_de_place)
+{
+    Team team("red", 1);
+
+    team.claimSlot();
+    cr_assert_eq(team.getRemainingSlots(), 0);
+    cr_assert_not(team.canAcceptClient());
+}
+
+Test(team_edge, release_redonne_une_place)
+{
+    Team team("red", 1);
+
+    team.claimSlot();
+    team.releaseSlot();
+    cr_assert_eq(team.getRemainingSlots(), 1);
+    cr_assert(team.canAcceptClient());
+}
+
+Test(team_edge, add_slot_ajoute_une_place)
+{
+    Team team("red", 1);
+
+    team.addSlot();
+    cr_assert_eq(team.getRemainingSlots(), 2);
 }
