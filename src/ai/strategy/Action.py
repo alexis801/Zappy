@@ -215,6 +215,8 @@ class Action:
                 self.player.inventory.team_inventory[player_id] = inventory
                 self.player.inventory.update_team_inventory(player_id)
                 self.ai.last_seen[player_id] = time.time()
+                if len(parts) > 3:
+                    self.ai.teammate_levels[player_id] = int(parts[3])
             elif broadcast_type == "S" and not self.player.boss:
                 self.player.incantation_state = IncantationState.EXECUTING
             elif broadcast_type == "RESET" and not self.player.boss:
