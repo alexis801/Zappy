@@ -190,3 +190,99 @@ Test(core_integration, equipe_inconnue_ferme_la_connexion)
     server.detach();
     std::exit(0);
 }
+namespace {
+
+int connectAndJoin(int port, const std::string &team)
+{
+    int fd = connectClient(port);
+
+    if (fd < 0)
+        return -1;
+    char buf[64];
+    ::recv(fd, buf, sizeof(buf), 0);
+    ::send(fd, (team + "\n").c_str(), team.size() + 1, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(80));
+    ::recv(fd, buf, sizeof(buf), 0);
+    return fd;
+}
+
+int connectAndGreetAsGui(int port)
+{
+    int fd = connectClient(port);
+
+    if (fd < 0)
+        return -1;
+    char buf[2048];
+    ::recv(fd, buf, sizeof(buf), 0);
+    ::send(fd, "GRAPHIC\n", 8, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    ::recv(fd, buf, sizeof(buf), 0);
+    return fd;
+}
+
+std::string sendAndReceive(int fd, const std::string &cmd)
+{
+    ::send(fd, cmd.c_str(), cmd.size(), 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+    char buf[256] = {};
+    ssize_t n = ::recv(fd, buf, sizeof(buf) - 1, 0);
+    if (n <= 0)
+        return "";
+    return std::string(buf, static_cast<std::size_t>(n));
+}
+
+} // namespace
+
+Test(core_integration, inventaire_renvoie_la_nourriture)
+{
+    Args args = makeArgs(48828);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48828);
+    int fd = connectAndJoin(48828, "red");
+    cr_assert_geq(fd, 0);
+    std::string response = sendAndReceive(fd, "Inventory\n");
+
+    cr_assert(response.find("food") != std::string::npos,
+        "reponse: '%s'", response.c_str());
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
+
+Test(core_integration, forward_renvoie_ok)
+{
+    Args args = makeArgs(48829);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48829);
+    int fd = connectAndJoin(48829, "red");
+    cr_assert_geq(fd, 0);
+    std::string response = sendAndReceive(fd, "Forward\n");
+
+    cr_assert(response.find("ok\n") != std::string::npos,
+        "reponse: '%s'", response.c_str());
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
+
+Test(core_integration, look_renvoie_le_contenu_des_cases)
+{
+    Args args = makeArgs(48830);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48830);
+    int fd = connectAndJoin(48830, "red");
+    cr_assert_geq(fd, 0);
+    std::string response = sendAndReceive(fd, "Look\n");
+
+    cr_assert(response.find("[") != std::string::npos,
+        "reponse: '%s'", response.c_str());
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
