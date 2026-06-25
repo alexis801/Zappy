@@ -35,6 +35,7 @@ class AI:
         self.confirmed_players = set()
         self.max_client = 0
         self.last_seen = {}
+        self.teammate_levels = {}
 
     def connecting(self):
         client_slots, map_size = self.client.connect(self.team_name)
@@ -58,6 +59,7 @@ class AI:
                 if now - ts > TEAMMATE_TTL]
         for pid in dead:
             self.last_seen.pop(pid, None)
+            self.teammate_levels.pop(pid, None)
             if pid != self_id:
                 self.player.inventory.team_inventory.pop(pid, None)
             self.confirmed_players.discard(pid)

@@ -16,6 +16,7 @@ class Decision:
     BROADCAST_PERIOD = 5
     GATHER_WAIT = 1.0
     MAX_RECOVERY_TIME = 15
+    GATHER_STABLE_WAIT = 5
 
     def __init__(self, player, mode, action):
         self.player = player
@@ -23,6 +24,8 @@ class Decision:
         self.action = action
         self.tick = 0
         self.recovery_start = 0
+        self._gather_peak = 0
+        self._gather_peak_time = 0
 
     def _should_abort_gathering(self):
         if self.player.incantation_state not in (
@@ -52,12 +55,14 @@ class Decision:
             self.action.ai.maintain_population()
 
         if (self.player.boss and self.player.level < 8
-                and self.player.get_food_level() >= 60
+                and self.player.get_food_level() >= 30
                 and self.player.can_team_upgrade(self.player.level)):
             if not self.player.is_immobile:
                 self.player.set_immobile("incantation")
             self.player.incantation_state = IncantationState.GATHERING_PLAYERS
             self.action.ai.confirmed_players.clear()
+            self._gather_peak = 0
+            self._gather_peak_time = time.time()
             return self.gather_team_for_incantation()
 
         if not self.player.can_subsist:
@@ -69,9 +74,13 @@ class Decision:
 
     def players_rasso(self):
         minimum = players_needed(self.player.level)
-        alive = len([p for p in self.player.inventory.team_inventory
-                     if p != "total"])
-        return max(minimum, min(TARGET_PLAYERS, alive))
+        my_id = str(self.player.player_id)
+        same_level = 1
+        for pid, lvl in self.action.ai.teammate_levels.items():
+            if (pid != my_id and lvl == self.player.level
+                    and pid in self.player.inventory.team_inventory):
+                same_level += 1
+        return min(TARGET_PLAYERS, max(minimum, same_level))
 
     def _group_ready(self, players_on_tile, required):
         return players_on_tile >= required
@@ -80,9 +89,18 @@ class Decision:
         vision = self.action.look_around_with_player()
         players_on_tile = vision[1].count("player") if 1 in vision else 0
         required = self.players_rasso()
+        minimum = players_needed(self.player.level)
+
+        now = time.time()
+        if players_on_tile > self._gather_peak:
+            self._gather_peak = players_on_tile
+            self._gather_peak_time = now
+        stable = (players_on_tile >= minimum
+                  and players_on_tile >= self._gather_peak
+                  and now - self._gather_peak_time > self.GATHER_STABLE_WAIT)
 
         self.action.broadcast_gather_for_incantation()
-        if self._group_ready(players_on_tile, required):
+        if self._group_ready(players_on_tile, required) or stable:
             self.action.broadcast_check_ready()
             self.player.incantation_state = IncantationState.MASTER_DROPPING
         elif 1 in vision and 'food' in vision[1]:
