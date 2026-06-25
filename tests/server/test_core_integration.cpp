@@ -286,3 +286,74 @@ Test(core_integration, look_renvoie_le_contenu_des_cases)
     server.detach();
     std::exit(0);
 }
+Test(core_integration, commande_inconnue_renvoie_ko)
+{
+    Args args = makeArgs(48831);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48831);
+    int fd = connectAndJoin(48831, "red");
+    cr_assert_geq(fd, 0);
+    std::string response = sendAndReceive(fd, "InvalidCmd\n");
+
+    cr_assert_str_eq(response.c_str(), "ko\n");
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
+Test(core_integration, take_set_eject_renvoient_ok_ou_ko)
+{
+    Args args = makeArgs(48834);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48834);
+    int fd = connectAndJoin(48834, "red");
+    cr_assert_geq(fd, 0);
+    std::string takeResponse = sendAndReceive(fd, "Take food\n");
+    std::string setResponse = sendAndReceive(fd, "Set linemate\n");
+    std::string ejectResponse = sendAndReceive(fd, "Eject\n");
+
+    cr_assert(!takeResponse.empty());
+    cr_assert(!setResponse.empty());
+    cr_assert(!ejectResponse.empty());
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
+
+Test(core_integration, fork_renvoie_ok)
+{
+    Args args = makeArgs(48835);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48835);
+    int fd = connectAndJoin(48835, "red");
+    cr_assert_geq(fd, 0);
+    std::string response = sendAndReceive(fd, "Fork\n");
+
+    cr_assert(response.find("ok\n") != std::string::npos,
+        "reponse: '%s'", response.c_str());
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
+
+Test(core_integration, connect_nbr_renvoie_un_chiffre)
+{
+    Args args = makeArgs(48836);
+    Core core(args);
+    std::thread server([&]() { core.run(); });
+
+    waitForPortOpen(48836);
+    int fd = connectAndJoin(48836, "red");
+    cr_assert_geq(fd, 0);
+    std::string response = sendAndReceive(fd, "Connect_nbr\n");
+
+    cr_assert(!response.empty());
+    ::close(fd);
+    server.detach();
+    std::exit(0);
+}
