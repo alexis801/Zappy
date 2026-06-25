@@ -5,31 +5,31 @@
 ## decision - machine a etats de la strategie (boss / worker)
 ##
 
+import time
+
 from strategy.Utils import (IncantationState, levels, players_needed, REPOP_PERIOD,
-                    FOOD_SURVIVAL_TARGET, FOOD_RECOVERY_TARGET)
+                    FOOD_SURVIVAL_TARGET, FOOD_RECOVERY_TARGET, TARGET_PLAYERS)
 from pathfinding.Movement import Movement
 
 
 class Decision:
     BROADCAST_PERIOD = 5
-    GATHER_TIMEOUT = 40
+    GATHER_WAIT = 1.0
+    MAX_RECOVERY_TIME = 15
 
     def __init__(self, player, mode, action):
         self.player = player
         self.current_mode = mode
         self.action = action
         self.tick = 0
-        self.gather_ticks = 0
+        self.recovery_start = 0
 
     def _should_abort_gathering(self):
         if self.player.incantation_state not in (
                 IncantationState.GATHERING_PLAYERS,
                 IncantationState.MASTER_DROPPING):
             return False
-        self.gather_ticks += 1
-        if self.player.is_very_hungry():
-            return True
-        return self.gather_ticks >= self.GATHER_TIMEOUT
+        return self.player.is_very_hungry()
 
     def set_next(self):
         self.tick += 1
@@ -42,13 +42,10 @@ class Decision:
                 return self.handle_recovery_phase()
             return self.handle_worker_recovery()
         if self.player.incantation_state != IncantationState.IDLE:
-            if self.player.boss and self._should_abort_gathering():
+            if self._should_abort_gathering():
                 self.reset_incantation_state()
-                self.gather_ticks = 0
                 return self.survival()
             return self.handle_incantation_state()
-
-        self.gather_ticks = 0
 
         if (self.player.boss and self.tick % REPOP_PERIOD == 0
                 and not self.player.is_hungry()):
@@ -70,25 +67,34 @@ class Decision:
                 self.player.can_subsist = True
         return self.survival()
 
+    def players_rasso(self):
+        minimum = players_needed(self.player.level)
+        alive = len([p for p in self.player.inventory.team_inventory
+                     if p != "total"])
+        return max(minimum, min(TARGET_PLAYERS, alive))
+
     def _group_ready(self, players_on_tile, required):
-        confirmed = len(self.action.ai.confirmed_players)
-        return players_on_tile >= required and confirmed >= required - 1
+        return players_on_tile >= required
 
     def gather_team_for_incantation(self):
         vision = self.action.look_around_with_player()
         players_on_tile = vision[1].count("player") if 1 in vision else 0
-        required = players_needed(self.player.level)
+        required = self.players_rasso()
 
         self.action.broadcast_gather_for_incantation()
         if self._group_ready(players_on_tile, required):
             self.action.broadcast_check_ready()
             self.player.incantation_state = IncantationState.MASTER_DROPPING
+        elif 1 in vision and 'food' in vision[1]:
+            self.action.collect_resources('food', vision[1].count('food'), self.player)
+        else:
+            time.sleep(self.GATHER_WAIT)
         return True
 
     def drop_resources_and_coordinate(self):
         vision = self.action.look_around_with_player()
         players_on_tile = vision[1].count("player") if 1 in vision else 0
-        required = players_needed(self.player.level)
+        required = self.players_rasso()
 
         if self._group_ready(players_on_tile, required):
             if self.drop_resources_for_team_incantation() is False:
@@ -119,20 +125,33 @@ class Decision:
         self.reset_incantation_state()
         return False
 
+    def _recovery_elapsed(self):
+        if self.recovery_start == 0:
+            self.recovery_start = time.time()
+        return time.time() - self.recovery_start
+
+    def _end_recovery(self):
+        self.player.incantation_state = IncantationState.IDLE
+        self.player.can_subsist = True
+        self.recovery_start = 0
+
     def handle_recovery_phase(self):
         target_food = FOOD_RECOVERY_TARGET
+        elapsed = self._recovery_elapsed()
+        if elapsed > self.MAX_RECOVERY_TIME:
+            self._end_recovery()
+            return True
         if (self.player.get_food_level() >= target_food
                 and self.player.can_team_upgrade(self.player.level)):
-            self.player.incantation_state = IncantationState.IDLE
-            self.player.can_subsist = True
+            self._end_recovery()
             return True
         return self.collect_food_strategy(target_food)
 
     def handle_worker_recovery(self):
         target_food = FOOD_RECOVERY_TARGET
-        if self.player.get_food_level() >= target_food:
-            self.player.incantation_state = IncantationState.IDLE
-            self.player.can_subsist = True
+        elapsed = self._recovery_elapsed()
+        if elapsed > self.MAX_RECOVERY_TIME or self.player.get_food_level() >= target_food:
+            self._end_recovery()
             return True
         return self.collect_food_strategy(target_food)
 
@@ -182,8 +201,7 @@ class Decision:
             if self.player.boss:
                 return self.gather_team_for_incantation()
             vision = self.action.look_around_with_player()
-            required = players_needed(self.player.level)
-            if 1 in vision and vision[1].count("player") >= required:
+            if 1 in vision and vision[1].count("player") >= 2:
                 self.action.broadcast_worker_arrived()
                 self.player.incantation_state = IncantationState.MASTER_DROPPING
             return True
@@ -192,8 +210,11 @@ class Decision:
             if self.player.boss:
                 return self.drop_resources_and_coordinate()
             vision = self.action.look_around_with_player()
-            if 1 in vision and vision[1].count("player") < 2:
-                self.player.incantation_state = IncantationState.IDLE
+            if 1 in vision and 'food' in vision[1]:
+                self.action.collect_resources('food', vision[1].count('food'),
+                                              self.player)
+            else:
+                time.sleep(0.5)
             return True
 
         if state == IncantationState.EXECUTING:
@@ -205,6 +226,8 @@ class Decision:
     def survival(self):
         target_food = FOOD_SURVIVAL_TARGET
         if self.player.is_very_hungry():
+            return self.collect_food_strategy(target_food)
+        if self.player.get_food_level() < self.player.food_objective():
             return self.collect_food_strategy(target_food)
         self.collect_stones()
         if self.player.get_food_level() >= target_food:
