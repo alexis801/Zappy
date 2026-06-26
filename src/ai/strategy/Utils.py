@@ -5,7 +5,48 @@
 ## config - enums, constantes et helpers partages de la strategie
 ##
 
+import base64
+import binascii
+import hashlib
+
 from enum import Enum
+
+BROADCAST_SECRET = "N4t4nk-Zappy-2026-x9K2mQ7vR3pL-Tr4nt0r"
+_KEYSTREAM_LEN = 256
+
+
+def broadcast_key(team_name):
+    secret_seed = (BROADCAST_SECRET + "|" + team_name).encode()
+    secret_key_bytes = b""
+    block_index = 0
+    while len(secret_key_bytes) < _KEYSTREAM_LEN:
+        secret_key_bytes += hashlib.sha256(
+            secret_seed + bytes([block_index])).digest()
+        block_index += 1
+    return secret_key_bytes
+
+
+def encrypt_message(readable_message, secret_key_bytes):
+    readable_bytes = readable_message.encode()
+    encrypted_bytes = bytes(
+        message_byte ^ secret_key_bytes[position % len(secret_key_bytes)]
+        for position, message_byte in enumerate(readable_bytes))
+    return base64.b64encode(encrypted_bytes).decode()
+
+
+def decrypt_message(encrypted_message, secret_key_bytes):
+    try:
+        encrypted_bytes = base64.b64decode(encrypted_message, validate=True)
+    except (binascii.Error, ValueError):
+        return None
+    decrypted_bytes = bytes(
+        encrypted_byte ^ secret_key_bytes[position % len(secret_key_bytes)]
+        for position, encrypted_byte in enumerate(encrypted_bytes))
+    try:
+        return decrypted_bytes.decode()
+    except UnicodeDecodeError:
+        return None
+
 
 class IncantationState(Enum):
     IDLE = 0

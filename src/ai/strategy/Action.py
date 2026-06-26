@@ -8,7 +8,8 @@
 import time
 import random
 
-from strategy.Utils import IncantationState, resource_map
+from strategy.Utils import (IncantationState, resource_map, broadcast_key,
+                            encrypt_message, decrypt_message)
 from pathfinding.Movement import Movement
 
 class Action:
@@ -48,7 +49,8 @@ class Action:
         return response
 
     def broadcast_message(self, message):
-        response = self.execute_action("Broadcast", message)
+        payload = encrypt_message(message, broadcast_key(self.ai.team_name))
+        response = self.execute_action("Broadcast", payload)
         return response is not None and response != "ko"
 
     def move_to_tile(self, tile_number):
@@ -191,8 +193,11 @@ class Action:
         return False
 
     def parse_team_broadcast(self, message, direction):
+        plain = decrypt_message(message, broadcast_key(self.ai.team_name))
+        if plain is None:
+            return False
         try:
-            parts = message.split("|")
+            parts = plain.split("|")
             if len(parts) < 2 or parts[0] != self.ai.team_name:
                 return False
             broadcast_type = parts[1]
@@ -222,6 +227,9 @@ class Action:
             elif broadcast_type == "RESET" and not self.player.boss:
                 self.player.incantation_state = IncantationState.IDLE
             elif broadcast_type == "G" and not self.player.boss:
+                boss_level = int(parts[3]) if len(parts) > 3 else self.player.level
+                if boss_level != self.player.level:
+                    return True
                 if self.player.incantation_state == IncantationState.MASTER_DROPPING:
                     return True
                 self.player.incantation_state = IncantationState.GATHERING_PLAYERS
