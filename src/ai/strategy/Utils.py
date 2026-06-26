@@ -11,40 +11,39 @@ import hashlib
 
 from enum import Enum
 
-# Secret partage par tous les binaires de l'equipe (compile dans l'AI).
-# Une equipe adverse ne le possede pas : elle ne peut ni lire ni forger
-# nos broadcasts, meme en connaissant notre nom d'equipe.
-BROADCAST_SECRET = "Z4ph0d-B33bl3br0x"
+BROADCAST_SECRET = "N4t4nk-Zappy-2026-x9K2mQ7vR3pL-Tr4nt0r"
 _KEYSTREAM_LEN = 256
 
 
 def broadcast_key(team_name):
-    # Keystream derive par hash de (secret + nom d'equipe) : chaque octet
-    # depend a la fois du secret et du nom, donc deux equipes au meme binaire
-    # mais nom different ne peuvent pas se lire, et le nom ne fuit pas en clair.
-    seed = (BROADCAST_SECRET + "|" + team_name).encode()
-    stream = b""
-    counter = 0
-    while len(stream) < _KEYSTREAM_LEN:
-        stream += hashlib.sha256(seed + bytes([counter])).digest()
-        counter += 1
-    return stream
+    secret_seed = (BROADCAST_SECRET + "|" + team_name).encode()
+    secret_key_bytes = b""
+    block_index = 0
+    while len(secret_key_bytes) < _KEYSTREAM_LEN:
+        secret_key_bytes += hashlib.sha256(
+            secret_seed + bytes([block_index])).digest()
+        block_index += 1
+    return secret_key_bytes
 
 
-def encrypt_message(plain, key):
-    data = plain.encode()
-    cipher = bytes(b ^ key[i % len(key)] for i, b in enumerate(data))
-    return base64.b64encode(cipher).decode()
+def encrypt_message(readable_message, secret_key_bytes):
+    readable_bytes = readable_message.encode()
+    encrypted_bytes = bytes(
+        message_byte ^ secret_key_bytes[position % len(secret_key_bytes)]
+        for position, message_byte in enumerate(readable_bytes))
+    return base64.b64encode(encrypted_bytes).decode()
 
 
-def decrypt_message(payload, key):
+def decrypt_message(encrypted_message, secret_key_bytes):
     try:
-        cipher = base64.b64decode(payload, validate=True)
+        encrypted_bytes = base64.b64decode(encrypted_message, validate=True)
     except (binascii.Error, ValueError):
         return None
-    plain = bytes(b ^ key[i % len(key)] for i, b in enumerate(cipher))
+    decrypted_bytes = bytes(
+        encrypted_byte ^ secret_key_bytes[position % len(secret_key_bytes)]
+        for position, encrypted_byte in enumerate(encrypted_bytes))
     try:
-        return plain.decode()
+        return decrypted_bytes.decode()
     except UnicodeDecodeError:
         return None
 
