@@ -5,7 +5,49 @@
 ## config - enums, constantes et helpers partages de la strategie
 ##
 
+import base64
+import binascii
+import hashlib
+
 from enum import Enum
+
+# Secret partage par tous les binaires de l'equipe (compile dans l'AI).
+# Une equipe adverse ne le possede pas : elle ne peut ni lire ni forger
+# nos broadcasts, meme en connaissant notre nom d'equipe.
+BROADCAST_SECRET = "Z4ph0d-B33bl3br0x"
+_KEYSTREAM_LEN = 256
+
+
+def broadcast_key(team_name):
+    # Keystream derive par hash de (secret + nom d'equipe) : chaque octet
+    # depend a la fois du secret et du nom, donc deux equipes au meme binaire
+    # mais nom different ne peuvent pas se lire, et le nom ne fuit pas en clair.
+    seed = (BROADCAST_SECRET + "|" + team_name).encode()
+    stream = b""
+    counter = 0
+    while len(stream) < _KEYSTREAM_LEN:
+        stream += hashlib.sha256(seed + bytes([counter])).digest()
+        counter += 1
+    return stream
+
+
+def encrypt_message(plain, key):
+    data = plain.encode()
+    cipher = bytes(b ^ key[i % len(key)] for i, b in enumerate(data))
+    return base64.b64encode(cipher).decode()
+
+
+def decrypt_message(payload, key):
+    try:
+        cipher = base64.b64decode(payload, validate=True)
+    except (binascii.Error, ValueError):
+        return None
+    plain = bytes(b ^ key[i % len(key)] for i, b in enumerate(cipher))
+    try:
+        return plain.decode()
+    except UnicodeDecodeError:
+        return None
+
 
 class IncantationState(Enum):
     IDLE = 0
