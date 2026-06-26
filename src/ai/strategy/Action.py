@@ -204,40 +204,13 @@ class Action:
             player_id = parts[2] if len(parts) > 2 else None
 
             if broadcast_type == "I":
-                food_amount = int(parts[5])
-                inventory_compact = parts[4]
-                inventory = dict.fromkeys(
-                    ["linemate", "deraumere", "sibur", "mendiane",
-                     "phiras", "thystame"], 0)
-                inventory["food"] = food_amount
-                if inventory_compact != "0":
-                    for item in inventory_compact.split(","):
-                        if len(item) >= 2:
-                            for res_name, res_code in resource_map.items():
-                                if res_code == item[0]:
-                                    inventory[res_name] = int(item[1:])
-                                    break
-                self.player.inventory.team_inventory[player_id] = inventory
-                self.player.inventory.update_team_inventory(player_id)
-                self.ai.last_seen[player_id] = time.time()
-                if len(parts) > 3:
-                    self.ai.teammate_levels[player_id] = int(parts[3])
+                self._parse_inventory_broadcast(parts, player_id)
             elif broadcast_type == "S" and not self.player.boss:
                 self.player.incantation_state = IncantationState.EXECUTING
             elif broadcast_type == "RESET" and not self.player.boss:
                 self.player.incantation_state = IncantationState.IDLE
             elif broadcast_type == "G" and not self.player.boss:
-                boss_level = int(parts[3]) if len(parts) > 3 else self.player.level
-                if boss_level != self.player.level:
-                    return True
-                if self.player.incantation_state == IncantationState.MASTER_DROPPING:
-                    return True
-                self.player.incantation_state = IncantationState.GATHERING_PLAYERS
-                if direction == 0:
-                    self.player.incantation_state = IncantationState.MASTER_DROPPING
-                    self.broadcast_worker_arrived()
-                else:
-                    self.move_to_sound_source(direction)
+                self._handle_gather_broadcast(parts, direction)
             elif broadcast_type == "ARRIVED" and self.player.boss:
                 self.ai.confirmed_players.add(player_id)
             elif broadcast_type == "RECOVERY" and not self.player.boss:
@@ -247,3 +220,36 @@ class Action:
             return True
         except Exception:
             return False
+
+    def _parse_inventory_broadcast(self, parts, player_id):
+        food_amount = int(parts[5])
+        inventory_compact = parts[4]
+        inventory = dict.fromkeys(
+            ["linemate", "deraumere", "sibur", "mendiane",
+             "phiras", "thystame"], 0)
+        inventory["food"] = food_amount
+        if inventory_compact != "0":
+            for item in inventory_compact.split(","):
+                if len(item) >= 2:
+                    for res_name, res_code in resource_map.items():
+                        if res_code == item[0]:
+                            inventory[res_name] = int(item[1:])
+                            break
+        self.player.inventory.team_inventory[player_id] = inventory
+        self.player.inventory.update_team_inventory(player_id)
+        self.ai.last_seen[player_id] = time.time()
+        if len(parts) > 3:
+            self.ai.teammate_levels[player_id] = int(parts[3])
+
+    def _handle_gather_broadcast(self, parts, direction):
+        boss_level = int(parts[3]) if len(parts) > 3 else self.player.level
+        if boss_level != self.player.level:
+            return
+        if self.player.incantation_state == IncantationState.MASTER_DROPPING:
+            return
+        self.player.incantation_state = IncantationState.GATHERING_PLAYERS
+        if direction == 0:
+            self.player.incantation_state = IncantationState.MASTER_DROPPING
+            self.broadcast_worker_arrived()
+        else:
+            self.move_to_sound_source(direction)
