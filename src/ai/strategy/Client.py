@@ -118,10 +118,15 @@ class SocketClient:
     def _route(self, line):
         if not line:
             return
+        if self._route_async(line):
+            return
+        self._route_command_reply(line)
+
+    def _route_async(self, line):
         if line == "dead":
             self.dead = True
             self._notifications.append(("dead", None))
-            return
+            return True
         if line.startswith("message"):
             head, _, text = line.partition(",")
             try:
@@ -129,15 +134,17 @@ class SocketClient:
             except (IndexError, ValueError):
                 direction = 0
             self._notifications.append(("message", (direction, text.strip())))
-            return
+            return True
         if line.startswith("eject"):
             try:
                 direction = int(line.split(":", 1)[1])
             except (IndexError, ValueError):
                 direction = 0
             self._notifications.append(("eject", direction))
-            return
+            return True
+        return False
 
+    def _route_command_reply(self, line):
         head = self._pending[0] if self._pending else None
         own_incantation = head is not None and head.command == "Incantation"
 
@@ -156,7 +163,7 @@ class SocketClient:
                 self._notifications.append(("level", level))
                 return
         if head is None:
-            return     
+            return
         head.lines.append(line)
         head.result = line
         head.done = True

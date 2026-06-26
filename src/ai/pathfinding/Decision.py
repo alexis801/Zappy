@@ -8,7 +8,7 @@
 import time
 
 from strategy.Utils import (IncantationState, levels, players_needed, REPOP_PERIOD,
-                    FOOD_SURVIVAL_TARGET, FOOD_RECOVERY_TARGET)
+                    FOOD_SURVIVAL_TARGET, FOOD_RECOVERY_TARGET, TARGET_PLAYERS)
 from pathfinding.Movement import Movement
 
 
@@ -54,16 +54,9 @@ class Decision:
                 and not self.player.is_hungry()):
             self.action.ai.maintain_population()
 
-        if (self.player.boss and self.player.level < 8
-                and self.player.get_food_level() >= 30
-                and self.player.can_team_upgrade(self.player.level)):
-            if not self.player.is_immobile:
-                self.player.set_immobile("incantation")
-            self.player.incantation_state = IncantationState.GATHERING_PLAYERS
-            self.action.ai.confirmed_players.clear()
-            self._gather_peak = 0
-            self._gather_peak_time = time.time()
-            return self.gather_team_for_incantation()
+        started = self._try_start_team_incantation()
+        if started is not None:
+            return started
 
         if not self.player.can_subsist:
             if self.player.is_hungry() or self.player.is_very_hungry():
@@ -71,6 +64,19 @@ class Decision:
             if self.player.get_food_level() >= self.player.food_objective():
                 self.player.can_subsist = True
         return self.survival()
+
+    def _try_start_team_incantation(self):
+        if not (self.player.boss and self.player.level < 8
+                and self.player.get_food_level() >= 30
+                and self.player.can_team_upgrade(self.player.level)):
+            return None
+        if not self.player.is_immobile:
+            self.player.set_immobile("incantation")
+        self.player.incantation_state = IncantationState.GATHERING_PLAYERS
+        self.action.ai.confirmed_players.clear()
+        self._gather_peak = 0
+        self._gather_peak_time = time.time()
+        return self.gather_team_for_incantation()
 
     def players_rasso(self):
         minimum = players_needed(self.player.level)
