@@ -227,6 +227,9 @@ class Action:
             elif broadcast_type == "RESET" and not self.player.boss:
                 self.player.incantation_state = IncantationState.IDLE
             elif broadcast_type == "G" and not self.player.boss:
+                boss_level = int(parts[3]) if len(parts) > 3 else self.player.level
+                if boss_level != self.player.level:
+                    return True
                 if self.player.incantation_state == IncantationState.MASTER_DROPPING:
                     return True
                 self.player.incantation_state = IncantationState.GATHERING_PLAYERS

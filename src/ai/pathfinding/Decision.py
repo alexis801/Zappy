@@ -8,7 +8,7 @@
 import time
 
 from strategy.Utils import (IncantationState, levels, players_needed, REPOP_PERIOD,
-                    FOOD_SURVIVAL_TARGET, FOOD_RECOVERY_TARGET, TARGET_PLAYERS)
+                    FOOD_SURVIVAL_TARGET, FOOD_RECOVERY_TARGET)
 from pathfinding.Movement import Movement
 
 
@@ -74,13 +74,9 @@ class Decision:
 
     def players_rasso(self):
         minimum = players_needed(self.player.level)
-        my_id = str(self.player.player_id)
-        same_level = 1
-        for pid, lvl in self.action.ai.teammate_levels.items():
-            if (pid != my_id and lvl == self.player.level
-                    and pid in self.player.inventory.team_inventory):
-                same_level += 1
-        return min(TARGET_PLAYERS, max(minimum, same_level))
+        alive = len([p for p in self.player.inventory.team_inventory
+                     if p != "total"])
+        return max(minimum, min(TARGET_PLAYERS, alive))
 
     def _group_ready(self, players_on_tile, required):
         return players_on_tile >= required
