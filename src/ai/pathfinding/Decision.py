@@ -96,7 +96,6 @@ class Decision:
             self._gather_peak = players_on_tile
             self._gather_peak_time = now
         stable = (players_on_tile >= minimum
-                  and players_on_tile >= self._gather_peak
                   and now - self._gather_peak_time > self.GATHER_STABLE_WAIT)
 
         self.action.broadcast_gather_for_incantation()
