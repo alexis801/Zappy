@@ -5,18 +5,21 @@
 ## main
 ##
 
-import sys, getopt
+import sys
+import getopt
 from strategy.Ai_Algo import AI
 
+
 def parser(argv):
-    port = None
+    port = 4242
     team = None
     host = "localhost"
     is_boss = True
 
     try:
         opts, args = getopt.getopt(argv, "p:n:h:", ["help", "worker"])
-    except getopt.GetoptError:
+    except getopt.GetoptError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
         print("USAGE: ./zappy_ai -p port -n name -h machine [--worker]")
         sys.exit(84)
 
@@ -26,7 +29,13 @@ def parser(argv):
             sys.exit(0)
 
         elif opt == "-p":
-            port = int(arg)
+            try:
+                port = int(arg)
+                if not 1 <= port <= 65535:
+                    raise ValueError
+            except ValueError:
+                print("Error: port must be between 1 and 65535", file=sys.stderr)
+                sys.exit(84)
 
         elif opt == "-n":
             team = arg
@@ -37,7 +46,17 @@ def parser(argv):
         elif opt == "--worker":
             is_boss = False
 
+    if not team or not team.strip():
+        print("Error: team name is required (-n name)", file=sys.stderr)
+        print("USAGE: ./zappy_ai [-p port] -n name [-h machine] [--worker]")
+        sys.exit(84)
+
+    if args:
+        print(f"Error: unexpected arguments: {' '.join(args)}", file=sys.stderr)
+        sys.exit(84)
+
     return port, team, host, is_boss
+
 
 def main(argv):
     port, team, host, is_boss = parser(argv)
@@ -52,6 +71,7 @@ def main(argv):
     except (ConnectionError, OSError) as exc:
         print(f"connexion impossible a {host}:{port} ({exc})", file=sys.stderr)
         sys.exit(84)
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])

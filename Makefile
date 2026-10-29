@@ -14,6 +14,7 @@ OBJ_DIR		=	obj
 
 SERVER		=	zappy_server
 GUI			=	zappy_gui
+AI 			= 	zappy_ai
 
 SERVER_LIBS	=
 GUI_LIBS	=	-lsfml-graphics -lsfml-window -lsfml-system
@@ -27,7 +28,12 @@ GUI_OBJ		=	$(GUI_SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 ALL_OBJ		=	$(sort $(SERVER_OBJ) $(GUI_OBJ))
 
-all:	$(SERVER) $(GUI)
+all:	$(SERVER) $(GUI) $(AI)
+
+$(AI):
+	@printf '#!/usr/bin/env bash\ncd "$$(dirname "$$0")" && exec python3 src/ai/main.py "$$@"\n' > $(AI)
+	@chmod +x $(AI)
+	@echo "  [ok]   $(AI)"
 
 $(SERVER):	$(SERVER_OBJ)
 	@if [ -z "$(strip $(SERVER_OBJ))" ]; then \
@@ -53,7 +59,7 @@ clean:
 	$(RM) -r $(OBJ_DIR)
 
 fclean:	clean tests_clean
-	$(RM) $(SERVER) $(GUI)
+	$(RM) $(SERVER) $(GUI) $(AI)
 
 re:	fclean all
 
